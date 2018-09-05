@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+
+<html>
+   <head>
+      
+      <script type = "text/javascript">
+         function ajaxTest() {
+            
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'http://localhost:3000/');
+            // xhr.withCredentials = true;
+            // xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    console.log('Server responsed with:' + xhr.responseText);
+                }
+                else {
+                    console.log('Request failed.  Returned status of ' + xhr.status);
+                }
+            };
+            xhr.send();
+         }
+
+
+      function play() {
+      var videoPlayer = document.getElementById("videoPlayer");
+      var btnPlay = document.getElementById("btnPlay");
+      if (videoPlayer.paused) {
+      videoPlayer.play();
+      btnPlay.textContent = "||";
+      } else {
+      videoPlayer.pause();
+      btnPlay.textContent = ">";
+      }
+      }
+      /*Function to Reload video from Beginning*/
+      function reloadVideo() {
+      var videoPlayer = document.getElementById("videoPlayer");
+      videoPlayer.currentTime = 0;
+      }
+      /*Function to Forward & Rewind*/
+      function forwardRewind(param) {
+      var videoPlayer = document.getElementById("videoPlayer");
+      videoPlayer.currentTime += param;
+      }
+      </script>
+		
+   </head>
+   
+   <body>
+      <div id = "sse">
+        <a href = "javascript:ajaxTest()">Run Test</a>
+
+
+
+        <video id='videoPlayer' width="400" controls preload="auto" autoplay>
+          <source src="http://localhost:3000/get_movie" type="video/mp4">
+        </video>
+        <!--Buttons for Video Player-->
+        <div id="playerButtons">
+        <button id="btnReload" onclick="reloadVideo();">[]</button>
+        <button id="btnRewind" onclick="forwardRewind(-7)"><<</button>
+        <button id="btnPlay" onclick="play()">></button>
+        <button id="btnForward" onclick="forwardRewind(7)">>></button>
+        </div>
+
+      </div>
+      
+   </body>
+</html>
