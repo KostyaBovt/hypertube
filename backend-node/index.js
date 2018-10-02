@@ -1,16 +1,23 @@
 const express 	= require('express');
 const fs 		= require('fs');
 const needle 		= require('needle');
+var path 		 = require('path');
 
 var cors = require('cors')
 var torrentStream = require('torrent-stream');
 
-var API_KEY = 'ec8920bdb431590b48d7b0205e7d6a49';
+var API_KEY = 'ec8920bdb431590b48d7b0205e7d6a49';  // API key for themoviedb.org
 
-const port = 3000;
+const port = 3200;
 
 const app = express();
 app.use(cors());
+
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static('public'));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
+app.use('/video', express.static('/tmp/test_video'));
 
 app.get('/test_download', (request, response) => {
 
