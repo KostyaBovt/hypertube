@@ -19,6 +19,101 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 
 app.use('/video', express.static('/tmp/test_video'));
 
+// ============================== some hardcode values
+
+var locale = 'eng';
+
+// ============================== get films list
+
+
+
+// ============================== get films list
+
+app.get('/films', (request, response) => {
+	console.log(request.query);
+
+	limit = request.query.limit;
+	page = request.query.page;
+	minimum_rating = request.query.minimum_rating;
+	query_term = request.query.query_term;
+	genre = request.query.genre;
+	sort_by = request.query.sort_by;
+	order_by = request.query.order_by;
+
+	filters = '';
+	if (limit) {
+		sign = filters ? "&" : "?";
+		filters += sign + 'limit=' + limit;
+	}
+	if (page) {
+		sign = filters ? "&" : "?";
+		filters += sign + 'page=' + page;
+	}
+	if (minimum_rating) {
+		sign = filters ? "&" : "?";
+		filters += sign + 'minimum_rating=' + minimum_rating;
+	}
+	if (query_term) {
+		sign = filters ? "&" : "?";
+		filters += sign + 'query_term=' + query_term;
+	}
+	if (genre) {
+		sign = filters ? "&" : "?";
+		filters += sign + 'genre=' + genre;
+	}
+	if (sort_by) {
+		sign = filters ? "&" : "?";
+		filters += sign + 'sort_by=' + sort_by;
+	}
+	if (order_by) {
+		sign = filters ? "&" : "?";
+		filters += sign + 'order_by=' + order_by;
+	}
+
+	console.log('API request: ' + 'https://yts.am/api/v2/list_movies.json' + filters + '\n');
+
+	needle.get('https://yts.am/api/v2/list_movies.json' + filters, function(error, n_response) {
+	  if (!error && n_response.statusCode == 200) {
+
+    	answer_movies = [];
+	    if (n_response.body['data']['movies']) {
+	    	n_response.body['data']['movies'].forEach(element => {
+			    var movie = {};
+			    movie['name'] = element.title;
+			    movie['year'] = element.year;
+			    movie['cover_image_url'] = element.large_cover_image;
+			    movie['rating'] = element.rating;
+			    movie['imdb_code'] = element.imdb_code;
+				answer_movies.push(movie);
+
+		    	// console.log('https://api.themoviedb.org/3/movie/' + element.imdb_code + '?api_key=' + API_KEY);
+		   //  	needle.get('https://api.themoviedb.org/3/movie/' + element.imdb_code + '?api_key=' + API_KEY, function(error, n_response2) {
+
+					// if (!error && n_response2.statusCode == 200) {
+					// 	movie['detail_info'] = n_response2.body;
+					// }
+				    // answer_movies.push(movie);
+		   //  	});
+
+	    	});
+
+	    }
+
+		response.send({'movies': answer_movies});
+	  }
+	});
+
+})
+
+
+// ==============================
+
+
+
+
+
+// ============================== some test api
+
 app.get('/test_download', (request, response) => {
 
 	test_video = {
@@ -66,6 +161,8 @@ app.get('/get_movie', (request, response) => {
     response.writeHead(200, head)
     fs.createReadStream(path).pipe(response)
 })
+
+// ======================================
 
 app.listen(port, (err) => {
     if (err) {

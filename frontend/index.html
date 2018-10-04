@@ -21,25 +21,50 @@
             xhr.send();
          }
 
+         function getMovies() {
+            
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', 'http://localhost:3200/films?limit=20&page=1&minimum_rating=3&query_term=ring&sort_by=rating&order_by=desc');
+            // xhr.withCredentials = true;
+            // xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    console.log('Server responsed with:');
+                    var movies = JSON.parse(xhr.responseText)['movies'];
+                    var toAddElements = '';
+                    movies.forEach(element => {
+                      toAddElements += '<tr> <td><img style="height: 250px;" src="' + element['cover_image_url'] + '"></td> <td><div>name: ' + element['name'] + ' </div> year: ' + element['year'] + '<div>rating: ' + element['rating'] + '</div> <div>imdb id: ' + element['imdb_code'] + '</div> </td> </tr>';
+                    });
+                    toAdd = '<table style="width:90%"> ' + toAddElements + ' </table>';
+                    document.getElementById("film-list").innerHTML = toAdd;
+                    console.log(movies);
+                }
+                else {
+                    console.log('Request failed.  Returned status of ' + xhr.status);
+                }
+            };
+            xhr.send();
+         }
 
       </script>
 		
    </head>
    
    <body>
-      <div>
+<!--       <div>
         <a href = "javascript:ajaxTest()">Start Download</a>
-
         <video id='videoPlayer' width="400" controls preload="auto" autoplay>
           <source src="http://localhost:3200/video/The.Naked.And.The.Dead.1958.720p.BluRay.x264-[YTS.AM].mp4" type="video/mp4">
         </video>
-
-
+      </div> -->
+      <button onclick="getMovies()">get movies</button>
+      <div id='film-list'>
+        <table style="width:90%">
+          <tr>
+            <td>Jill</td>
+            <td>Smith</td> 
+          </tr>
+        </table>
       </div>
-
-      <div>
-        <img src=" http://localhost:3200/public/1.png">
-      </div>
-      
    </body>
 </html>
