@@ -1,1 +1,4 @@
 .vagrant
+.idea
+hyper/deps
+hyper/.erlang.mk
