@@ -1,6 +1,7 @@
 const express 	= require('express');
 const fs 		= require('fs');
 const needle 		= require('needle');
+const axios 		= require('axios');
 var path 		 = require('path');
 
 var cors = require('cors')
@@ -29,7 +30,7 @@ var locale = 'eng';
 
 // ============================== get films list
 
-app.get('/films', (request, response) => {
+app.get('/films', async (request, response) => {
 	console.log(request.query);
 
 	limit = request.query.limit;
@@ -70,38 +71,31 @@ app.get('/films', (request, response) => {
 		filters += sign + 'order_by=' + order_by;
 	}
 
-	console.log('API request: ' + 'https://yts.am/api/v2/list_movies.json' + filters + '\n');
+	// console.log('API request: ' + 'https://yts.ag/api/v2/list_movies.json' + filters + '\n');
 
-	needle.get('https://yts.am/api/v2/list_movies.json' + filters, function(error, n_response) {
-	  if (!error && n_response.statusCode == 200) {
+	var films = await axios.get('https://yts.ag/api/v2/list_movies.json' + filters);
+	films = films.data.data['movies'];
+	
+	// var some_var = await axios.get('https://api.themoviedb.org/3/movie/tt0120737?api_key=' + API_KEY);
+	// console.log(some_var);
 
-    	answer_movies = [];
-	    if (n_response.body['data']['movies']) {
-	    	n_response.body['data']['movies'].forEach(element => {
-			    var movie = {};
-			    movie['name'] = element.title;
-			    movie['year'] = element.year;
-			    movie['cover_image_url'] = element.large_cover_image;
-			    movie['rating'] = element.rating;
-			    movie['imdb_code'] = element.imdb_code;
-				answer_movies.push(movie);
 
-		    	// console.log('https://api.themoviedb.org/3/movie/' + element.imdb_code + '?api_key=' + API_KEY);
-		   //  	needle.get('https://api.themoviedb.org/3/movie/' + element.imdb_code + '?api_key=' + API_KEY, function(error, n_response2) {
+	answer_movies = [];
+	for (const element of films) {
+		var movie = {};
+		movie['name'] = element.title;
+		movie['year'] = element.year;
+		movie['cover_image_url'] = element.large_cover_image;
+		movie['rating'] = element.rating;
+		movie['imdb_code'] = element.imdb_code;
+		
+		var full_info_response = await axios.get('https://api.themoviedb.org/3/movie/' + element.imdb_code + '?api_key=' + API_KEY + '&language=ru');
+		movie['full_info'] = full_info_response.data;
 
-					// if (!error && n_response2.statusCode == 200) {
-					// 	movie['detail_info'] = n_response2.body;
-					// }
-				    // answer_movies.push(movie);
-		   //  	});
+		answer_movies.push(movie);
+	}
 
-	    	});
-
-	    }
-
-		response.send({'movies': answer_movies});
-	  }
-	});
+	response.send({'movies': answer_movies});
 
 })
 

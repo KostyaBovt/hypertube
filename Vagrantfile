@@ -14,10 +14,10 @@ Vagrant.configure("2") do |config|
   # boxes at https://vagrantcloud.com/search.
 
   # for box LXC
-  config.vm.box = "fgrehm/trusty64-lxc"
+  # config.vm.box = "fgrehm/trusty64-lxc"
 
   # for VB
-  # config.vm.box = "ubuntu/trusty64"
+  config.vm.box = "ubuntu/trusty64"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs

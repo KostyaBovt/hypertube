@@ -24,7 +24,7 @@
          function getMovies() {
             
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', 'http://localhost:3200/films?limit=20&page=1&minimum_rating=3&query_term=ring&sort_by=rating&order_by=desc');
+            xhr.open('GET', 'http://localhost:3200/films?limit=2&page=1&minimum_rating=3&query_term=ring&sort_by=rating&order_by=desc');
             // xhr.withCredentials = true;
             // xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
             xhr.onload = function() {
