@@ -7,7 +7,7 @@
          function ajaxTest() {
             
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', 'http://localhost:3200/test_download');
+            xhr.open('GET', 'http://localhost:3200/film?hash=363BC6C534B1430C6758318D196CCD61DB61B647');
             // xhr.withCredentials = true;
             // xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
             xhr.onload = function() {
@@ -24,7 +24,7 @@
          function getMovies() {
             
             var xhr = new XMLHttpRequest();
-            xhr.open('GET', 'http://localhost:3200/films?limit=12&page=1&minimum_rating=3&query_term=&sort_by=rating&order_by=desc');
+            xhr.open('GET', 'http://localhost:3200/films?limit=20&page=2&minimum_rating=3&query_term=&sort_by=rating&order_by=desc');
             // xhr.withCredentials = true;
             // xhr.setRequestHeader("Access-Control-Allow-Origin", "*");
             xhr.onload = function() {
@@ -33,7 +33,7 @@
                     var movies = JSON.parse(xhr.responseText)['movies'];
                     var toAddElements = '';
                     movies.forEach(element => {
-                      toAddElements += '<tr> <td><img style="height: 250px;" src="' + element['cover_image_url'] + '"></td> <td><div>name: ' + element['name'] + ' </div> year: ' + element['year'] + '<div>rating: ' + element['rating'] + '</div> <div>imdb id: ' + element['imdb_code'] + '</div> </td> </tr>';
+                      toAddElements += '<tr> <td><img style="height: 250px;" src="' + element['cover_image_url'] + '"></td> <td><div>name: ' + element['name'] + ' </div> year: ' + element['year'] + '<div>rating: ' + element['rating'] + '</div> <div>imdb id: ' + element['imdb_code'] + '</div> <hr> <div>summary: ' + '</div></td> </tr>';
                     });
                     toAdd = '<table style="width:90%"> ' + toAddElements + ' </table>';
                     document.getElementById("film-list").innerHTML = toAdd;
@@ -51,12 +51,12 @@
    </head>
    
    <body>
-<!--       <div>
+      <div>
         <a href = "javascript:ajaxTest()">Start Download</a>
-        <video id='videoPlayer' width="400" controls preload="auto" autoplay>
+<!--         <video id='videoPlayer' width="400" controls preload="auto" autoplay>
           <source src="http://localhost:3200/video/The.Naked.And.The.Dead.1958.720p.BluRay.x264-[YTS.AM].mp4" type="video/mp4">
-        </video>
-      </div> -->
+        </video> -->
+      </div>
       <button onclick="getMovies()">get movies</button>
       <div id='film-list'>
         <table style="width:90%">
