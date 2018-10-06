@@ -1,8 +1,9 @@
 const express 	= require('express');
 const fs 		= require('fs');
-const needle 		= require('needle');
-const axios 		= require('axios');
-var path 		 = require('path');
+const needle 	= require('needle');
+const axios 	= require('axios');
+const rax 		= require('retry-axios');
+var path 		= require('path');
 
 var cors = require('cors')
 var torrentStream = require('torrent-stream');
@@ -22,9 +23,9 @@ app.use('/video', express.static('/tmp/test_video'));
 
 // ============================== some hardcode values
 
-var locale = 'eng';
+var locale = 'ru';
 
-// ============================== get films list
+// ==============================
 
 
 
@@ -73,8 +74,54 @@ app.get('/films', async (request, response) => {
 
 	// console.log('API request: ' + 'https://yts.ag/api/v2/list_movies.json' + filters + '\n');
 
-	var films = await axios.get('https://yts.ag/api/v2/list_movies.json' + filters);
-	films = films.data.data['movies'];
+	const interceptorId = rax.attach();
+	try {
+		var films_res = await axios({
+		  url: 'https://yts.ag/api/v2/list_movies.json' + filters,
+		  raxConfig: {
+		    // Retry 3 times on requests that return a response (500, etc) before giving up.  Defaults to 3.
+		    retry: 3,
+		 
+		    // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
+		    noResponseRetries: 2,
+		 
+		    // Milliseconds to delay at first.  Defaults to 100.
+		    retryDelay: 3000,
+		 
+		    // HTTP methods to automatically retry.  Defaults to:
+		    // ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT']
+		    httpMethodsToRetry: ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT'],
+		 
+		    // The response status codes to retry.  Supports a double
+		    // array with a list of ranges.  Defaults to:
+		    // [[100, 199], [429, 429], [500, 599]]
+		    httpStatusCodesToRetry: [[100, 199], [429, 429], [500, 599]],
+		 
+		    // If you are using a non static instance of Axios you need
+		    // to pass that instance here (const ax = axios.create())
+		    // instance: ax,
+		 
+		    // You can detect when a retry is happening, and figure out how many
+		    // retry attempts have been made
+		    onRetryAttempt: (err) => {
+		      const cfg = rax.getConfig(err);
+		      console.log(`Retry attempt (movie list) #${cfg.currentRetryAttempt}`);
+		    }
+		  }
+		});
+	} catch(err) {
+		response.send({'movies': [], 'error': 'api failed'});
+		return;
+	}
+
+
+	// try {
+	// 	var films = await axios.get('https://yts.ag/api/v2/list_movies.json' + filters);
+	// } catch(err) {
+	// 	response.send({'movies': [], 'error': 'api failed'});
+	// 	return;
+	// }
+	var films = films_res.data.data['movies'];
 	
 	// var some_var = await axios.get('https://api.themoviedb.org/3/movie/tt0120737?api_key=' + API_KEY);
 	// console.log(some_var);
@@ -88,9 +135,56 @@ app.get('/films', async (request, response) => {
 		movie['cover_image_url'] = element.large_cover_image;
 		movie['rating'] = element.rating;
 		movie['imdb_code'] = element.imdb_code;
-		
-		var full_info_response = await axios.get('https://api.themoviedb.org/3/movie/' + element.imdb_code + '?api_key=' + API_KEY + '&language=ru');
-		movie['full_info'] = full_info_response.data;
+
+
+		try {
+			var full_info_response = await axios({
+			  url: 'https://api.themoviedb.org/3/movie/' + element.imdb_code + '?api_key=' + API_KEY + ( locale == 'ru' ? '&language=ru' : ''),
+			  raxConfig: {
+			    // Retry 3 times on requests that return a response (500, etc) before giving up.  Defaults to 3.
+			    retry: 3,
+			 
+			    // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
+			    noResponseRetries: 2,
+			 
+			    // Milliseconds to delay at first.  Defaults to 100.
+			    retryDelay: 3000,
+			 
+			    // HTTP methods to automatically retry.  Defaults to:
+			    // ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT']
+			    httpMethodsToRetry: ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT'],
+			 
+			    // The response status codes to retry.  Supports a double
+			    // array with a list of ranges.  Defaults to:
+			    // [[100, 199], [429, 429], [500, 599]]
+			    httpStatusCodesToRetry: [[100, 199], [429, 429], [500, 599]],
+			 
+			    // If you are using a non static instance of Axios you need
+			    // to pass that instance here (const ax = axios.create())
+			    // instance: ax,
+			 
+			    // You can detect when a retry is happening, and figure out how many
+			    // retry attempts have been made
+			    onRetryAttempt: (err) => {
+			      const cfg = rax.getConfig(err);
+			      console.log(`Retry attempt (movie details) #${cfg.currentRetryAttempt}`);
+			    }
+			  }
+			});
+			movie['name'] = full_info_response.data.title;
+			movie['cover_image_url'] = 'http://image.tmdb.org/t/p/original//' + full_info_response.data.poster_path;
+		} catch(err) {
+			response.send({'movies': [], 'error': 'api failed'});
+
+			return;
+		}
+
+		movie['full_info_detailed'] = full_info_response.data;
+		movie['full_info_general'] = element;
+
+
+		// var full_info_response = await axios.get('https://api.themoviedb.org/3/movie/' + element.imdb_code + '?api_key=' + API_KEY + '&language=ru');
+		// movie['full_info'] = full_info_response.data;
 
 		answer_movies.push(movie);
 	}
