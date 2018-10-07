@@ -2,3 +2,5 @@
 .idea
 hyper/deps
 hyper/.erlang.mk
+frontend-react/node_modules/
+
