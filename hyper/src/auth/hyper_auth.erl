@@ -2,7 +2,7 @@
 
 %% API
 
--export([get_session/1,
+-export([social/4,
          login/2,
          logout/1,
          register/1, register/2,
@@ -19,10 +19,14 @@
 -define(PASSWORD_RECOVERING_COOKIE_NAME, <<"recovering_token">>).
 -define(SESSION_COOKIE_NAME, <<"x-auth-token">>).
 
--spec get_session(Cookies::proplists:proplist()) -> #session{} | null.
-get_session(Cookies) ->
-	io:format("COOKIES: ~p~n", [Cookies]),
-	hyper_mnesia:get_session(gv(?SESSION_COOKIE_NAME, Cookies)).
+-spec social(Network::binary(), Action::binary(), Url::binary(), Qs::binary()) -> matcha_http:handler_ret().
+social(Network, Action, Url, Qs) ->
+    case hyper_oauth2:dispatch(Url, Network, Action, Qs) of
+        {profile, Profile} ->
+            lager:info("Profile: ~p", [Profile]),
+            login(social, Profile);
+        E -> E
+    end.
 
 -spec login(password | social, proplists:proplist()) -> ok.
 login(password, Credentials) ->
