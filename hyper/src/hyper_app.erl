@@ -8,7 +8,6 @@
 
 start(_Type, _Args) ->
     Paths = [{"/api/[...]", hyper_http, []},
-             {"/ws", hyper_ws, []},
              {"/static/[...]", cowboy_static, {priv_dir, hyper, "./static/"}},
              {"/[...]", cowboy_static, {priv_file, hyper, "static/index.html"}}],
     Dispatch = cowboy_router:compile([{'_', Paths}]),

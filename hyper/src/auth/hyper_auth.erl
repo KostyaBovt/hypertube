@@ -2,175 +2,153 @@
 
 %% API
 
--export([social/4,
+-export([get_udata/1,
+         social/4,
          login/2,
-         logout/1,
-         register/1, register/2,
+         logout/0,
+         register/1, register/6,
          recover_password/1, recover_password/2,
-         set_new_password/2]).
+         update_password/2,
+         update_locale/2]).
 
 -include("hyper.hrl").
 
 -import(hyper_lib, [gv/2, gv/3]).
 
--define(CONFIRMATION_REDIRECT_PATH, <<"/auth">>).
--define(LOGIN_REDIRECT_PATH, <<"/my_profile">>).
--define(PASSWORD_RECOVERING_REDIRECT_PATH, <<"/auth/password_recovering/set_new_password">>).
--define(PASSWORD_RECOVERING_COOKIE_NAME, <<"recovering_token">>).
--define(SESSION_COOKIE_NAME, <<"x-auth-token">>).
+-define(LOGIN_REDIRECT_PATH, <<"/">>).
+-define(PASSWORD_RECOVERING_REDIRECT_PATH, <<"/auth/lostpass/newpass">>).
+-define(PASSWORD_RECOVERING_COOKIE_NAME, <<"recovering-token">>).
+-define(AUTH_COOKIE_NAME, <<"x-auth-token">>).
 
--spec social(Network::binary(), Action::binary(), Url::binary(), Qs::binary()) -> matcha_http:handler_ret().
+-spec get_udata(Cookies::proplists:proplist()) -> map().
+get_udata(Cookies) ->
+    Token = gv(?AUTH_COOKIE_NAME, Cookies),
+    todo.
+
+-spec social(Network::binary(), Action::binary(), Url::binary(), Qs::binary()) -> hyper_http:handler_ret().
 social(Network, Action, Url, Qs) ->
     case hyper_oauth2:dispatch(Url, Network, Action, Qs) of
         {profile, Profile} ->
             lager:info("Profile: ~p", [Profile]),
-            login(social, Profile);
-        E -> E
-    end.
-
--spec login(password | social, proplists:proplist()) -> ok.
-login(password, Credentials) ->
-    VSchema =
-        #{<<"uname">> => [required, {min_length, ?MIN_UNAME_LENGTH}, {max_length, ?MAX_UNAME_LENGTH}],
-          <<"password">> => [required, strong_password]},
-    case liver:validate(VSchema, Credentials) of
-        {ok, #{<<"uname">> := Uname, <<"password">> := Pass}} ->
-            case hyper_db:get_user_by_username(Uname) of
-                {ok, #{<<"password">> := PassHash, <<"id">> := UId, <<"is_complete">> := IsComplete,
-                       <<"location">> := Location} = P0} ->
-                    io:format("~p:~p", [Pass, PassHash]),
-                    case erlpass:match(Pass, PassHash) of
-                        true ->
-                            P1 = maps:remove(<<"password">>, P0),
-                            P2 = maps:remove(<<"id">>, P1),
-                            P3 = hyper_lib:conv_locaction(P2),
-                            SID = hyper_mnesia:create_session(Uname, UId, Location, IsComplete),
-                            {ok, P3, {set_cookie, <<"x-auth-token">>, SID}};
-                        false -> {error, #{<<"password">> => <<"invalid password">>}}
-                    end;
+            Provider = gv(<<"provider">>, Profile),
+            Id = gv(<<"id">>, Profile),
+            case hyper_db:get_user_by_social(Provider, Id) of
+                {ok, User} -> redirect_with_auth_token(User);
                 null ->
-                    {error, #{<<"uname">> => <<"invalid username">>}}
+                    {ok, User} = create_user_from_social_profile(Profile, Provider, Id),
+                    redirect_with_auth_token(User)
             end;
         E -> E
-    end;
-login(social, Profile) ->
-    Provider = gv(<<"provider">>, Profile),
-    SocialId = gv(<<"id">>, Profile),
-    case hyper_db:get_user_by_social_info(Provider, SocialId) of
-        {ok, #{<<"username">> := Uname, <<"id">> := UId, <<"is_complete">> := IsComplete}} ->
-            return_sid(Uname, UId, IsComplete, ?LOGIN_REDIRECT_PATH);
+    end.
+
+-spec login(Login::binary(), Pass::binary()) -> hyper_http:handler_ret().
+login(Login, Pass) ->
+    case hyper_db:get_user_by_uname(Login) of
+        {ok, User} -> check_password(Pass, User);
         null ->
-            {ok, #{<<"username">> := Uname, <<"id">> := UId}} =
-                create_account_from_social_profile(Profile, Provider, SocialId),
-            return_sid(Uname, UId, false, ?LOGIN_REDIRECT_PATH)
+            case hyper_db:get_user_by_email(Login) of
+                {ok, User} -> check_password(Pass, User);
+                null -> {error, #{<<"login">> => incorrect}}
+            end
     end.
 
-logout(Cookies) ->
-    hyper_mnesia:delete_session(gv(?SESSION_COOKIE_NAME, Cookies)),
-    {ok, {delete_cookie, ?SESSION_COOKIE_NAME}}.
-
--spec register(Data::map(), BaseUrl::binary()) -> term().
-register(Data0, BaseUrl) ->
-    VSchema =
-        #{<<"uname">> => [required, unique_uname],
-          <<"fname">> => [required, {min_length, ?MIN_FNAME_LENGTH}, {max_length, ?MAX_FNAME_LENGTH}],
-          <<"lname">> => [required, {min_length, ?MIN_LNAME_LENGTH}, {max_length, ?MAX_LNAME_LENGTH}],
-          <<"password">> => [required, strong_password],
-          <<"email">> => [required, unique_email]},
-    case liver:validate(VSchema, Data0) of
-        {ok, Data1} -> send_registration_confirmation(Data1, BaseUrl);
-        E -> E
+-spec check_password(Pass::binary(), User::map()) -> hyper_http:handler_ret().
+check_password(Pass, #{<<"password">> := PassHash} = User) ->
+    case erlpass:match(Pass, PassHash) of
+        true ->
+            Token = create_auth_token(User),
+            {ok, {set_cookie, ?AUTH_COOKIE_NAME, Token}};
+        false -> {error, #{<<"password">> => incorrect}}
     end.
 
--spec register(ConfirmationToken::binary()) -> term().
+-spec logout() -> hyper_http:handler_ret().
+logout() -> {ok, {delete_cookie, ?AUTH_COOKIE_NAME}}.
+
+-spec register(Email::binary(), Uname::binary(), Fname::binary(),
+               Lname::binary(), Pass::binary(), BaseUrl::binary()) ->
+    ok.
+register(Email, Uname, Fname, Lname, Pass, BaseUrl) ->
+    Token = hyper_lib:rand_str(16),
+    hyper_mnesia:create_temp_account(Uname, Fname, Lname, Pass, Email, Token),
+    Url = <<BaseUrl/binary, "/auth/registration/confirm?token=", Token/binary>>,
+    {ok, _} = erlydtl:compile_file("priv/templates/registration.html", registration_email),
+    {ok, EmailBody} = registration_email:render([{username, Uname}, {link, Url}]),
+    <<_/binary>> = hyper_lib:send_email(<<"hyper registration">>, iolist_to_binary(EmailBody), Email),
+    ok.
+
+-spec register(Qs::proplists:proplist()) -> hyper_http:handler_ret().
 register(Qs) ->
     Token = gv(<<"token">>, Qs),
     case hyper_mnesia:get_temp_account(Token) of
         #temp_account{uname = Uname, fname = Fname, lname = Lname, password = Pass, email = Email} ->
-            PassHash = erlpass:hash(Pass),
-            {ok, #{<<"id">> := UId}} = hyper_db:create_user(Uname, Fname, Lname, PassHash, Email),
+            {ok, User} = hyper_db:create_user(Uname, Fname, Lname, erlpass:hash(Pass), Email),
             hyper_mnesia:delete_temp_account(Token),
-            return_sid(Uname, UId, false, ?CONFIRMATION_REDIRECT_PATH);
+            redirect_with_auth_token(User);
         false ->
             {redirect, ?LINK_EXPIRED_REDIRECT_PATH}
     end.
 
+-spec redirect_with_auth_token(User::map()) -> hyper_http:handler_ret().
+redirect_with_auth_token(User) ->
+    Token = create_auth_token(User),
+    {redirect, ?LOGIN_REDIRECT_PATH, {set_cookie, ?AUTH_COOKIE_NAME, Token}}.
 
-recover_password(Data0, BaseUrl) ->
-    VSchema = #{<<"email">> => [required, email]},
-    case liver:validate(VSchema, Data0) of
-        {ok, #{<<"email">> := Email}} ->
-            case hyper_db:get_user_by_email(Email) of
-                {ok, #{<<"username">> := Uname, <<"id">> := Id}} ->
-                    send_password_recovering_confirmation(Id, Uname, Email, BaseUrl);
-                null ->
-                    {error, #{<<"email">> => <<"cannot find such email">>}}
-            end;
-        E -> E
+-spec create_auth_token(User::map()) -> binary().
+create_auth_token(User) -> todo.
+
+-spec recover_password(Email::binary(), BaseUrl::binary()) -> hyper_http:handler_ret().
+recover_password(Email, BaseUrl) ->
+    case hyper_db:get_user_by_email(Email) of
+        {ok, #{<<"username">> := Uname, <<"id">> := Id}} ->
+            Token = hyper_lib:rand_str(16),
+            hyper_mnesia:create_password_recovering_state(Id, Token),
+            Url = <<BaseUrl/binary, "/auth/lostpass/confirm?token=", Token/binary>>,
+            {ok, _} = erlydtl:compile_file("priv/templates/password_recovering.html", password_recovering_email),
+            {ok, EmailBody} = password_recovering_email:render([{username, Uname}, {link, Url}]),
+            <<_/binary>> = hyper_lib:send_email(<<"Hypertube password recovering">>,
+                                                iolist_to_binary(EmailBody), Email),
+            ok;
+        null ->
+            {error, #{<<"email">> => <<"doesn't exist">>}}
     end.
 
+-spec recover_password(Qs::proplists:proplist()) -> hyper_http:handler_ret().
 recover_password(Qs) ->
-    case hyper_mnesia:get_password_recovering_state(gv(<<"token">>, Qs)) of
+    Token = gv(<<"token">>, Qs),
+    case hyper_mnesia:get_password_recovering_state(Token) of
         #password_recovering_state{stage = confirmation} = S ->
             NewToken = hyper_lib:rand_str(16),
             hyper_mnesia:update_password_recovering_state(S, NewToken),
-            {redirect, ?PASSWORD_RECOVERING_REDIRECT_PATH,
-             {set_cookie, ?PASSWORD_RECOVERING_COOKIE_NAME, NewToken}};
+            {redirect, ?PASSWORD_RECOVERING_REDIRECT_PATH, {set_cookie, ?PASSWORD_RECOVERING_COOKIE_NAME, NewToken}};
         _ ->
             {redirect, ?LINK_EXPIRED_REDIRECT_PATH}
     end.
 
-set_new_password(Data, Cookies) ->
+-spec update_password(NewPass::binary(), Cookies::proplists:proplist()) -> hyper_http:handler_ret().
+update_password(NewPass, Cookies) ->
     Token = gv(?PASSWORD_RECOVERING_COOKIE_NAME, Cookies),
     case hyper_mnesia:get_password_recovering_state(Token) of
-        #password_recovering_state{stage = new_password, id = AccountId} ->
-            VSchema = #{<<"new_password">> => [required, strong_password]},
-            case liver:validate(VSchema, Data) of
-                {ok, #{<<"new_password">> := NewPassword}} ->
-                    PassHash = erlpass:hash(NewPassword),
-                    true = hyper_db:update_user_password(AccountId, PassHash),
-                    hyper_mnesia:delete_password_recovering_state(AccountId),
-                    {ok, {delete_cookie, ?PASSWORD_RECOVERING_COOKIE_NAME}};
-                E -> E
-            end;
-        E -> io:format("PASS STATE: ~p", [E]), {error, #{<<"new_password">> => <<"cannot update password">>}}
+        #password_recovering_state{stage = new_password, id = UserId} ->
+            PassHash = erlpass:hash(NewPass),
+            true = hyper_db:update_user_password(UserId, PassHash),
+            hyper_mnesia:delete_password_recovering_state(UserId),
+            {ok, {delete_cookie, ?PASSWORD_RECOVERING_COOKIE_NAME}};
+        _ ->
+            {error, #{<<"password">> => <<"cannot update">>}}
     end.
 
--spec send_registration_confirmation(map(), BaseUrl::binary()) -> ok.
-send_registration_confirmation(#{<<"uname">> := Uname, <<"fname">> := Fname, <<"lname">> := Lname,
-                                 <<"password">> := Pass, <<"email">> := Email}, BaseUrl) ->
-    Token = hyper_lib:rand_str(16),
-    hyper_mnesia:create_temp_account(Uname, Fname, Lname, Pass, Email, Token),
-    Url = <<BaseUrl/binary, "/api/auth/registration/confirm_email?token=", Token/binary>>,
-    {ok, _} = erlydtl:compile_file("priv/templates/registration.html",
-                                   registration_verification_email),
-    {ok, Body} = registration_verification_email:render([{username, Uname}, {link, Url}]),
-    <<_/binary>> = hyper_lib:send_email(<<"hyper registration">>, iolist_to_binary(Body), Email),
-    ok.
-
-send_password_recovering_confirmation(AccountId, Uname, Email, BaseUrl) ->
-    Token = hyper_lib:rand_str(16),
-    hyper_mnesia:create_password_recovering_state(AccountId, Token),
-    Url = <<BaseUrl/binary, "/api/auth/password_recovering/confirm_email?token=", Token/binary>>,
-    {ok, _} = erlydtl:compile_file("priv/templates/password_recovering.html",
-                                   password_recovering_verification_email),
-    {ok, Body} = password_recovering_verification_email:render([{username, Uname}, {link, Url}]),
-    <<_/binary>> = hyper_lib:send_email(<<"hyper password recovering">>, iolist_to_binary(Body), Email),
-    ok.
-
-create_account_from_social_profile(Profile, Provider, SocialId) ->
+-spec create_user_from_social_profile(Profile::map(), Provider::binary(), SocialId::binary()) -> {ok, User::map()}.
+create_user_from_social_profile(Profile, Provider, SocialId) ->
     {Fname, Lname} = case gv(<<"name">>, Profile) of
                          Name when is_binary(Name) ->
                              case binary:split(Name, <<" ">>) of
-                                 [Fn, Ln] -> {Fn, Ln};
+                                 [Fn, Ln | _] -> {Fn, Ln};
                                  [Fn] -> {Fn, <<>>}
                              end;
                          _ -> {<<>>, <<>>}
                      end,
     Uname = <<"user_", (hyper_lib:rand_str(16))/binary>>,
-    hyper_db:create_user_from_social_info(Provider, SocialId, Uname, Fname, Lname).
+    {ok, _} = hyper_db:create_user_from_social_info(Provider, SocialId, Uname, Fname, Lname).
 
-return_sid(Uname, UId, IsComplete, RedirectPath) ->
-    SID = hyper_mnesia:create_session(Uname, UId, null, IsComplete),
-    {redirect, RedirectPath, {set_cookie, ?SESSION_COOKIE_NAME, SID}}.
-
+-spec update_locale(UData::map(), Locale::binary()) -> hyper_http:handler_ret().
+update_locale(UData, Locale) -> todo.

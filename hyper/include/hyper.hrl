@@ -6,6 +6,7 @@
 -define(MAX_LNAME_LENGTH, 50).
 -define(MIN_PASS_LENGTH, 8).
 -define(MAX_PASS_LENGTH, 20).
+-define(MAX_BIO_LENGTH, 200).
 
 -define(HTTP_PORT, 8080).
 

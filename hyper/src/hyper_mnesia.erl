@@ -38,7 +38,7 @@ init() ->
     mnesia:create_table(email_updating_state,
                         [{attributes, record_info(fields, email_updating_state)},
                          {disc_copies, [node()]}]),
-    mnesia:wait_for_tables([temp_account, session, password_recovering_state, email_updating_state], 2000).
+    mnesia:wait_for_tables([temp_account, password_recovering_state, email_updating_state], 2000).
 
 print_table(Table_name)->
   Iterator = fun(Rec, _)->
