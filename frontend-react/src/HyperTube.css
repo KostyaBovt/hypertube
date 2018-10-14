@@ -24,13 +24,64 @@
 .container-reg{
   position: absolute;
   top: 0px;
-  left: 0px;
+  left: 130px;
   right: 0px;
-  bottom: 90px;
+  bottom: 170px;
   margin: auto;
-  width: 230px;
-  height: 400px;
-  background-color: rgb(10, 20, 50, 0.3);
+  width: 300px;
+  height: 505px;
+  background-color: rgb(20, 30, 60, 0.5);
   border-radius: 5px;
-  padding: 10px;
+  padding: 15px;
+  color: white;
+  border: 1px solid #28a6a8;
+}
+.container-log{
+  position: absolute;
+  top: 0px;
+  left: 130px;
+  right: 0px;
+  bottom: 170px;
+  margin: auto;
+  width: 300px;
+  height: 255px;
+  background-color: rgb(20, 30, 60, 0.5);
+  border-radius: 5px;
+  padding: 15px;
+  color: white;
+  border: 1px solid #28a6a8;
+}
+label {
+  color: #28a6a8!important;
+}
+.btn-small{
+  margin-top: 20px;
+  left: 120px;
+}
+#logo {
+  font-family: 'Open Sans', sans-serif;
+  color: #154;
+  text-decoration: none;
+  font-size: 50px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1;
+  text-shadow: #EDEDED 3px -2px 0;
+  position: relative;
+}
+#logo:after {
+  content:"dreamdealer";
+  position: absolute;
+  left: 8px;
+  top: 32px;
+}
+#logo:after {
+  /*background: url(https://subtlepatterns.com/patterns/crossed_stripes.png) repeat;*/
+  background-image: -webkit-linear-gradient(left top, transparent 0%, transparent 25%, #555 25%, #555 50%, transparent 50%, transparent 75%, #555 75%);
+  background-size: 4px 4px;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  z-index: -15;
+  display: block;
+  text-shadow: none;
 }

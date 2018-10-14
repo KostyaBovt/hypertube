@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import Logo from './logo.svg';
-import './App.css';
+import './HyperTube.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './components/Home';

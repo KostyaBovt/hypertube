@@ -14,6 +14,9 @@ class Registration extends Component {
 					    <Input type="email" label="Email" s={12} />
 					    <Input type="password" label="Password" s={12} />
 					    <Input type="password"s={12} l={12} label="Repeat Password" />
+					    <button className="btn waves-effect waves-light btn-small" type="submit" name="action">Submit
+    						<i className="material-icons right">send</i>
+  						</button>
 					</Row>	
 				</div>	
 		);
