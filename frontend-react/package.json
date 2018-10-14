@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "axios": "^0.18.0",
+    "materialize-social": "^1.0.3",
     "mobx": "^5.5.0",
     "mobx-react": "^5.2.8",
     "react": "^16.5.2",

@@ -2,13 +2,17 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './HyperTube.css';
 import HyperTube from './HyperTube';
-import Storage from './Storage';
 import * as serviceWorker from './serviceWorker';
 import { BrowserRouter } from 'react-router-dom';
+import { Provider } from 'mobx-react';
+
+import stores from './stores';
 
 ReactDOM.render((
 	<BrowserRouter>
-		 <HyperTube storage = {new Storage()}/>
+		<Provider { ...stores }>
+			<HyperTube/>
+		</Provider>
 	</BrowserRouter>
 ), document.getElementById('root'));
 
