@@ -1,7 +1,7 @@
 import { observable, action } from "mobx";
 
 class AuthStore {
-    @observable.box fields = {
+    @observable fields = {
         first_name: '',
         last_name: '',
         username: '',
@@ -10,7 +10,7 @@ class AuthStore {
         confirm_password: ''
     }
 
-    @observable.box errors = {
+    @observable errors = {
         first_name: '',
         last_name: '',
         username: '',
@@ -23,23 +23,24 @@ class AuthStore {
         this.errors[fieldName] = error;
     }
 
-    resetStore() {
-        this.fields.set({
+    @action resetStore() {
+        this.fields = {
             first_name: '',
             last_name: '',
             username: '',
             email: '',
             password: '',
             confirm_password: ''
-        });
-        this.errors.set({
+        };
+
+        this.errors = {
             first_name: '',
             last_name: '',
             username: '',
             email: '',
             password: '',
             confirm_password: ''
-        })
+        };
     }
 
     validate() {

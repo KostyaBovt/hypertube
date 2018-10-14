@@ -5,6 +5,7 @@ import { Row, Input } from "react-materialize";
 
 class Login extends Component {
 	render() {
+		console.log('rendering login');
 		return (
 			<div className="container-log">
 				<Row>

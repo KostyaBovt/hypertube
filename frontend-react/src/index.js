@@ -9,11 +9,9 @@ import { Provider } from 'mobx-react';
 import stores from './stores';
 
 ReactDOM.render((
-	<BrowserRouter>
 		<Provider { ...stores }>
 			<HyperTube/>
 		</Provider>
-	</BrowserRouter>
 ), document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change
