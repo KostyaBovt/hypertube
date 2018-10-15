@@ -47,7 +47,6 @@
   height: 255px;
   background-color: rgb(20, 30, 60, 0.5);
   border-radius: 5px;
-  padding: 15px;
   color: white;
   border: 1px solid #28a6a8;
 }
@@ -55,9 +54,13 @@ label {
   color: #28a6a8!important;
 }
 .btn-small{
-  margin-top: 20px;
-  left: 120px;
+  left: 125px;
+  margin: 5px;
 }
+.social{
+  margin: 0 auto;
+}
+
 #logo {
   font-family: 'Open Sans', sans-serif;
   color: #154;

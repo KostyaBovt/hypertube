@@ -19,9 +19,6 @@ class Registration extends Component {
 							<span>Submit</span>
 							<i className="material-icons right">send</i>
 						</Button>
-						{/* <a class="waves-effect waves-light btn-floating social google">
-							<i class="fab fa-google"></i> Sign in with google
-						</a> */}
 					</Row>	
 				</div>	
 		);
