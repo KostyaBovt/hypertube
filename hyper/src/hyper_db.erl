@@ -1,21 +1,20 @@
 -module(hyper_db).
 
-
+%% API
 -export([get_user_by_id/1,
          get_user_by_uname/1,
          get_user_by_email/1,
-         get_user_by_social/2]).
-
-%% API
--export([
+         get_user_by_social/2,
          user_with_email_exists/1,
          user_with_uname_exists/1,
          create_user/5,
          create_user_from_social_info/5,
+         update_user/6,
          update_user_password/2,
-         update_user/6]).
-
-
+         update_user_locale/2,
+         update_user_email/2,
+         get_comments/1,
+         create_comment/3]).
 
 get_user_by_id(Id) -> get_user("id = $1", [Id]).
 
@@ -34,16 +33,19 @@ user_with_email_exists(Email) -> db_bool(q("SELECT id FROM users WHERE email = $
 
 user_with_uname_exists(Uname) -> db_bool(q("SELECT id FROM users WHERE username = $1", [Uname])).
 
+update_user_locale(UId, NewLocale) ->
+    db_bool(q("UPDATE users SET locale = $2 WHERE id = $1", [UId, NewLocale])).
+
 create_user(Uname, Fname, Lname, Pass, Email) ->
-    db_val(q("INSERT INTO users (username, first_name, last_name, password, email)
+    db_val(q("INSERT INTO users (uname, fname, lname, password, email)
               VALUES ($1, $2, $3, $4, $5)
-              RETURNING username, id",
+              RETURNING *",
              [Uname, Fname, Lname, Pass, Email])).
 
 create_user_from_social_info(Provider, SocialId, Uname, Fname, Lname) ->
-    db_val(q("INSERT INTO users (social_provider, social_id, username, first_name, last_name)
+    db_val(q("INSERT INTO users (social_provider, social_id, uname, fname, lname)
               VALUES ($1, $2, $3, $4, $5)
-              RETURNING username, id",
+              RETURNING *",
              [Provider, SocialId, Uname, Fname, Lname])).
 
 update_user_password(UId, NewPassword) ->
@@ -62,6 +64,12 @@ update_user(UId, Uname, Fname, Lname, Bio, PhotoName) ->
               WHERE id = $1
               RETURNING uname, fname, lname, bio, email, locale, avatar",
              [UId, Uname, Fname, Lname, Bio, PhotoName])).
+
+get_comments(ImdbId) ->
+    db_vals(q("SELECT user_id, imdb_id, text, dt FROM comments WHERE imdb_id = $1 ORDER BY dt DESC", [ImdbId])).
+
+create_comment(UId, ImdbId, Text) ->
+    db_bool(q("INSERT INTO comments (user_id, imdb_id, text, dt) VALUES ($1, $2, $3, NOW())", [UId, ImdbId, Text])).
 
 %% Internal
 
@@ -83,8 +91,6 @@ db_bool(_) -> true.
 db_val(Ret) -> db_val(Ret, map).
 db_val({ok, _, Cols, [_] = Rows}, map) -> {ok, hd(serialize(Cols, Rows))};
 db_val({ok, Cols, [_] = Rows}, map)    -> {ok, hd(serialize(Cols, Rows))};
-db_val({ok, _, _, [Res]}, tuple) -> {ok, Res};
-db_val({ok, _, [Res]}, tuple)    -> {ok, Res};
 db_val({ok, _, _, []}, _)        -> null;
 db_val({ok, _, []}, _)           -> null;
 db_val(E, _)                     -> db_error(E).
@@ -92,8 +98,6 @@ db_val(E, _)                     -> db_error(E).
 db_vals(Ret) -> db_vals(Ret, map).
 db_vals({ok, _, Cols, Rows}, map) -> {ok, serialize(Cols, Rows)};
 db_vals({ok, Cols, Rows}, map)    -> {ok, serialize(Cols, Rows)};
-db_vals({ok, _, _, Res}, tuple)   -> {ok, Res};
-db_vals({ok, _, Res}, tuple)      -> {ok, Res};
 db_vals(E, _)                     -> db_error(E).
 
 db_error({error, _} = E) -> E;

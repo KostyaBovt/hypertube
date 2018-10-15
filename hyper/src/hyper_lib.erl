@@ -3,6 +3,7 @@
 
 %% API
 -export([gv/2, gv/3,
+         sv/3,
          rand_str/1,
          send_email/3,
          md5/1]).
@@ -22,6 +23,9 @@ gv(K, L, D) when is_list(L) ->
     {K, V} -> V;
     false -> D
   end.
+
+sv(K, V, #{} = M) -> M#{K => V};
+sv(K, V, L) when is_list(L) -> lists:keystore(K, 1, L, {K, V}).
 
 -spec rand_str(Bytes::non_neg_integer()) -> binary().
 rand_str(Bytes) -> encode62(crypto:strong_rand_bytes(Bytes)).

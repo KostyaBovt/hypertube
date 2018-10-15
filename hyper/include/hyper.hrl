@@ -12,18 +12,18 @@
 
 -define(LINK_EXPIRED_REDIRECT_PATH, <<"/link_expired">>).
 
--record(temp_account, {token::binary(),
-                       uname::binary(),
-                       fname::binary(),
-                       lname::binary(),
-                       email::binary(),
-                       password::binary()}).
+-record(temp_account, {token::binary() | '_',
+                       uname::binary() | '_',
+                       fname::binary() | '_',
+                       lname::binary() | '_',
+                       email::binary() | '_',
+                       password::binary() | '_'}).
 
--record(password_recovering_state, {id::non_neg_integer(),
-                                    token::binary(),
-                                    stage = confirmation::confirmation | new_password}).
+-record(password_recovering_state, {id::non_neg_integer() | '_',
+                                    token::binary() | '_',
+                                    stage = confirmation::confirmation | new_password | '_'}).
 
--record(email_updating_state, {token::non_neg_integer(),
-                               email::binary(),
-                               uid::non_neg_integer()}).
+-record(email_updating_state, {token::binary() | '_',
+                               email::binary() | '_',
+                               uid::non_neg_integer() | '_'}).
 

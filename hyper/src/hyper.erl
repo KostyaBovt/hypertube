@@ -12,13 +12,13 @@
          update_pass/3,
          update_locale/2,
          create_comment/3,
-         update_email/1, update_email/3]).
+         update_email/1, update_email/3,
+         get_comments/1,
+         prefix_avatar_path/1]).
 
 -import(hyper_lib, [gv/2, gv/3]).
 
 -define(PHOTOS_PATH, "/static/photos/").
-
-
 
 -spec start() -> ok.
 start() ->
@@ -91,13 +91,17 @@ update_pass(UId, OldPass, NewPass) ->
 -spec update_locale(UData::map(), Locale::binary()) -> hyper_http:handler_ret().
 update_locale(#{<<"loc">> := Locale}, Locale) -> ok;
 update_locale(#{<<"iss">> := UId} = UData, NewLocale) ->
-    true = hyper_db:update_locale(UId, NewLocale),
-    hyper_auth:update_locale(UData, NewLocale).
+    true = hyper_db:update_user_locale(UId, NewLocale),
+    hyper_auth:update_token_locale(UData, NewLocale).
 
 -spec create_comment(UId::non_neg_integer(), ImdbId::binary(), Text::binary()) -> hyper_http:handler_ret().
 create_comment(UId, ImdbId, Text) ->
     true = hyper_db:create_comment(UId, ImdbId, Text),
     ok.
+
+-spec get_comments(Qs::proplists:proplist()) -> hyper_http:handler_ret().
+get_comments(Qs) ->
+    {ok, _} = hyper_db:get_comments(gv(<<"id">>, Qs)).
 
 -spec update_email(Qs::proplists:proplist()) -> hyper_http:handler_ret().
 update_email(Qs) ->
@@ -111,7 +115,7 @@ update_email(Qs) ->
             {redirect, ?LINK_EXPIRED_REDIRECT_PATH}
     end.
 
--spec update_email(Email::binary(), UId::non_neg_integer(), BaseUrl::binary()) ->
+-spec update_email(UId::non_neg_integer(), Email::binary(), BaseUrl::binary()) ->
     hyper_http:handler_ret().
 update_email(UId, Email, BaseUrl) ->
     {ok, #{<<"uname">> := Uname}} = hyper_db:get_user_by_id(UId),

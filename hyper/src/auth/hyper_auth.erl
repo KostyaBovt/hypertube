@@ -9,23 +9,29 @@
          register/1, register/6,
          recover_password/1, recover_password/2,
          update_password/2,
-         update_locale/2]).
+         update_token_locale/2]).
 
 -include("hyper.hrl").
 
--import(hyper_lib, [gv/2, gv/3]).
+-import(hyper_lib, [gv/2, gv/3, sv/3]).
 
 -define(LOGIN_REDIRECT_PATH, <<"/">>).
 -define(PASSWORD_RECOVERING_REDIRECT_PATH, <<"/auth/lostpass/newpass">>).
 -define(PASSWORD_RECOVERING_COOKIE_NAME, <<"recovering-token">>).
 -define(AUTH_COOKIE_NAME, <<"x-auth-token">>).
+-define(JWT_KEY, <<"change_me">>). % TODO
+-define(JWT_ALGO, <<"HS256">>).
 
--spec get_udata(Cookies::proplists:proplist()) -> map().
+-spec get_udata(Cookies::proplists:proplist()) -> {ok, map()} | {error, atom()}.
 get_udata(Cookies) ->
     Token = gv(?AUTH_COOKIE_NAME, Cookies),
-    todo.
+    case jwt:decode(Token, ?JWT_KEY) of
+        {ok, UData} when is_list(UData) -> {ok, maps:from_list(UData)};
+        E -> E
+    end.
 
--spec social(Network::binary(), Action::binary(), Url::binary(), Qs::binary()) -> hyper_http:handler_ret().
+-spec social(Network::binary(), Action::binary(), Url::binary(), Qs::binary()) ->
+    hyper_http:handler_ret().
 social(Network, Action, Url, Qs) ->
     case hyper_oauth2:dispatch(Url, Network, Action, Qs) of
         {profile, Profile} ->
@@ -53,11 +59,13 @@ login(Login, Pass) ->
     end.
 
 -spec check_password(Pass::binary(), User::map()) -> hyper_http:handler_ret().
-check_password(Pass, #{<<"password">> := PassHash} = User) ->
+check_password(Pass, #{<<"password">> := PassHash} = User0) ->
     case erlpass:match(Pass, PassHash) of
         true ->
-            Token = create_auth_token(User),
-            {ok, {set_cookie, ?AUTH_COOKIE_NAME, Token}};
+            Token = create_auth_token(User0),
+            User1 = maps:with([<<"uname">>, <<"fname">>, <<"lname">>, <<"bio">>,
+                               <<"locale">>, <<"avatar">>, <<"email">>], hyper:prefix_avatar_path(User0)),
+            {ok, User1, {set_cookie, ?AUTH_COOKIE_NAME, Token}};
         false -> {error, #{<<"password">> => incorrect}}
     end.
 
@@ -84,7 +92,7 @@ register(Qs) ->
             {ok, User} = hyper_db:create_user(Uname, Fname, Lname, erlpass:hash(Pass), Email),
             hyper_mnesia:delete_temp_account(Token),
             redirect_with_auth_token(User);
-        false ->
+        null ->
             {redirect, ?LINK_EXPIRED_REDIRECT_PATH}
     end.
 
@@ -94,7 +102,10 @@ redirect_with_auth_token(User) ->
     {redirect, ?LOGIN_REDIRECT_PATH, {set_cookie, ?AUTH_COOKIE_NAME, Token}}.
 
 -spec create_auth_token(User::map()) -> binary().
-create_auth_token(User) -> todo.
+create_auth_token(#{<<"id">> := UId, <<"locale">> := Loc}) ->
+    Claims = #{<<"iss">> => UId, <<"loc">> => Loc, <<"scp">> => <<"user">>},
+    {ok, Token} = jwt:encode(?JWT_ALGO, Claims, ?JWT_KEY),
+    Token.
 
 -spec recover_password(Email::binary(), BaseUrl::binary()) -> hyper_http:handler_ret().
 recover_password(Email, BaseUrl) ->
@@ -137,7 +148,8 @@ update_password(NewPass, Cookies) ->
             {error, #{<<"password">> => <<"cannot update">>}}
     end.
 
--spec create_user_from_social_profile(Profile::map(), Provider::binary(), SocialId::binary()) -> {ok, User::map()}.
+-spec create_user_from_social_profile(Profile::proplists:proplist(), Provider::binary(), SocialId::binary()) ->
+    {ok, User::map()}.
 create_user_from_social_profile(Profile, Provider, SocialId) ->
     {Fname, Lname} = case gv(<<"name">>, Profile) of
                          Name when is_binary(Name) ->
@@ -150,5 +162,7 @@ create_user_from_social_profile(Profile, Provider, SocialId) ->
     Uname = <<"user_", (hyper_lib:rand_str(16))/binary>>,
     {ok, _} = hyper_db:create_user_from_social_info(Provider, SocialId, Uname, Fname, Lname).
 
--spec update_locale(UData::map(), Locale::binary()) -> hyper_http:handler_ret().
-update_locale(UData, Locale) -> todo.
+-spec update_token_locale(UData::map(), Locale::binary()) -> hyper_http:handler_ret().
+update_token_locale(UData, Locale) ->
+    {ok, Token} = jwt:encode(?JWT_ALGO, sv(<<"loc">>, Locale, UData), ?JWT_KEY),
+    {ok, {set_cookie, ?AUTH_COOKIE_NAME, Token}}.

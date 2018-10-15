@@ -25,9 +25,9 @@ unique_email(Args, Email, Opts) ->
         {ok, _} -> case hyper_mnesia:get_temp_account_by_email(Email) of
                        null -> case hyper_db:user_with_email_exists(Email) of
                                    false -> {ok, Email};
-                                   true -> io:format("L2~n"), {error, email_already_taken}
+                                   true -> {error, email_already_taken}
                                end;
-                       E -> io:format("L1 ~p~n", [E]), {error, email_already_taken}
+                       _ -> {error, email_already_taken}
                    end;
         E -> E
     end.

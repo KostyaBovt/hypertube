@@ -4,10 +4,12 @@
 -export([init/2]).
 -export([terminate/3]).
 
+-export([get/1, post/1]).
+
 -define(FRONTEND_ORIGIN, <<"http://localhost:3000">>).
 
 -type mod() :: {delete_cookie, Name::binary()} | {set_cookie, Name::binary(), Value::binary()}.
--type handler_ret() :: ok | {ok, map() | mod()} | {ok, map(), mod()} |
+-type handler_ret() :: ok | {ok, map() | [map()] | mod()} | {ok, map() | [map()], mod()} |
                        {redirect, Uri::binary()} | {redirect, Uri::binary(), mod()} |
                        {send_html, Html::binary()} |
                        {error, map() | binary() | 300..511}.
@@ -45,7 +47,7 @@ get_exec_state(_, _) -> {error, 405}.
 check_permissions(#state{scope = undefined} = S, Req) -> validate_body(S, Req);
 check_permissions(#state{scope = user} = S, Req) ->
     case hyper_auth:get_udata(cookies(Req)) of
-        {ok, #{<<"scp">> := user} = UData} -> validate_body(S, Req#{_hyper_udata => UData});
+        {ok, #{<<"scp">> := <<"user">>} = UData} -> validate_body(S, Req#{'_hyper_udata' => UData});
         {error, _} -> {error, 403}
     end.
 
@@ -53,7 +55,7 @@ check_permissions(#state{scope = user} = S, Req) ->
 validate_body(#state{v_schema = undefined, handler = Handler}, Req) -> Handler(Req);
 validate_body(#state{v_schema = VSchema, handler = Handler}, Req) ->
     try liver:validate(VSchema, body(Req)) of
-        {ok, Body} -> Handler(Req#{_hyper_body = Body});
+        {ok, Body} -> Handler(Req#{'_hyper_body' => Body});
         E -> E
     catch Class:Reason:Stacktrace ->
         lager:error("Exception: ~p:~p~nStacktrace: ~p", [Class, Reason, Stacktrace]),
@@ -65,19 +67,19 @@ terminate(_Reason, _Req, _State) ->
 
 -spec get(Path::binary()) -> #state{} | {error, 404}.
 get(<<"auth/udata">>) ->
-    #state{handler = fun(#{_hyper_udata := #{<<"iss">> := Id, <<"loc">> := Locale, <<"scp">> := Scope}}) ->
-                         {ok, #{<<"id">> => Id, <<"locale">> => Locale, <<"scope">> := Scope}}
+    #state{handler = fun(#{'_hyper_udata' := #{<<"iss">> := Id, <<"loc">> := Locale, <<"scp">> := Scope}}) ->
+                         {ok, #{<<"id">> => Id, <<"locale">> => Locale, <<"scope">> => Scope}}
                      end,
            scope = user};
 
 get(<<"auth/google/", Action/binary>>) when Action =:= <<"login">>; Action =:= <<"callback">> ->
-    #state{handler = fun(Req) -> hyper_auth:social(<<"google">>, Action, base_url(Req), qs(Req)) end};
+    #state{handler = fun(#{qs := Qs} = Req) -> hyper_auth:social(<<"google">>, Action, base_url(Req), Qs) end};
 
 get(<<"auth/github/", Action/binary>>) when Action =:= <<"login">>; Action =:= <<"callback">> ->
-    #state{handler = fun(Req) -> hyper_auth:social(<<"github">>, Action, base_url(Req), qs(Req)) end};
+    #state{handler = fun(#{qs := Qs} = Req) -> hyper_auth:social(<<"github">>, Action, base_url(Req), Qs) end};
 
 get(<<"auth/intra/", Action/binary>>) when Action =:= <<"login">>; Action =:= <<"callback">> ->
-    #state{handler = fun(Req) -> hyper_auth:social(<<"intra">>, Action, base_url(Req), qs(Req)) end};
+    #state{handler = fun(#{qs := Qs} = Req) -> hyper_auth:social(<<"intra">>, Action, base_url(Req), Qs) end};
 
 get(<<"auth/registration/confirm">>) ->
     #state{handler = fun(Req) -> hyper_auth:register(qs(Req)) end};
@@ -88,12 +90,16 @@ get(<<"auth/lostpass/confirm">>) ->
 get(<<"profile/email/confirm">>) ->
     #state{handler = fun(Req) -> hyper:update_email(qs(Req)) end};
 
-get(<<"user/", Uname>>) ->
+get(<<"user/", Uname/binary>>) ->
     #state{handler = fun(_) -> hyper:get_user(Uname) end,
            scope = user};
 
 get(<<"profile">>) ->
-    #state{handler = fun(#{_hyper_udata := #{<<"iss">> := UId}}) -> hyper:get_profile(UId) end,
+    #state{handler = fun(#{'_hyper_udata' := #{<<"iss">> := UId}}) -> hyper:get_profile(UId) end,
+           scope = user};
+
+get(<<"comments">>) ->
+    #state{handler = fun(Req) -> hyper:get_comments(qs(Req)) end,
            scope = user};
 
 get(_) -> {error, 404}.
@@ -101,7 +107,7 @@ get(_) -> {error, 404}.
 
 -spec post(Path::binary()) -> #state{} | {error, 404}.
 post(<<"auth/login">>) ->
-    #state{handler = fun(#{_hyper_body := #{<<"login">> := Login, <<"password">> := Password}}) ->
+    #state{handler = fun(#{'_hyper_body' := #{<<"login">> := Login, <<"password">> := Password}}) ->
                          hyper_auth:login(Login, Password)
                      end,
            v_schema = #{<<"login">>    => [required, string],
@@ -111,7 +117,7 @@ post(<<"auth/logout">>) ->
     #state{handler = fun(_) -> hyper_auth:logout() end};
 
 post(<<"auth/registration">>) ->
-    #state{handler = fun(#{_hyper_body := #{<<"email">> := Email, <<"uname">> := Uname, <<"fname">> := Fname,
+    #state{handler = fun(#{'_hyper_body' := #{<<"email">> := Email, <<"uname">> := Uname, <<"fname">> := Fname,
                                             <<"lname">> := Lname, <<"password">> := Pass}} = Req) ->
                          hyper_auth:register(Email, Uname, Fname, Lname, Pass, base_url(Req))
                      end,
@@ -122,19 +128,19 @@ post(<<"auth/registration">>) ->
                         <<"password">> => [required, strong_password]}};
 
 post(<<"auth/lostpass">>) ->
-    #state{handler = fun(#{_hyper_body := #{<<"email">> := Email}} = Req) ->
+    #state{handler = fun(#{'_hyper_body' := #{<<"email">> := Email}} = Req) ->
                          hyper_auth:recover_password(Email, base_url(Req))
                      end,
-           v_schema = #{<<"email">> := [required, email]}};
+           v_schema = #{<<"email">> => [required, email]}};
 
 post(<<"auth/lostpass/newpass">>) ->
-    #state{handler = fun(#{_hyper_body := #{<<"password">> := NewPass}} = Req) ->
+    #state{handler = fun(#{'_hyper_body' := #{<<"password">> := NewPass}} = Req) ->
                          hyper_auth:update_password(NewPass, cookies(Req))
                      end,
            v_schema = #{<<"password">> => [required, strong_password]}};
 
 post(<<"profile">>) ->
-    #state{handler = fun(#{_hyper_body := B, _hyper_udata => #{<<"iss">> := UId}}) ->
+    #state{handler = fun(#{'_hyper_body' := B, '_hyper_udata' := #{<<"iss">> := UId}}) ->
                          hyper:update_profile(UId, gv(<<"uname">>, B), gv(<<"fname">>, B),
                                               gv(<<"lname">>, B), gv(<<"bio">>, B), gv(<<"avatar">>, B))
                      end,
@@ -146,32 +152,33 @@ post(<<"profile">>) ->
            scope = user};
 
 post(<<"profile/email">>) ->
-    #state{handler = fun(#{_hyper_body := #{<<"email">> := Email}, _hyper_udata => #{<<"iss">> := UId} = Req}) ->
+    #state{handler = fun(#{'_hyper_body' := #{<<"email">> := Email}, '_hyper_udata' := #{<<"iss">> := UId} = Req}) ->
                          hyper:update_email(UId, Email, base_url(Req))
                      end,
            v_schema = #{<<"email">> => [required, unique_email]},
            scope = user};
 
 post(<<"profile/pass">>) ->
-    #state{handler = fun(#{_hyper_body := #{<<"old_password">> => OldPass, <<"new_password">> => NewPass},
-                           _hyper_udata => #{<<"iss">> := UId}}) -> hyper:update_pass(UId, OldPass, NewPass)
+    #state{handler = fun(#{'_hyper_body' := #{<<"old_password">> := OldPass, <<"new_password">> := NewPass},
+                           '_hyper_udata' := #{<<"iss">> := UId}}) -> hyper:update_pass(UId, OldPass, NewPass)
                      end,
            v_schema = #{<<"old_password">> => [required, string],
                         <<"new_password">> => [required, strong_password]},
            scope = user};
 
 post(<<"profile/locale">>) ->
-    #state{handler = fun(#{_hyper_body := #{<<"locale">> := NewLocale},
-                           _hyper_udata => UData}) ->
+    #state{handler = fun(#{'_hyper_body' := #{<<"locale">> := NewLocale},
+                           '_hyper_udata' := UData}) ->
                          hyper:update_locale(UData, NewLocale)
                      end,
            v_schema = #{<<"locale">> => [required, {one_of, [<<"en">>, <<"ru">>]}]},
            scope = user};
 
 
-post(<<"comment">>) ->
-    #state{handler = fun(#{_hyper_body := #{<<"imdb_id">> := ImdbId, <<"text">> := Text},
-                           _hyper_udata => #{<<"iss">> := UId}}) -> hyper:create_comment(UId, ImdbId, Text)
+post(<<"comments">>) ->
+    #state{handler = fun(#{'_hyper_body' := #{<<"imdb_id">> := ImdbId, <<"text">> := Text},
+                           '_hyper_udata' := #{<<"iss">> := UId}}) ->
+                         hyper:create_comment(UId, ImdbId, Text)
                      end,
            v_schema = #{<<"imdb_id">> => [required, string],
                         <<"text">> =>    [required, string, not_empty]},
