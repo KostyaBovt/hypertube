@@ -15,7 +15,7 @@ class Auth extends Component {
             return <Redirect to="/" />;
         } else {
             return (
-                <div className="auth-bg">
+                <div>
                     <Switch>
                         <Route exact path="/auth/login" component={Login}/>
                         <Route exact path="/auth/registration" component={Registration}/>

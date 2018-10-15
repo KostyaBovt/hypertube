@@ -5,7 +5,6 @@ import HyperTube from './HyperTube';
 import * as serviceWorker from './serviceWorker';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'mobx-react';
-
 import stores from './stores';
 
 ReactDOM.render((

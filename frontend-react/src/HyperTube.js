@@ -9,6 +9,8 @@ import Profile from './components/Profile';
 import User from './components/User';
 import {Switch, Route, Redirect, BrowserRouter} from 'react-router-dom';
 import { inject, observer } from 'mobx-react';
+import CssBaseline from '@material-ui/core/CssBaseline';
+
 
 @inject('UserStore') @observer
 class HyperTube extends Component {
@@ -16,6 +18,7 @@ class HyperTube extends Component {
     return (
 	    <BrowserRouter>
          <React.Fragment>
+			    <CssBaseline/>
             <Header/>
             <Switch>
               <Route path="/auth" component={Auth}/>
