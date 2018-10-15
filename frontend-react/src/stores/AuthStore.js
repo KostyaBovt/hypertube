@@ -19,6 +19,17 @@ class AuthStore {
         confirmPassword: ''
     }
 
+    @observable fields_login = {
+        login: '',
+        password: '',
+
+    }
+
+    @observable errors_login = {
+        login: '',
+        password: '',
+    }
+
     @action setFieldValue(name, value) {
         this.fields[name] = value;
         console.log(this.fields[name]);
@@ -29,9 +40,26 @@ class AuthStore {
         this.errors[fieldName] = error;
     }
 
+    @action setFieldValueLogin(name, value) {
+        this.fields_login[name] = value;
+        console.log(this.fields_login[name]);
+    }
+
+    @action setErrorLogin(fieldName, error) {
+        console.log('setting errors', fieldName, error);
+        this.errors_login[fieldName] = error;
+    }
+
     register() {
         if (this._validateFields()) {
             // Submit user info to the server
+        }
+    }
+
+     login() {
+        if (this._validateFieldsLogin()) {
+            // Submit user info to the server
+
         }
     }
 
@@ -66,6 +94,31 @@ class AuthStore {
 
         return isValid;
     }
+
+    _validateFieldsLogin() {
+        let isValid = true;
+        const { login, password } = this.fields_login;
+        if (login < 6){
+             this.setErrorLogin("login", "Login is too short");
+             isValid = false;
+        }
+        else if (login > 16) {
+            this.setErrorLogin("login", "Login is too long");
+            isValid = false;
+        }
+        else if (password < 6) {
+            this.setErrorLogin("password", "Password is too short");
+            isValid = false;
+        }
+        else if (password > 128) {
+            this.setErrorLogin("login", "Password is too long");
+            isValid = false;
+        }
+
+        return isValid;
+    }
+
+
 }
 
 export default new AuthStore();

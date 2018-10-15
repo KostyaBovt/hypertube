@@ -50,8 +50,12 @@
 }
 .social{
   margin: 0 auto;
+  margin-top: 5px;
+  font-size: 30px;
 }
-
+.fa {
+  padding: 10px;
+}
 #logo {
   font-family: 'Open Sans', sans-serif;
   color: #154;

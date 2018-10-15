@@ -10,6 +10,9 @@ const styles = {
     backgroundColor: '#4d4d4d',
     color: '#f2f2f2',
     textAlign: 'center',
+    position: 'fixed',
+   	bottom: '0',
+   	width: '100%',
   },
 };
 
