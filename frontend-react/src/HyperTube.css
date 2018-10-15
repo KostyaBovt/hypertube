@@ -22,10 +22,10 @@
   padding: 10px;
 }
 .container-reg{
+  display: flex;
+  flex-direction: column;
   margin: auto;
-  color: white;
-  background-color: rgb(20, 30, 60, 0.5);
-  border: 1px solid #28a6a8;
+  background-color:white;
   border-radius: 5px;
   border-radius: 4px;
   padding: 15px;

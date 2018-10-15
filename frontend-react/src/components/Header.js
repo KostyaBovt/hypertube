@@ -1,23 +1,40 @@
 import React, { Component } from 'react';
+import { withStyles } from '@material-ui/core/styles';
+import AppBar from '@material-ui/core/AppBar';
+import Toolbar from '@material-ui/core/Toolbar';
+import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
+
+const styles = {
+  root: {
+    flexGrow: 1,
+  },
+  grow: {
+    flexGrow: 1,
+	},
+	buttons: {
+		marginLeft: 5
+	}
+};
 
 class Header extends Component {
 	render() {
+		const { classes } = this.props;
 		return (
-			<div>
-			<nav>
-  				<div className="nav-wrapper">
-				    <a href="" className="brand-logo" id="logo">HyperTube</a>
-				    <ul id="nav-mobile" className="right hide-on-med-and-down">
-				      <li><a href="">sass</a></li>
-				      <li><a href="">sass <span className="new badge">4</span></a></li>
-				      <li><a href="">sass</a></li>
-				    </ul>
-				  </div>
-				</nav>	
-			</div>
+			<div className={classes.root}>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" color="inherit" className={classes.grow}>
+            Hypertube
+          </Typography>
+          <Button className={classes.buttons} color="inherit">Register</Button>
+          <Button className={classes.buttons} color="inherit">Login</Button>
+        </Toolbar>
+      </AppBar>
+    </div>
 		);
 	}
 };
 
 
-export default Header;
+export default withStyles(styles)(Header);
