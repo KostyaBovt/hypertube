@@ -7,7 +7,7 @@ import Home from './components/Home';
 import Auth from './components/Auth';
 import Profile from './components/Profile';
 import User from './components/User';
-import {Switch, Route, Redirect, withRouter, BrowserRouter} from 'react-router-dom';
+import {Switch, Route, Redirect, BrowserRouter} from 'react-router-dom';
 import { inject, observer } from 'mobx-react';
 
 @inject('UserStore') @observer
@@ -34,9 +34,9 @@ class HyperTube extends Component {
 @inject('UserStore') @observer
 class PrivateRoute extends Component {
   render() {
-    const { UserStore, component: Component, ...rest } = this.props;
+    const { UserStore, component: Component } = this.props;
     if (UserStore.self) {
-      return <Component {...rest} />;
+      return <Component/>;
     } else {
       return <Redirect to="/auth/login" />;
     }

@@ -22,19 +22,13 @@
   padding: 10px;
 }
 .container-reg{
-  position: absolute;
-  top: 0px;
-  left: 130px;
-  right: 0px;
-  bottom: 170px;
   margin: auto;
-  width: 300px;
-  height: 505px;
-  background-color: rgb(20, 30, 60, 0.5);
-  border-radius: 5px;
-  padding: 15px;
   color: white;
+  background-color: rgb(20, 30, 60, 0.5);
   border: 1px solid #28a6a8;
+  border-radius: 5px;
+  border-radius: 4px;
+  padding: 15px;
 }
 .container-log{
   position: absolute;
@@ -49,9 +43,6 @@
   border-radius: 5px;
   color: white;
   border: 1px solid #28a6a8;
-}
-label {
-  color: #28a6a8!important;
 }
 .btn-small{
   left: 125px;
