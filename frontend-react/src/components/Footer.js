@@ -21,8 +21,8 @@ class Footer extends Component {
 		const { classes } = this.props;
 		return (
 			<Typography className={classes.footer}>
-	  			<div className="foter">aklimchu lmalaya kbovt rtarasen</div>
-	  			<div>© 2018</div> 
+	  			aklimchu lmalaya kbovt rtarasen <br/>
+	  			© 2018
 			 </Typography>
 
 		);

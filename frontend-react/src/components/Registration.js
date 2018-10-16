@@ -44,7 +44,7 @@ class Registration extends Component {
 		const { classes } = this.props;
 		return (
 			<Paper className={classes.paper} elevation={1}>
-				<Typography component="h5" variant="h5" gutterBottom>
+				<Typography variant="h5" gutterBottom>
 					Registration
 				</Typography>
 				<FormControl error={!!errors.fname}>
@@ -119,7 +119,7 @@ class Registration extends Component {
 					<FormHelperText>{errors.confirmPassword}</FormHelperText>
 				</FormControl>
 
-				<Button onClick={this.handleSubmit} variant="contained" color="primary">
+				<Button onClick={this.handleSubmit} variant="contained" size="large" color="primary">
 					Register
 				</Button>
 			</Paper>
