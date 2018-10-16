@@ -19,35 +19,13 @@ class AuthStore {
         confirmPassword: ''
     }
 
-    @observable fields_login = {
-        login: '',
-        password: '',
-
-    }
-
-    @observable errors_login = {
-        login: '',
-        password: '',
-    }
-
     @action setFieldValue(name, value) {
         this.fields[name] = value;
-        console.log(this.fields[name]);
+        this.errors[name] = '';
     }
 
     @action setError(fieldName, error) {
-        console.log('setting errors', fieldName, error);
         this.errors[fieldName] = error;
-    }
-
-    @action setFieldValueLogin(name, value) {
-        this.fields_login[name] = value;
-        console.log(this.fields_login[name]);
-    }
-
-    @action setErrorLogin(fieldName, error) {
-        console.log('setting errors', fieldName, error);
-        this.errors_login[fieldName] = error;
     }
 
     register() {
@@ -56,10 +34,9 @@ class AuthStore {
         }
     }
 
-     login() {
-        if (this._validateFieldsLogin()) {
+    login() {
+        if (this._validateFields()) {
             // Submit user info to the server
-
         }
     }
 
@@ -85,8 +62,32 @@ class AuthStore {
 
     _validateFields() {
         let isValid = true;
-        const { password, confirmPassword } = this.fields;
+        const {
+            fname,
+            lname,
+            uname,
+            email,
+            password,
+            confirmPassword
+        } = this.fields;
 
+
+        if (uname.length < 6){
+            this.setError("uname", "Username is too short.");
+            isValid = false;
+        }
+        if (uname.length > 16) {
+            this.setError("uname", "Username is too long");
+            isValid = false;
+        }
+        if (password.length < 6) {
+            this.setError("password", "Password is too short.");
+            isValid = false;
+        }
+        if (password > 128) {
+            this.setError("password", "Password is too long.");
+            isValid = false;
+        }
         if (password !== confirmPassword) {
             this.setError("confirmPassword", "Passwords doesn't match.");
             isValid = false;
@@ -94,31 +95,6 @@ class AuthStore {
 
         return isValid;
     }
-
-    _validateFieldsLogin() {
-        let isValid = true;
-        const { login, password } = this.fields_login;
-        if (login < 6){
-             this.setErrorLogin("login", "Login is too short");
-             isValid = false;
-        }
-        else if (login > 16) {
-            this.setErrorLogin("login", "Login is too long");
-            isValid = false;
-        }
-        else if (password < 6) {
-            this.setErrorLogin("password", "Password is too short");
-            isValid = false;
-        }
-        else if (password > 128) {
-            this.setErrorLogin("login", "Password is too long");
-            isValid = false;
-        }
-
-        return isValid;
-    }
-
-
 }
 
 export default new AuthStore();

@@ -27,8 +27,8 @@ class Header extends Component {
           <Typography variant="h6" color="inherit" className={classes.grow}>
             Hypertube
           </Typography>
-          <Button className={classes.buttons} color="inherit">Register</Button>
-          <Button className={classes.buttons} color="inherit">Login</Button>
+          <Button href="/auth/registration" className={classes.buttons} color="inherit">Register</Button>
+          <Button href="/auth/login" className={classes.buttons} color="inherit">Login</Button>
         </Toolbar>
       </AppBar>
     </div>

@@ -29,7 +29,7 @@ class HyperTube extends Component {
       <MuiThemeProvider theme={theme}>
         <BrowserRouter>
             <React.Fragment>
-            <CssBaseline/>
+             <CssBaseline/>
               <Header/>
               <Switch>
                 <Route path="/auth" component={Auth}/>

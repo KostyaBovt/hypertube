@@ -9,20 +9,18 @@ import { inject, observer } from 'mobx-react';
 @inject('UserStore') @observer
 class Auth extends Component {
 	render() {
-        const { UserStore } = this.props;
-        console.log('auth');
+        const { UserStore, match } = this.props;
         if (UserStore.self) {
-            return <Redirect to="/" />;
+            return <Redirect to="/"/>;
         } else {
             return (
-                <div>
-                    <Switch>
-                        <Route exact path="/auth/login" component={Login}/>
-                        <Route exact path="/auth/registration" component={Registration}/>
-                        <Route exact path="/auth/lostpass" component={LostPass}/>
-                    </Switch>
-                </div>
-            )
+                <Switch>
+                    <Route path={`${match.path}/login`} component={Login}/>
+                    <Route path={`${match.path}/registration`} component={Registration}/>
+                    <Route path={`${match.path}/lostpass`} component={LostPass}/>
+                    <Redirect to="/auth/login"/>
+                </Switch>
+            );
         }
     }
 }
