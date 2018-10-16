@@ -10,7 +10,6 @@ import Typography from '@material-ui/core/Typography';
 import intra_logo from "../img/42.png";
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
-import { Link } from 'react-router-dom'
 
 const styles = {
 	paper: {
@@ -29,8 +28,9 @@ const styles = {
 	}
   };
 
+
 @inject('AuthStore') @observer
-class Login extends Component {
+class RecoverPass extends Component {
 	constructor(props) {
 		super(props);
 		this.handleInput = this.handleInput.bind(this);
@@ -44,32 +44,19 @@ class Login extends Component {
 	}
 	
 	handleSubmit(e) {
-		this.props.AuthStore.login();
+		this.props.AuthStore.recoverPass();
 	}
-
 	render() {
 		const { fields, errors } = this.props.AuthStore;
 		const { classes } = this.props;
 		return (
 			<Paper className={classes.paper} elevation={1}>
 				<Typography variant="h5" gutterBottom>
-					Log In
+					Password Recovery
 				</Typography>
 
 				<FormControl error={!!errors.uname} margin="dense">
-					<InputLabel htmlFor="uname">Username</InputLabel>
-					<Input
-						id="uname"
-						type="text"
-						name="uname"
-						value={fields.login}
-						onChange={this.handleInput}
-					/>
-					<FormHelperText>{errors.uname}</FormHelperText>
-				</FormControl>
-
-				<FormControl error={!!errors.password} margin="dense">
-					<InputLabel htmlFor="password">Password</InputLabel>
+					<InputLabel htmlFor="uname">Password</InputLabel>
 					<Input
 						id="password"
 						type="password"
@@ -80,28 +67,24 @@ class Login extends Component {
 					<FormHelperText>{errors.password}</FormHelperText>
 				</FormControl>
 
-				<Button className={classes.button} onClick={this.handleSubmit} variant="contained" color="primary">
-					Log in
-				</Button>
+				<FormControl error={!!errors.password} margin="dense">
+					<InputLabel htmlFor="password">Repeat Password</InputLabel>
+					<Input
+						id="password"
+						type="password"
+						name="password"
+						value={fields.confirmPassword}
+						onChange={this.handleInput}
+					/>
+					<FormHelperText>{errors.password}</FormHelperText>
+				</FormControl>
 
-				<div className="social">
-					<a title="42_Intra" href="#">
-						<img src={intra_logo} height="20"/>
-					</a>
-					<a title="GitHub" href="#">
-						<i className="fa fa-github"></i>
-					</a>
-					<a title="Gmail" href="#">
-						<i  className="fa fa-google-plus-circle " aria-hidden="true"></i>
-					</a>
-					<div>
-					<Link to="/auth/lostpass">Forgot Password?</Link>
-					</div>
-				</div>
+				<Button className={classes.button} onClick={this.handleSubmit} variant="contained" color="primary">
+					Submit
+				</Button>
 			</Paper>
 		);
 	}
 }
 
-
-export default withStyles(styles)(Login);
+export default withStyles(styles)(RecoverPass);

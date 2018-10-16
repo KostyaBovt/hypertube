@@ -40,6 +40,12 @@ class AuthStore {
         }
     }
 
+    lostPass() {
+        if (this._validateFields()) {
+            
+        }
+    }
+
     @action resetStore() {
         this.fields = {
             fname: '',

@@ -51,7 +51,12 @@
 .social{
   margin: 0 auto;
   margin-top: 5px;
-  font-size: 30px;
+  font-size: 35px;
+}
+.social a {
+  text-decoration: none;
+  font-size: 17px;
+  color: black;
 }
 .fa {
   padding: 10px;
