@@ -35,7 +35,7 @@ get_udata(Cookies) ->
 social(Network, Action, Url, Qs) ->
     case hyper_oauth2:dispatch(Url, Network, Action, Qs) of
         {profile, Profile} ->
-            lager:info("Profile: ~p", [Profile]),
+            io:format("Profile: ~p", [Profile]),
             Provider = gv(<<"provider">>, Profile),
             Id = gv(<<"id">>, Profile),
             case hyper_db:get_user_by_social(Provider, Id) of
@@ -160,7 +160,8 @@ create_user_from_social_profile(Profile, Provider, SocialId) ->
                          _ -> {<<>>, <<>>}
                      end,
     Uname = <<"user_", (hyper_lib:rand_str(16))/binary>>,
-    {ok, _} = hyper_db:create_user_from_social_info(Provider, SocialId, Uname, Fname, Lname).
+    SocialToken = gv(<<"access_token">>, Profile),
+    {ok, _} = hyper_db:create_user_from_social_info(Provider, SocialId, SocialToken, Uname, Fname, Lname).
 
 -spec update_token_locale(UData::map(), Locale::binary()) -> hyper_http:handler_ret().
 update_token_locale(UData, Locale) ->

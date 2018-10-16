@@ -8,7 +8,7 @@
          user_with_email_exists/1,
          user_with_uname_exists/1,
          create_user/5,
-         create_user_from_social_info/5,
+         create_user_from_social_info/6,
          update_user/6,
          update_user_password/2,
          update_user_locale/2,
@@ -25,13 +25,14 @@ get_user_by_email(Email) -> get_user("email = $1", [Email]).
 get_user_by_social(Provider, Id) -> get_user("social_provider = $1 AND social_id = $2", [Provider, Id]).
 
 get_user(SearchCondition, Args) ->
-    db_val(q(["SELECT id, uname, fname, lname, bio, email, password, locale, avatar, social_provider, social_id
+    db_val(q(["SELECT id, uname, fname, lname, bio, email, password, locale, avatar,
+                      social_provider, social_id, social_token
                FROM users WHERE ", SearchCondition], Args)).
 
 
 user_with_email_exists(Email) -> db_bool(q("SELECT id FROM users WHERE email = $1", [Email])).
 
-user_with_uname_exists(Uname) -> db_bool(q("SELECT id FROM users WHERE username = $1", [Uname])).
+user_with_uname_exists(Uname) -> db_bool(q("SELECT id FROM users WHERE uname = $1", [Uname])).
 
 update_user_locale(UId, NewLocale) ->
     db_bool(q("UPDATE users SET locale = $2 WHERE id = $1", [UId, NewLocale])).
@@ -42,11 +43,11 @@ create_user(Uname, Fname, Lname, Pass, Email) ->
               RETURNING *",
              [Uname, Fname, Lname, Pass, Email])).
 
-create_user_from_social_info(Provider, SocialId, Uname, Fname, Lname) ->
-    db_val(q("INSERT INTO users (social_provider, social_id, uname, fname, lname)
-              VALUES ($1, $2, $3, $4, $5)
+create_user_from_social_info(Provider, SocialId, SocialToken, Uname, Fname, Lname) ->
+    db_val(q("INSERT INTO users (social_provider, social_id, social_token, uname, fname, lname)
+              VALUES ($1, $2, $3, $4, $5, $6)
               RETURNING *",
-             [Provider, SocialId, Uname, Fname, Lname])).
+             [Provider, SocialId, SocialToken, Uname, Fname, Lname])).
 
 update_user_password(UId, NewPassword) ->
     db_bool(q("UPDATE users SET password = $1 WHERE id = $2", [NewPassword, UId])).

@@ -3,7 +3,7 @@ PROJECT_DESCRIPTION = Hypertube user account manager
 PROJECT_VERSION = 0.1.0
 
 
-DEPS = cowboy lager epgsql pgapp eimp jsone gen_smtp erlydtl mimetypes erlpass
+DEPS = cowboy epgsql pgapp eimp jsone gen_smtp erlydtl mimetypes erlpass
 dep_cowboy_commit = master
 dep_epgsql_commit = master
 dep_pgapp = git https://github.com/epgsql/pgapp.git master
@@ -19,7 +19,7 @@ LOCAL_DEPS = mnesia inets crypto
 
 include erlang.mk
 
-ERLC_OPTS += +'{parse_transform, lager_transform}'
+DIALYZER_OPTS = -Wno_match
 
 rerun: all
 	erl -pa ebin/ -s hyper

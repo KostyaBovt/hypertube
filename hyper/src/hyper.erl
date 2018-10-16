@@ -14,11 +14,14 @@
          create_comment/3,
          update_email/1, update_email/3,
          get_comments/1,
-         prefix_avatar_path/1]).
+         prefix_avatar_path/1,
+         import_social_avatar/1]).
 
 -import(hyper_lib, [gv/2, gv/3]).
 
 -define(PHOTOS_PATH, "/static/photos/").
+
+%% API
 
 -spec start() -> ok.
 start() ->
@@ -31,51 +34,33 @@ get_user(Uname) ->
         {ok, User} ->
             {ok, maps:with([<<"uname">>, <<"fname">>, <<"lname">>, <<"bio">>, <<"locale">>, <<"avatar">>],
                             prefix_avatar_path(User))};
-        null -> {ok, <<"not found">>}
+        null -> {error, 404}
     end.
 
 -spec get_profile(UId::binary()) -> hyper_http:handler_ret().
 get_profile(UId) ->
     case hyper_db:get_user_by_id(UId) of
         {ok, User} ->
-            {ok, maps:with([<<"uname">>, <<"fname">>, <<"lname">>, <<"bio">>, <<"locale">>, <<"avatar">>, <<"email">>],
-                           prefix_avatar_path(User))};
-        null -> {ok, <<"not found">>}
+            {ok, maps:with([<<"uname">>, <<"fname">>, <<"lname">>, <<"bio">>, <<"locale">>, <<"avatar">>,
+                            <<"email">>, <<"social_provider">>], prefix_avatar_path(User))};
+        null -> {error, 404}
     end.
-
--spec prefix_avatar_path(Data::map()) -> map().
-prefix_avatar_path(Data) ->
-    maps:update_with(<<"avatar">>, fun(P) when is_binary(P) -> <<?PHOTOS_PATH, P/binary>> end, Data).
 
 -spec update_profile(UId::non_neg_integer(), Uname::binary() | null, Fname::binary() | null, Lname::binary() | null,
                      Bio::binary() | null, Avatar::binary() | null) ->
     hyper_http:handler_ret().
 update_profile(_, null, null, null, null, null) -> ok;
-update_profile(UId, Uname, Fname, Lname, Bio, Avatar) ->
-    case process_photo(Avatar) of
-        {ok, PhotoName} ->
-            {ok, _} =  hyper_db:update_user(UId, Uname, Fname, Lname, Bio, PhotoName);
+update_profile(UId, Uname, Fname, Lname, Bio, Avatar0) ->
+    case binary:split(Avatar0, <<"base64,">>) of
+        [_, Avatar1] ->
+            case process_photo(Avatar1) of
+                {ok, PhotoName} ->
+                    {ok, _} = hyper_db:update_user(UId, Uname, Fname, Lname, Bio, PhotoName);
+                _ ->
+                    {error, #{<<"avatar">> => <<"invalid format">>}}
+            end;
         _ ->
             {error, #{<<"avatar">> => <<"invalid format">>}}
-    end.
-
--spec process_photo(Photo::binary() | null) -> {ok, binary()} | error.
-process_photo(null) -> null;
-process_photo(Photo0) ->
-    case binary:split(Photo0, <<"base64,">>) of
-        [_, Photo1] ->
-            case eimp:convert(base64:decode(Photo1), jpeg) of
-                {ok, Converted} ->
-                    Name = <<(hyper_lib:md5(Converted))/binary, ".jpeg">>,
-                    Path = <<"priv/static/photos/", Name/binary>>,
-                    case filelib:is_regular(Path) of
-                        true -> ok;
-                        false -> file:write_file(Path, Converted)
-                    end,
-                    {ok, Name};
-                _ -> error
-            end;
-        _ -> error
     end.
 
 -spec update_pass(UId::non_neg_integer(), OldPass::binary(), NewPass::binary()) ->  hyper_http:handler_ret().
@@ -115,8 +100,7 @@ update_email(Qs) ->
             {redirect, ?LINK_EXPIRED_REDIRECT_PATH}
     end.
 
--spec update_email(UId::non_neg_integer(), Email::binary(), BaseUrl::binary()) ->
-    hyper_http:handler_ret().
+-spec update_email(UId::non_neg_integer(), Email::binary(), BaseUrl::binary()) -> ok.
 update_email(UId, Email, BaseUrl) ->
     {ok, #{<<"uname">> := Uname}} = hyper_db:get_user_by_id(UId),
     Token = hyper_lib:rand_str(16),
@@ -126,3 +110,58 @@ update_email(UId, Email, BaseUrl) ->
     {ok, Body} = email_updating:render([{username, Uname}, {link, Url}, {out_dir, "priv/templates"}]),
     <<_/binary>> = hyper_lib:send_email(<<"HyperTube -- email changing">>, iolist_to_binary(Body), Email),
     ok.
+
+-spec import_social_avatar(UId::non_neg_integer()) -> {ok, map()} | {error, binary()}.
+import_social_avatar(UId) ->
+     case hyper_db:get_user_by_uname(UId) of
+         {ok, #{<<"social_provider">> := Provider, <<"social_token">> := Token}} when Provider =/= null ->
+            case hyper_oauth2:get_profile_info(Provider, Token) of
+                {profile, P} ->
+                    case gv(<<"picture">>, P) of
+                        <<AvatarUrl/binary>> -> update_profile_with_social_avatar(UId, AvatarUrl);
+                        null -> {error, <<"not available">>}
+                    end;
+                E ->
+                    io:format("hyper_oauth2:get_profile_info(~p, ~p) error: ~p", [Provider, Token, E]),
+                    {error, <<"not available">>}
+            end;
+         {ok, _} ->
+             {error, <<"not social account">>}
+     end.
+
+-spec prefix_avatar_path(Data::map()) -> map().
+prefix_avatar_path(Data) ->
+    maps:update_with(<<"avatar">>, fun(P) when is_binary(P) -> <<?PHOTOS_PATH, P/binary>> end, Data).
+
+%% Inner
+
+-spec update_profile_with_social_avatar(UId::non_neg_integer(), AvatarUrl::binary()) -> {ok, map()} | {error, binary()}.
+update_profile_with_social_avatar(UId, AvatarUrl) ->
+    case hyper_lib:get_img_by_url(AvatarUrl) of
+        {ok, Body} ->
+            case process_photo(Body) of
+                {ok, PhotoName} ->
+                    {ok, User} = hyper_db:update_user(UId, null, null, null, null, PhotoName),
+                    {ok, gv(<<"avatar">>, prefix_avatar_path(User))};
+                error ->
+                    {error, <<"not available">>}
+            end;
+        {error, _} ->
+            {error, <<"not available">>}
+    end.
+
+
+-spec process_photo(Photo::binary() | null) -> {ok, Name::binary()} | error.
+process_photo(null) -> null;
+process_photo(Photo) ->
+    case eimp:convert(base64:decode(Photo), jpeg) of
+        {ok, Converted} ->
+            Name = <<(hyper_lib:md5(Converted))/binary, ".jpeg">>,
+            Path = <<"priv", ?PHOTOS_PATH, Name/binary>>,
+            case filelib:is_regular(Path) of
+                true -> ok;
+                false -> file:write_file(Path, Converted)
+            end,
+            {ok, Name};
+        _ -> error
+    end.

@@ -3,4 +3,8 @@
 hyper/deps
 hyper/.erlang.mk
 frontend-react/node_modules/
+hyper/ebin
+hyper/hyper.d
+hyper/.hyper.plt
+hyper/Mnesia*
 

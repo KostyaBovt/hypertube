@@ -14,7 +14,7 @@ start(_Type, _Args) ->
     {ok, _} = cowboy:start_clear(hyper_http_listener, [{port, ?HTTP_PORT}], #{env => #{dispatch => Dispatch}}),
     hyper_mnesia:init(),
     hyper_validation:load(),
-    pgapp:connect([{size, 10}, {database, "vagrant"}, {username, "vagrant"}, {password, "12345"}, {port, 5432}]),
+    pgapp:connect([{size, 10}, {database, "Hypertube"}, {username, "Hypertube"}, {password, ""}, {port, 5432}]),
     hyper_sup:start_link().
 
 stop(_State) ->

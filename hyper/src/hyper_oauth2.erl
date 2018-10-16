@@ -2,7 +2,7 @@
 -author("aklimchu").
 
 -export([dispatch/4,
-         get_github_user_email/1]).
+         get_profile_info/2]).
 
 -import(hyper_lib, [gv/2, gv/3]).
 
@@ -42,7 +42,15 @@
       {token_uri, "https://github.com/login/oauth/access_token"},
       {user_profile_url_composer,
        fun(AccessToken) -> <<"https://api.github.com/user?access_token=", AccessToken/binary>> end},
-      {fields, [<<"id">>, <<"email">>, <<"name">>, <<"avatar_url">>]}
+      {fields, [<<"id">>,
+          {<<"email">>,
+           fun(null, AccessToken) ->
+              AuthHeader = {"Authorization", "token " ++ binary_to_list(AccessToken)},
+              http_request_json(get, {"https://api.github.com/user/emails", [{"User-Agent", "" }, AuthHeader]},
+                                fun(Response) -> gv(<<"email">>, hd(Response), null) end);
+              (Val, _) -> Val
+           end},
+           <<"name">>, <<"avatar_url">>]}
     ]}]).
 
 %% API
@@ -64,6 +72,13 @@ dispatch(LocalUrlPrefix, NetName, Action, Qs) ->
                 Error -> {error, Error}
             end;
         _ -> {error, unknow_action}
+    end.
+
+-spec get_profile_info(NetName::binary(), Token::binary()) -> {profile, list()} | {error, term()}.
+get_profile_info(NetName, Token) ->
+    case lists:keyfind(NetName, 1, ?NETWORKS) of
+        {_, _} = Network -> get_profile_info(Network, Token, []);
+        _ -> {error, unknown_network}
     end.
 
 %% INNER
@@ -112,11 +127,10 @@ get_profile_info({NetName, NetOpts}, AccessToken, Auth) ->
     Url = binary_to_list(UrlComposerFun(AccessToken)),
     OnSuccessFun =
         fun(Profile0) ->
-            lager:info("Profile: ~p", [Profile0]),
             Fields = lists:zip([<<"id">>, <<"email">>, <<"name">>, <<"picture">>], gv(fields, NetOpts)),
             Profile1 =
                 [case Field of
-                     {N, {PField, Fun}} -> {N, Fun(gv(PField, Profile0))};
+                     {N, {PField, Fun}} -> {N, Fun(gv(PField, Profile0), AccessToken)};
                      {N, PField} -> {N, gv(PField, Profile0)}
                  end || Field <- Fields],
             Profile2 = Auth ++ [{<<"provider">>, NetName} | Profile1],
@@ -168,12 +182,3 @@ qs_encode([{Key,Value}|R], "") ->
 qs_encode([{Key,Value}|R], Acc) ->
     qs_encode(R, Acc ++ "&" ++ edoc_lib:escape_uri(atom_to_list(Key)) ++ "=" ++
         edoc_lib:escape_uri(binary_to_list(Value))).
-
-%% ADDITIONAL
-
--spec get_github_user_email(Profile::map() | proplists:proplist()) ->
-    binary() | null | {error, term()}.
-get_github_user_email(Profile) ->
-    AuthHeader = {"Authorization", "token " ++ binary_to_list(gv(<<"access_token">>, Profile))},
-    http_request_json(get, {"https://api.github.com/user/emails", [{"User-Agent", "" }, AuthHeader]},
-                      fun(Response) -> gv(<<"email">>, hd(Response), null) end).

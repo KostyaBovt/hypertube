@@ -6,7 +6,8 @@
          sv/3,
          rand_str/1,
          send_email/3,
-         md5/1]).
+         md5/1,
+         get_img_by_url/1]).
 
 -define(EMAIL_SENDER, <<"hyper">>).
 -define(EMAIL_OPTS, [
@@ -43,6 +44,19 @@ send_email(Subject, Body, Receiver) ->
     gen_smtp_client:send_blocking(Mail, ?EMAIL_OPTS).
 
 md5(Content) -> iolist_to_binary([if N < 10 -> N + 48; true -> N + 87 end || <<N:4>> <= erlang:md5(Content)]).
+
+-spec get_img_by_url(Url::list() | binary()) -> {ok, Image::binary()} | {error, Reason::term()}.
+get_img_by_url(<<Url/binary>>) -> get_img_by_url(binary_to_list(Url));
+get_img_by_url(Url) when is_list(Url)->
+    case httpc:request(get, {Url, []}, [{autoredirect, true}], [{body_format, binary}]) of
+        {ok, {{_, 200, "OK"}, _, Body}} -> Body;
+        {ok, {{_, _, Reason}, _, _} = Resp} ->
+            io:format("Non 200 response: ~p~n", [Resp]),
+            {error, Reason};
+        {error, {Reason, _} = E} ->
+            io:format("Error: ~p~n", [E]),
+            {error, Reason}
+    end.
 
 % Inner functions
 

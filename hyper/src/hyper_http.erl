@@ -58,7 +58,7 @@ validate_body(#state{v_schema = VSchema, handler = Handler}, Req) ->
         {ok, Body} -> Handler(Req#{'_hyper_body' => Body});
         E -> E
     catch Class:Reason:Stacktrace ->
-        lager:error("Exception: ~p:~p~nStacktrace: ~p", [Class, Reason, Stacktrace]),
+        io:format("Exception: ~p:~p~nStacktrace: ~p", [Class, Reason, Stacktrace]),
         {error, 400}
     end.
 
@@ -102,6 +102,10 @@ get(<<"comments">>) ->
     #state{handler = fun(Req) -> hyper:get_comments(qs(Req)) end,
            scope = user};
 
+get(<<"social_avatar">>) ->
+    #state{handler = fun(#{'_hyper_udata' := #{<<"iss">> := UId}}) -> hyper:import_social_avatar(UId) end,
+           scope = user};
+
 get(_) -> {error, 404}.
 
 
@@ -118,7 +122,7 @@ post(<<"auth/logout">>) ->
 
 post(<<"auth/registration">>) ->
     #state{handler = fun(#{'_hyper_body' := #{<<"email">> := Email, <<"uname">> := Uname, <<"fname">> := Fname,
-                                            <<"lname">> := Lname, <<"password">> := Pass}} = Req) ->
+                                              <<"lname">> := Lname, <<"password">> := Pass}} = Req) ->
                          hyper_auth:register(Email, Uname, Fname, Lname, Pass, base_url(Req))
                      end,
            v_schema = #{<<"email">> => [required, unique_email],
