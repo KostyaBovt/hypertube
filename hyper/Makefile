@@ -5,7 +5,7 @@ PROJECT_VERSION = 0.1.0
 
 DEPS = cowboy epgsql pgapp eimp jsone gen_smtp erlydtl mimetypes erlpass
 dep_cowboy_commit = master
-dep_epgsql_commit = master
+dep_epgsql_commit = 4.1.0
 dep_pgapp = git https://github.com/epgsql/pgapp.git master
 dep_eimp = git https://github.com/processone/eimp master
 dep_erlpass = git https://github.com/AndreyKlimchuk/erlpass master

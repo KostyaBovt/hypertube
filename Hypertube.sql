@@ -19,8 +19,9 @@ SET row_security = off;
 -- Name: Hypertube; Type: DATABASE; Schema: -; Owner: Hypertube
 --
 
-CREATE DATABASE "Hypertube" WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'C' LC_CTYPE = 'UTF-8';
+CREATE ROLE "Hypertube" WITH LOGIN SUPERUSER;
 
+CREATE DATABASE "Hypertube" WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'C' LC_CTYPE = 'UTF-8';
 
 ALTER DATABASE "Hypertube" OWNER TO "Hypertube";
 
