@@ -49,12 +49,14 @@ class HyperTube extends Component {
 @inject('UserStore') @observer
 class PrivateRoute extends Component {
   render() {
-    const { UserStore, component: Component } = this.props;
-    if (UserStore.self) {
-      return <Component/>;
-    } else {
-      return <Redirect to="/auth/login" />;
-    }
+    const { UserStore, component: Component, ...rest } = this.props;
+    return (
+			<Route {...rest} render={(props) => (
+				UserStore.currentUser
+					? <Component {...props} />
+					: <Redirect to='/auth/login' />
+			)} />
+		);
   }
 }
 
