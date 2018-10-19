@@ -24,8 +24,8 @@ class Header extends Component {
 			<div className={classes.root}>
       <AppBar position="static">
         <Toolbar>
-          <Typography variant="h6" color="inherit" className={classes.grow}>
-            Hypertube
+          <Typography id="logo" variant="h6" color="inherit" className={classes.grow}>
+            HyperTube
           </Typography>
           <Button href="/auth/registration" className={classes.buttons} color="inherit">Register</Button>
           <Button href="/auth/login" className={classes.buttons} color="inherit">Login</Button>
