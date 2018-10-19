@@ -10,7 +10,9 @@
 
 -define(HTTP_PORT, 8080).
 
--define(LINK_EXPIRED_REDIRECT_PATH, <<"/link_expired">>).
+-define(FRONTEND_HOST, "localhost:3000").
+-define(LINK_EXPIRED_REDIRECT_PATH, <<?FRONTEND_HOST, "/link_expired">>).
+
 
 -record(temp_account, {token::binary() | '_',
                        uname::binary() | '_',

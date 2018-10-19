@@ -53,7 +53,7 @@ update_profile(_, null, null, null, null, null) -> ok;
 update_profile(UId, Uname, Fname, Lname, Bio, Avatar0) ->
     case binary:split(Avatar0, <<"base64,">>) of
         [_, Avatar1] ->
-            case process_photo(Avatar1) of
+            case process_photo(base64:decode(Avatar1)) of
                 {ok, PhotoName} ->
                     {ok, _} = hyper_db:update_user(UId, Uname, Fname, Lname, Bio, PhotoName);
                 _ ->
@@ -113,7 +113,7 @@ update_email(UId, Email, BaseUrl) ->
 
 -spec import_social_avatar(UId::non_neg_integer()) -> {ok, map()} | {error, binary()}.
 import_social_avatar(UId) ->
-     case hyper_db:get_user_by_uname(UId) of
+     case hyper_db:get_user_by_id(UId) of
          {ok, #{<<"social_provider">> := Provider, <<"social_token">> := Token}} when Provider =/= null ->
             case hyper_oauth2:get_profile_info(Provider, Token) of
                 {profile, P} ->
@@ -131,7 +131,7 @@ import_social_avatar(UId) ->
 
 -spec prefix_avatar_path(Data::map()) -> map().
 prefix_avatar_path(Data) ->
-    maps:update_with(<<"avatar">>, fun(P) when is_binary(P) -> <<?PHOTOS_PATH, P/binary>> end, Data).
+    maps:update_with(<<"avatar">>, fun(<<P/binary>>) -> <<?PHOTOS_PATH, P/binary>>; (null) -> null end, Data).
 
 %% Inner
 
@@ -154,7 +154,7 @@ update_profile_with_social_avatar(UId, AvatarUrl) ->
 -spec process_photo(Photo::binary() | null) -> {ok, Name::binary()} | error.
 process_photo(null) -> null;
 process_photo(Photo) ->
-    case eimp:convert(base64:decode(Photo), jpeg) of
+    case eimp:convert(Photo, jpeg) of
         {ok, Converted} ->
             Name = <<(hyper_lib:md5(Converted))/binary, ".jpeg">>,
             Path = <<"priv", ?PHOTOS_PATH, Name/binary>>,
@@ -163,5 +163,7 @@ process_photo(Photo) ->
                 false -> file:write_file(Path, Converted)
             end,
             {ok, Name};
-        _ -> error
+        E ->
+            io:format("Format convertion failed: ~p", [E]),
+            error
     end.

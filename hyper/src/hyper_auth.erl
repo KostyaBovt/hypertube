@@ -15,8 +15,8 @@
 
 -import(hyper_lib, [gv/2, gv/3, sv/3]).
 
--define(LOGIN_REDIRECT_PATH, <<"/">>).
--define(PASSWORD_RECOVERING_REDIRECT_PATH, <<"/auth/lostpass/newpass">>).
+-define(LOGIN_REDIRECT_PATH, <<?FRONTEND_HOST, "/">>).
+-define(PASSWORD_RECOVERING_REDIRECT_PATH, <<?FRONTEND_HOST, "/auth/lostpass/newpass">>).
 -define(PASSWORD_RECOVERING_COOKIE_NAME, <<"recovering-token">>).
 -define(AUTH_COOKIE_NAME, <<"x-auth-token">>).
 -define(JWT_KEY, <<"change_me">>). % TODO
@@ -24,11 +24,15 @@
 
 -spec get_udata(Cookies::proplists:proplist()) -> {ok, map()} | {error, atom()}.
 get_udata(Cookies) ->
-    Token = gv(?AUTH_COOKIE_NAME, Cookies),
-    case jwt:decode(Token, ?JWT_KEY) of
-        {ok, UData} when is_list(UData) -> {ok, maps:from_list(UData)};
-        E -> E
+    case gv(?AUTH_COOKIE_NAME, Cookies) of
+      <<Token/binary>> ->
+        case jwt:decode(Token, ?JWT_KEY) of
+          {ok, UData} when is_list(UData) -> {ok, maps:from_list(UData)};
+          E -> E
+        end;
+      _ -> {error, token_missed}
     end.
+
 
 -spec social(Network::binary(), Action::binary(), Url::binary(), Qs::binary()) ->
     hyper_http:handler_ret().
@@ -44,7 +48,9 @@ social(Network, Action, Url, Qs) ->
                     {ok, User} = create_user_from_social_profile(Profile, Provider, Id),
                     redirect_with_auth_token(User)
             end;
-        E -> E
+        E ->
+            io:format("~p", [E]),
+            E
     end.
 
 -spec login(Login::binary(), Pass::binary()) -> hyper_http:handler_ret().

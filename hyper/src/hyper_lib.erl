@@ -49,7 +49,7 @@ md5(Content) -> iolist_to_binary([if N < 10 -> N + 48; true -> N + 87 end || <<N
 get_img_by_url(<<Url/binary>>) -> get_img_by_url(binary_to_list(Url));
 get_img_by_url(Url) when is_list(Url)->
     case httpc:request(get, {Url, []}, [{autoredirect, true}], [{body_format, binary}]) of
-        {ok, {{_, 200, "OK"}, _, Body}} -> Body;
+        {ok, {{_, 200, "OK"}, _, Body}} -> {ok, Body};
         {ok, {{_, _, Reason}, _, _} = Resp} ->
             io:format("Non 200 response: ~p~n", [Resp]),
             {error, Reason};

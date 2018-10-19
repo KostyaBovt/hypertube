@@ -111,10 +111,10 @@ get(_) -> {error, 404}.
 
 -spec post(Path::binary()) -> #state{} | {error, 404}.
 post(<<"auth/login">>) ->
-    #state{handler = fun(#{'_hyper_body' := #{<<"login">> := Login, <<"password">> := Password}}) ->
+    #state{handler = fun(#{'_hyper_body' := #{<<"uname">> := Login, <<"password">> := Password}}) ->
                          hyper_auth:login(Login, Password)
                      end,
-           v_schema = #{<<"login">>    => [required, string],
+           v_schema = #{<<"uname">>    => [required, string],
                         <<"password">> => [required, string]}};
 
 post(<<"auth/logout">>) ->
@@ -190,8 +190,6 @@ post(<<"comments">>) ->
 
 post(_) -> {error, 404}.
 
-
-
 %% HELPERS
 
 body(Req) -> body(Req, <<>>).
@@ -221,8 +219,7 @@ reply({error, Reason}, Req) when is_binary(Reason); is_map(Reason) ->
 reply({error, Code}, Req) when is_integer(Code) ->
     cowboy_req:reply(Code, Req);
 reply({redirect, Uri}, Req) ->
-    TUri = <<(?FRONTEND_ORIGIN)/binary, Uri/binary>>,
-    cowboy_req:reply(302, #{<<"location">> => TUri}, Req);
+    cowboy_req:reply(302, #{<<"location">> => Uri}, Req);
 reply({redirect, Uri, Mod}, Req) when is_tuple(Mod) ->
     reply({redirect, Uri}, mod_req(Mod, Req));
 reply({send_html, Html}, Req) ->
