@@ -7,4 +7,5 @@ hyper/ebin
 hyper/hyper.d
 hyper/.hyper.plt
 hyper/Mnesia*
+hyper/xrefr
 

@@ -48,9 +48,7 @@ social(Network, Action, Url, Qs) ->
                     {ok, User} = create_user_from_social_profile(Profile, Provider, Id),
                     redirect_with_auth_token(User)
             end;
-        E ->
-            io:format("~p", [E]),
-            E
+        E -> E
     end.
 
 -spec login(Login::binary(), Pass::binary()) -> hyper_http:handler_ret().

@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 10.5
--- Dumped by pg_dump version 10.5
+-- Dumped from database version 10.5 (Ubuntu 10.5-2.pgdg14.04+1)
+-- Dumped by pg_dump version 10.5 (Ubuntu 10.5-2.pgdg14.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -19,9 +19,10 @@ SET row_security = off;
 -- Name: Hypertube; Type: DATABASE; Schema: -; Owner: Hypertube
 --
 
-CREATE ROLE "Hypertube" WITH LOGIN SUPERUSER;
+CREATE ROLE "Hypertube" WITH LOGIN SUPERUSER PASSWORD '12345';
 
-CREATE DATABASE "Hypertube" WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'C' LC_CTYPE = 'UTF-8';
+CREATE DATABASE "Hypertube" WITH TEMPLATE = template0 ENCODING = 'UTF8' LC_COLLATE = 'en_US.UTF-8' LC_CTYPE = 'en_US.UTF-8';
+
 
 ALTER DATABASE "Hypertube" OWNER TO "Hypertube";
 

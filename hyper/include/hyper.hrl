@@ -10,7 +10,7 @@
 
 -define(HTTP_PORT, 8080).
 
--define(FRONTEND_HOST, "localhost:3000").
+-define(FRONTEND_HOST, "http://localhost:3000").
 -define(LINK_EXPIRED_REDIRECT_PATH, <<?FRONTEND_HOST, "/link_expired">>).
 
 

@@ -142,7 +142,7 @@ update_profile_with_social_avatar(UId, AvatarUrl) ->
             case process_photo(Body) of
                 {ok, PhotoName} ->
                     {ok, User} = hyper_db:update_user(UId, null, null, null, null, PhotoName),
-                    {ok, gv(<<"avatar">>, prefix_avatar_path(User))};
+                    {ok, #{<<"avatar">> => gv(<<"avatar">>, prefix_avatar_path(User))}};
                 error ->
                     {error, <<"not available">>}
             end;

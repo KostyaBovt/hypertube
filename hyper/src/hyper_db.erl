@@ -61,7 +61,7 @@ update_user(UId, Uname, Fname, Lname, Bio, PhotoName) ->
                   fname  = COALESCE($3, fname),
                   lname  = COALESCE($4, lname),
                   bio    = COALESCE($5, bio),
-                  avatar = COALESCE($6, avatar),
+                  avatar = COALESCE($6, avatar)
               WHERE id = $1
               RETURNING uname, fname, lname, bio, email, locale, avatar",
              [UId, Uname, Fname, Lname, Bio, PhotoName])).
