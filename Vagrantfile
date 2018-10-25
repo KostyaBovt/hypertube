@@ -104,7 +104,7 @@ Vagrant.configure("2") do |config|
 
         sudo sed -i "s/localhost/*/g" /etc/postgresql/10/main/postgresql.conf
         sudo sed -i "s/#listen/listen/g" /etc/postgresql/10/main/postgresql.conf
-        echo "host    Hypertube       Hypertube       10.0.2.2/32             trust" | sudo tee --append /etc/postgresql/10/main/pg_hba.conf
+        echo "host Hypertube Hypertube 10.0.2.2/32 md5" | sudo tee --append /etc/postgresql/10/main/pg_hba.conf
         sudo /etc/init.d/postgresql restart
 
         sudo su - postgres
@@ -113,6 +113,7 @@ Vagrant.configure("2") do |config|
         sudo su vagrant -c  "psql < /vagrant/Hypertube.sql"
         cd /vagrant/hyper
         make
+	./start.sh
 
     SHELL
 
