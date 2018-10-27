@@ -82,7 +82,7 @@ logout() -> {ok, {delete_cookie, ?AUTH_COOKIE_NAME}}.
 register(Email, Uname, Fname, Lname, Pass, BaseUrl) ->
     Token = hyper_lib:rand_str(16),
     hyper_mnesia:create_temp_account(Uname, Fname, Lname, Pass, Email, Token),
-    Url = <<BaseUrl/binary, "/auth/registration/confirm?token=", Token/binary>>,
+    Url = <<BaseUrl/binary, "/api/auth/registration/confirm?token=", Token/binary>>,
     {ok, _} = erlydtl:compile_file("priv/templates/registration.html", registration_email),
     {ok, EmailBody} = registration_email:render([{username, Uname}, {link, Url}]),
     <<_/binary>> = hyper_lib:send_email(<<"hyper registration">>, iolist_to_binary(EmailBody), Email),
@@ -117,7 +117,7 @@ recover_password(Email, BaseUrl) ->
         {ok, #{<<"username">> := Uname, <<"id">> := Id}} ->
             Token = hyper_lib:rand_str(16),
             hyper_mnesia:create_password_recovering_state(Id, Token),
-            Url = <<BaseUrl/binary, "/auth/lostpass/confirm?token=", Token/binary>>,
+            Url = <<BaseUrl/binary, "/api/auth/lostpass/confirm?token=", Token/binary>>,
             {ok, _} = erlydtl:compile_file("priv/templates/password_recovering.html", password_recovering_email),
             {ok, EmailBody} = password_recovering_email:render([{username, Uname}, {link, Url}]),
             <<_/binary>> = hyper_lib:send_email(<<"Hypertube password recovering">>,

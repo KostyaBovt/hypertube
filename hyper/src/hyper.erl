@@ -50,7 +50,7 @@ get_profile(UId) ->
                      Bio::binary() | null, Avatar::binary() | null) ->
     hyper_http:handler_ret().
 update_profile(_, null, null, null, null, null) -> ok;
-update_profile(UId, Uname, Fname, Lname, Bio, Avatar0) ->
+update_profile(UId, Uname, Fname, Lname, Bio, <<Avatar0/binary>>) ->
     case binary:split(Avatar0, <<"base64,">>) of
         [_, Avatar1] ->
             case process_photo(base64:decode(Avatar1)) of
@@ -61,16 +61,21 @@ update_profile(UId, Uname, Fname, Lname, Bio, Avatar0) ->
             end;
         _ ->
             {error, #{<<"avatar">> => <<"invalid format">>}}
-    end.
+    end;
+update_profile(UId, Uname, Fname, Lname, Bio, _) ->
+    hyper_db:update_user(UId, Uname, Fname, Lname, Bio, null).
 
 -spec update_pass(UId::non_neg_integer(), OldPass::binary(), NewPass::binary()) ->  hyper_http:handler_ret().
 update_pass(UId, OldPass, NewPass) ->
-    {ok, #{<<"password">> := PassHash}} = hyper_db:get_user_by_id(UId),
-    case erlpass:change(OldPass, PassHash, NewPass, 12) of
-        {error, bad_password} -> {error, #{<<"old_password">> => incorrect}};
-        NewPassHash ->
-            true = hyper_db:update_user_password(UId, NewPassHash),
-            ok
+    case hyper_db:get_user_by_id(UId) of
+	{ok, #{<<"social_provider">> := null, <<"password">> := PassHash}} ->
+    	    case erlpass:change(OldPass, PassHash, NewPass, 12) of
+        	{error, bad_password} -> {error, #{<<"old_password">> => <<"incorrect">>}};
+        	NewPassHash ->
+            	    true = hyper_db:update_user_password(UId, NewPassHash),
+            	    ok
+    	    end;
+	{ok, _} -> {error, <<"social_account">>}
     end.
 
 -spec update_locale(UData::map(), Locale::binary()) -> hyper_http:handler_ret().
@@ -95,7 +100,7 @@ update_email(Qs) ->
         #email_updating_state{uid = UId, email = Email} ->
             hyper_db:update_user_email(UId, Email),
             hyper_mnesia:delete_email_updating_state(Token),
-            {redirect, <<"/">>};
+            {redirect, <<?FRONTEND_HOST, "/">>};
         null ->
             {redirect, ?LINK_EXPIRED_REDIRECT_PATH}
     end.

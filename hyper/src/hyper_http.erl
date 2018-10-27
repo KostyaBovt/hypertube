@@ -156,7 +156,7 @@ post(<<"profile">>) ->
            scope = user};
 
 post(<<"profile/email">>) ->
-    #state{handler = fun(#{'_hyper_body' := #{<<"email">> := Email}, '_hyper_udata' := #{<<"iss">> := UId} = Req}) ->
+    #state{handler = fun(#{'_hyper_body' := #{<<"email">> := Email}, '_hyper_udata' := #{<<"iss">> := UId}} = Req) ->
                          hyper:update_email(UId, Email, base_url(Req))
                      end,
            v_schema = #{<<"email">> => [required, unique_email]},
@@ -195,7 +195,7 @@ post(_) -> {error, 404}.
 body(Req) -> body(Req, <<>>).
 body(Req0, Acc) ->
     case cowboy_req:read_body(Req0) of
-        {ok, Data, _Req} ->  << Acc/binary, Data/binary >>;
+        {ok, Data, _Req} -> jsone:decode(<< Acc/binary, Data/binary >>);
         {more, Data, Req} -> body(Req, << Acc/binary, Data/binary >>)
     end.
 
@@ -208,11 +208,11 @@ cookies(Req) -> cowboy_req:parse_cookies(Req).
 -spec reply(handler_ret(), cowboy_req:req()) -> cowboy_req:req().
 reply(ok, Req) ->
     reply(200, #{status => ok}, Req);
-reply({ok, Data = #{}}, Req) ->
+reply({ok, Data}, Req) when is_map(Data); is_list(Data) ->
     reply(200, #{status => ok, payload => Data}, Req);
 reply({ok, Mod}, Req) when is_tuple(Mod) ->
     reply(ok, mod_req(Mod, Req));
-reply({ok, Data = #{}, Mod}, Req) when is_tuple(Mod) ->
+reply({ok, Data, Mod}, Req) ->
     reply({ok, Data}, mod_req(Mod, Req));
 reply({error, Reason}, Req) when is_binary(Reason); is_map(Reason) ->
     reply(200, #{status => error, reason => Reason}, Req);
@@ -220,7 +220,7 @@ reply({error, Code}, Req) when is_integer(Code) ->
     cowboy_req:reply(Code, Req);
 reply({redirect, Uri}, Req) ->
     cowboy_req:reply(302, #{<<"location">> => Uri}, Req);
-reply({redirect, Uri, Mod}, Req) when is_tuple(Mod) ->
+reply({redirect, Uri, Mod}, Req) ->
     reply({redirect, Uri}, mod_req(Mod, Req));
 reply({send_html, Html}, Req) ->
     cowboy_req:reply(200, #{<<"content-type">> => <<"text/html">>}, Html, Req).
