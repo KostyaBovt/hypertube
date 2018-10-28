@@ -62,7 +62,7 @@ class Login extends Component {
 						id="uname"
 						type="text"
 						name="uname"
-						value={fields.login}
+						value={fields.uname}
 						onChange={this.handleInput}
 					/>
 					<FormHelperText>{errors.uname}</FormHelperText>
@@ -85,13 +85,13 @@ class Login extends Component {
 				</Button>
 
 				<div className="social">
-					<a title="42_Intra" href="#">
+					<a title="42_Intra" href="http://localhost:8080/api/auth/intra/login">
 						<img src={intra_logo} height="20"/>
 					</a>
-					<a title="GitHub" href="#">
+					<a title="GitHub" href="http://localhost:8080/api/auth/github/login">
 						<i className="fa fa-github"></i>
 					</a>
-					<a title="Gmail" href="#">
+					<a title="Google" href="http://localhost:8080/api/auth/google/login">
 						<i  className="fa fa-google-plus-circle " aria-hidden="true"></i>
 					</a>
 					<div>

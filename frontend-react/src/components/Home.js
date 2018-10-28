@@ -6,7 +6,7 @@ class Home extends Component {
 	render() {
 		return (
 			<div>
-			<p>xsdcd</p>	
+			<p>HOME</p>
 			</div>
 		);
 	}

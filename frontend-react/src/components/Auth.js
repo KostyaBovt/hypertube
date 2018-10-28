@@ -12,6 +12,7 @@ import { inject, observer } from 'mobx-react';
 class Auth extends Component {
 	render() {
         const { UserStore, match } = this.props;
+        console.log("us: ", UserStore.self);
         if (UserStore.self) {
             return <Redirect to="/"/>;
         } else {

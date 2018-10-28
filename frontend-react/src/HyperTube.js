@@ -24,25 +24,36 @@ const theme = createMuiTheme({
 
 @inject('UserStore') @observer
 class HyperTube extends Component {
+    componentDidMount(){
+        const { UserStore } = this.props;
+        UserStore.pullSelf();
+        console.log("us: ", UserStore.self);
+    }
   render() {
-    return (
-      <MuiThemeProvider theme={theme}>
-        <BrowserRouter>
-            <React.Fragment>
-             <CssBaseline/>
-              <Header/>
-              <Switch>
-                <Route path="/auth" component={Auth}/>
-                <PrivateRoute exact path="/" component={Home}/>
-                <PrivateRoute exact path="/user/:username" component={User}/>
-                <PrivateRoute exact path="/profile" component={Profile}/>
-                <Route path="*" render={() => (<h1>Not Found</h1>)}/>
-              </Switch>
-              <Footer/>
-          </React.Fragment>
-        </BrowserRouter>
-      </MuiThemeProvider>
-    );
+      const { UserStore } = this.props;
+      if (UserStore.self === undefined) {
+          return null;
+      }
+      else {
+          return (
+              <MuiThemeProvider theme={theme}>
+                  <BrowserRouter>
+                      <React.Fragment>
+                          <CssBaseline/>
+                          <Header/>
+                          <Switch>
+                              <Route path="/auth" component={Auth}/>
+                              <PrivateRoute exact path="/" component={Home}/>
+                              <PrivateRoute exact path="/user/:username" component={User}/>
+                              <PrivateRoute exact path="/profile" component={Profile}/>
+                              <Route path="*" render={() => (<h1>Not Found</h1>)}/>
+                          </Switch>
+                          <Footer/>
+                      </React.Fragment>
+                  </BrowserRouter>
+              </MuiThemeProvider>
+          );
+      }
   }
 }
 
@@ -52,7 +63,7 @@ class PrivateRoute extends Component {
     const { UserStore, component: Component, ...rest } = this.props;
     return (
 			<Route {...rest} render={(props) => (
-				UserStore.currentUser
+				UserStore.self
 					? <Component {...props} />
 					: <Redirect to='/auth/login' />
 			)} />
