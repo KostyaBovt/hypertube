@@ -68,7 +68,7 @@ check_password(Pass, #{<<"password">> := PassHash} = User0) ->
         true ->
             Token = create_auth_token(User0),
             User1 = maps:with([<<"uname">>, <<"fname">>, <<"lname">>, <<"bio">>,
-                               <<"locale">>, <<"avatar">>, <<"email">>], hyper:prefix_avatar_path(User0)),
+                               <<"locale">>, <<"avatar">>, <<"email">>, <<"social_provider">>], hyper:prefix_avatar_path(User0)),
             {ok, User1, {set_cookie, ?AUTH_COOKIE_NAME, Token}};
         false -> {error, #{<<"password">> => incorrect}}
     end.
@@ -114,7 +114,7 @@ create_auth_token(#{<<"id">> := UId, <<"locale">> := Loc}) ->
 -spec recover_password(Email::binary(), BaseUrl::binary()) -> hyper_http:handler_ret().
 recover_password(Email, BaseUrl) ->
     case hyper_db:get_user_by_email(Email) of
-        {ok, #{<<"username">> := Uname, <<"id">> := Id}} ->
+        {ok, #{<<"uname">> := Uname, <<"id">> := Id}} ->
             Token = hyper_lib:rand_str(16),
             hyper_mnesia:create_password_recovering_state(Id, Token),
             Url = <<BaseUrl/binary, "/api/auth/lostpass/confirm?token=", Token/binary>>,

@@ -63,7 +63,7 @@ update_user(UId, Uname, Fname, Lname, Bio, PhotoName) ->
                   bio    = COALESCE($5, bio),
                   avatar = COALESCE($6, avatar)
               WHERE id = $1
-              RETURNING uname, fname, lname, bio, email, locale, avatar",
+              RETURNING uname, fname, lname, bio, email, locale, avatar, social_provider",
              [UId, Uname, Fname, Lname, Bio, PhotoName])).
 
 get_comments(ImdbId) ->

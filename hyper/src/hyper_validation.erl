@@ -13,7 +13,8 @@
 
 -define(ERRORS,
     #{email_already_taken => <<"email already taken">>,
-      uname_already_taken => <<"username already taken">>}).
+      uname_already_taken => <<"username already taken">>,
+      invalid_password => <<"invalid_password">>}).
 
 load() ->
     [liver:add_rule(Rule, ?MODULE) || Rule <- ?RULES],
@@ -47,10 +48,16 @@ unique_uname(_Args, Uname, _Opts) ->
     end.
 
 strong_password(_Args, Password, _Opts) ->
-    case length(unicode:characters_to_list(Password)) of
-        Len when Len < ?MIN_PASS_LENGTH -> {error, too_short};
-        Len when Len > ?MAX_PASS_LENGTH -> {error, too_long};
-        _ -> {ok, Password}
+    PatternsList = ["^[0-9 | A-Z | a-z]+$", "[0-9]+", "[A-Z]+", "[a-z]+"],
+    case lists:all(fun(Pattern) -> re:run(Password, Pattern) =/= nomatch end, PatternsList) of
+        true ->
+            case length(unicode:characters_to_list(Password)) of
+                Len when Len < ?MIN_PASS_LENGTH -> {error, too_short};
+                Len when Len > ?MAX_PASS_LENGTH -> {error, too_long};
+                _ -> {ok, Password}
+            end;
+        false -> {error, invalid_password}
     end.
+
 
 
