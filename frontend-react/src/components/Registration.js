@@ -22,7 +22,7 @@ const styles = {
 	button: {
 		marginTop: 15
 	}
-  };
+};
 
 @inject('AuthStore') @observer
 class Registration extends Component {
@@ -39,6 +39,7 @@ class Registration extends Component {
 	}
 	
 	handleSubmit(e) {
+		e.preventDefault();
 		this.props.AuthStore.register();
 	}
 	
@@ -46,86 +47,88 @@ class Registration extends Component {
 		const { fields, errors } = this.props.AuthStore;
 		const { classes } = this.props;
 		return (
-			<Paper className={classes.paper} elevation={1}>
-				<Typography variant="h5" gutterBottom>
-					Registration
-				</Typography>
-				<FormControl error={!!errors.fname} margin="dense">
-					<InputLabel htmlFor="fname">First Name</InputLabel>
-					<Input
-						id="fname"
-						type="text"
-						name="fname"
-						value={fields.fname}
-						onChange={this.handleInput}
-					/>
-					<FormHelperText>{errors.fname}</FormHelperText>
-				</FormControl>
+			<form onSubmit={this.handleSubmit}>
+				<Paper className={classes.paper} elevation={1}>
+					<Typography variant="h5" gutterBottom>
+						Registration
+					</Typography>
+					<FormControl error={!!errors.fname} margin="dense">
+						<InputLabel htmlFor="fname">First Name</InputLabel>
+						<Input
+							id="fname"
+							type="text"
+							name="fname"
+							value={fields.fname}
+							onChange={this.handleInput}
+						/>
+						<FormHelperText>{errors.fname}</FormHelperText>
+					</FormControl>
 
-				<FormControl error={!!errors.lname} margin="dense">
-					<InputLabel htmlFor="lname">Last Name</InputLabel>
-					<Input
-						id="lname"
-						type="text"
-						name="lname"
-						value={fields.lname}
-						onChange={this.handleInput}
-					/>
-					<FormHelperText>{errors.lname}</FormHelperText>
-				</FormControl>
+					<FormControl error={!!errors.lname} margin="dense">
+						<InputLabel htmlFor="lname">Last Name</InputLabel>
+						<Input
+							id="lname"
+							type="text"
+							name="lname"
+							value={fields.lname}
+							onChange={this.handleInput}
+						/>
+						<FormHelperText>{errors.lname}</FormHelperText>
+					</FormControl>
 
-				<FormControl error={!!errors.uname} margin="dense">
-					<InputLabel htmlFor="uname">Username</InputLabel>
-					<Input
-						id="uname"
-						type="text"
-						name="uname"
-						value={fields.uname}
-						onChange={this.handleInput}
-					/>
-					<FormHelperText>{errors.uname}</FormHelperText>
-				</FormControl>
+					<FormControl error={!!errors.uname} margin="dense">
+						<InputLabel htmlFor="uname">Username</InputLabel>
+						<Input
+							id="uname"
+							type="text"
+							name="uname"
+							value={fields.uname}
+							onChange={this.handleInput}
+						/>
+						<FormHelperText>{errors.uname}</FormHelperText>
+					</FormControl>
 
-				<FormControl error={!!errors.email} margin="dense">
-					<InputLabel htmlFor="email">Email</InputLabel>
-					<Input
-						id="email"
-						type="email"
-						name="email"
-						value={fields.email}
-						onChange={this.handleInput}
-					/>
-					<FormHelperText>{errors.email}</FormHelperText>
-				</FormControl>
+					<FormControl error={!!errors.email} margin="dense">
+						<InputLabel htmlFor="email">Email</InputLabel>
+						<Input
+							id="email"
+							type="email"
+							name="email"
+							value={fields.email}
+							onChange={this.handleInput}
+						/>
+						<FormHelperText>{errors.email}</FormHelperText>
+					</FormControl>
 
-				<FormControl error={!!errors.password} margin="dense">
-					<InputLabel htmlFor="password">Password</InputLabel>
-					<Input
-						id="password"
-						type="password"
-						name="password"
-						value={fields.password}
-						onChange={this.handleInput}
-					/>
-					<FormHelperText>{errors.password}</FormHelperText>
-				</FormControl>
+					<FormControl error={!!errors.password} margin="dense">
+						<InputLabel htmlFor="password">Password</InputLabel>
+						<Input
+							id="password"
+							type="password"
+							name="password"
+							value={fields.password}
+							onChange={this.handleInput}
+						/>
+						<FormHelperText>{errors.password}</FormHelperText>
+					</FormControl>
 
-				<FormControl error={!!errors.confirmPassword} margin="dense">
-					<InputLabel htmlFor="confirmPassword">Confirm password</InputLabel>
-					<Input
-						id="confirmPassword"
-						type="password"
-						name="confirmPassword"
-						value={fields.confirmPassword}
-						onChange={this.handleInput}
-					/>
-					<FormHelperText>{errors.confirmPassword}</FormHelperText>
-				</FormControl>
+					<FormControl error={!!errors.confirmPassword} margin="dense">
+						<InputLabel htmlFor="confirmPassword">Confirm password</InputLabel>
+						<Input
+							id="confirmPassword"
+							type="password"
+							name="confirmPassword"
+							value={fields.confirmPassword}
+							onChange={this.handleInput}
+						/>
+						<FormHelperText>{errors.confirmPassword}</FormHelperText>
+					</FormControl>
 
-				<Button className={classes.button} onClick={this.handleSubmit} variant="contained" size="large" color="primary">
-					Register
-				</Button>
-			</Paper>
+					<Button className={classes.button} variant="contained" size="large" color="primary" type="submit">
+						Register
+					</Button>
+				</Paper>
+			</form>
 		);
 	}
 }

@@ -30,31 +30,42 @@ class AuthStore {
         this.errors[fieldName] = error;
     }
 
-    register() {
-        if (this._validateFields(['fname','lname','uname','email','password'])) {
-            const { fname, lname, uname, email, password } = this.fields;
-            const body = { fname, lname, uname, email, password };
-            axios.post('http://localhost:8080/api/auth/registration', body, {withCredentials: true})
-                .then((response) => {
-                    console.log(response);
-                    if (response.data.status === "ok") {
-                        // email is sent and we to need notify user about it in some form
-                    }
-                    else if (response.data.status === "error")
-                    {
-                        this.errors = response.data.payload;
-                    }
-                })
+    @action setErrors(errors) {
+        Object.keys(errors).forEach(field => {
+            this.errors[field] = errors[field];
+        });
+    }
+
+    async register() {
+        if (this._validateFields(['fname','lname','uname','email','password','confirmPassword'])) {
+            const { ...fields } = this.fields;
+
+            const response = await axios.post('http://localhost:8080/api/auth/registration', fields, {withCredentials: true});
+            console.log(response);
+            if (response.data.status === "ok") {
+                // email is sent and we to need notify user about it in some form
+            } else if (response.data.status === "error") {
+                this.setErrors(response.data.reason);
+            }
         }
     }
 
-    login() {
+    async login() {
+        console.log('AAAA');
         if (this._validateFields(['uname','password'])) {
-            // Submit user info to the server
+            console.log('AAAA2');
+            const { uname, password } = this.fields;
+            const response = await axios.post('http://localhost:8080/api/auth/login', { uname, password }, {withCredentials: true});
+            console.log(response);
+            if (response.data.status === 'ok') {
+
+            } else {
+
+            }
         }
     }
 
-    lostPass() {
+    async lostPass() {
         if (this._validateFields(['email'])) {
             
         }
@@ -81,6 +92,7 @@ class AuthStore {
     }
 
     _validateFields(fields) {
+        console.log(this.errors);
 
         let isValid = true;
 
@@ -126,18 +138,19 @@ class AuthStore {
             }
             else if (name === "password"){
                 if (password.length < 8){
-                    this.setError(name, "Password name is too short.");
+                    this.setError(name, "Password is too short.");
                     isValid = false;
                 }
                 else if (password.length > 20) {
-                    this.setError(name, "Password name is too long");
+                    this.setError(name, "Password is too long");
                     isValid = false;
                 }
-                else if (password !== confirmPassword) {
+            }
+            else if (name === "confirmPassword") {
+                if (password !== confirmPassword) {
                     this.setError("confirmPassword", "Passwords doesn't match.");
                     isValid = false;
                 }
-
             }
             else if (name === "email"){
                 if (EmailValidator.validate(email) === false){
@@ -147,6 +160,8 @@ class AuthStore {
             }
 
         });
+        const { ...errors } = this.errors;
+        console.log(errors);
         return isValid;
     }
 }

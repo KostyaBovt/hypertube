@@ -27,7 +27,7 @@ const styles = {
 	authBtnsContainer: {
 		display: 'flex',
 	}
-  };
+};
 
 @inject('AuthStore') @observer
 class Login extends Component {
@@ -44,6 +44,7 @@ class Login extends Component {
 	}
 	
 	handleSubmit(e) {
+		e.preventDefault();
 		this.props.AuthStore.login();
 	}
 
@@ -51,54 +52,56 @@ class Login extends Component {
 		const { fields, errors } = this.props.AuthStore;
 		const { classes } = this.props;
 		return (
-			<Paper className={classes.paper} elevation={1}>
-				<Typography variant="h5" gutterBottom>
-					Log In
-				</Typography>
+			<form onSubmit={this.handleSubmit}>
+				<Paper className={classes.paper} elevation={1}>
+					<Typography variant="h5" gutterBottom>
+						Log In
+					</Typography>
 
-				<FormControl error={!!errors.uname} margin="dense">
-					<InputLabel htmlFor="uname">Username</InputLabel>
-					<Input
-						id="uname"
-						type="text"
-						name="uname"
-						value={fields.uname}
-						onChange={this.handleInput}
-					/>
-					<FormHelperText>{errors.uname}</FormHelperText>
-				</FormControl>
+					<FormControl error={!!errors.uname} margin="dense">
+						<InputLabel htmlFor="uname">Username</InputLabel>
+						<Input
+							id="uname"
+							type="text"
+							name="uname"
+							value={fields.uname}
+							onChange={this.handleInput}
+						/>
+						<FormHelperText>{errors.uname}</FormHelperText>
+					</FormControl>
 
-				<FormControl error={!!errors.password} margin="dense">
-					<InputLabel htmlFor="password">Password</InputLabel>
-					<Input
-						id="password"
-						type="password"
-						name="password"
-						value={fields.password}
-						onChange={this.handleInput}
-					/>
-					<FormHelperText>{errors.password}</FormHelperText>
-				</FormControl>
+					<FormControl error={!!errors.password} margin="dense">
+						<InputLabel htmlFor="password">Password</InputLabel>
+						<Input
+							id="password"
+							type="password"
+							name="password"
+							value={fields.password}
+							onChange={this.handleInput}
+						/>
+						<FormHelperText>{errors.password}</FormHelperText>
+					</FormControl>
 
-				<Button className={classes.button} onClick={this.handleSubmit} variant="contained" color="primary">
-					Log in
-				</Button>
+					<Button className={classes.button} variant="contained" color="primary" type="submit">
+						Log in
+					</Button>
 
-				<div className="social">
-					<a title="42_Intra" href="http://localhost:8080/api/auth/intra/login">
-						<img src={intra_logo} height="20"/>
-					</a>
-					<a title="GitHub" href="http://localhost:8080/api/auth/github/login">
-						<i className="fa fa-github"></i>
-					</a>
-					<a title="Google" href="http://localhost:8080/api/auth/google/login">
-						<i  className="fa fa-google-plus-circle " aria-hidden="true"></i>
-					</a>
-					<div>
-					<Link to="/auth/lostpass">Forgot Password?</Link>
+					<div className="social">
+						<a title="42_Intra" href="http://localhost:8080/api/auth/intra/login">
+							<img src={intra_logo} height="20"/>
+						</a>
+						<a title="GitHub" href="http://localhost:8080/api/auth/github/login">
+							<i className="fa fa-github"></i>
+						</a>
+						<a title="Google" href="http://localhost:8080/api/auth/google/login">
+							<i  className="fa fa-google-plus-circle " aria-hidden="true"></i>
+						</a>
+						<Typography variant="body1">
+							<Link to="/auth/lostpass">Forgot password?</Link>
+						</Typography>
 					</div>
-				</div>
-			</Paper>
+				</Paper>
+			</form>
 		);
 	}
 }

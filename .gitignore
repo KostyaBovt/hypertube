@@ -9,4 +9,5 @@ hyper/.hyper.plt
 hyper/Mnesia*
 hyper/xrefr
 hyper/logs/erlang.log*
+hyper/logs/run_erl.log*
 

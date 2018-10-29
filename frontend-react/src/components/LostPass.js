@@ -26,7 +26,7 @@ const styles = {
 	authBtnsContainer: {
 		display: 'flex',
 	}
-  };
+};
 
 
 @inject('AuthStore') @observer
@@ -44,33 +44,37 @@ class LostPass extends Component {
 	}
 	
 	handleSubmit(e) {
+		e.preventDefault();
 		this.props.AuthStore.lostPass();
 	}
+
 	render() {
 		const { fields, errors } = this.props.AuthStore;
 		const { classes } = this.props;
 		return (
-			<Paper className={classes.paper} elevation={1}>
-				<Typography variant="h5" gutterBottom>
-					Lost Password
-				</Typography>
+			<form onSubmit={this.handleSubmit}>
+				<Paper className={classes.paper} elevation={1}>
+					<Typography variant="h5" gutterBottom>
+						Lost Password
+					</Typography>
 
-				<FormControl error={!!errors.email} margin="dense">
-					<InputLabel htmlFor="email">Your Email</InputLabel>
-					<Input
-						id="email"
-						type="email"
-						name="email"
-						value={fields.email}
-						onChange={this.handleInput}
-					/>
-					<FormHelperText>{errors.email}</FormHelperText>
-				</FormControl>
+					<FormControl error={!!errors.email} margin="dense">
+						<InputLabel htmlFor="email">Your Email</InputLabel>
+						<Input
+							id="email"
+							type="email"
+							name="email"
+							value={fields.email}
+							onChange={this.handleInput}
+						/>
+						<FormHelperText>{errors.email}</FormHelperText>
+					</FormControl>
 
-				<Button className={classes.button} onClick={this.handleSubmit} variant="contained" color="primary">
-					Submit
-				</Button>
-			</Paper>
+					<Button className={classes.button} variant="contained" color="primary" type="submit">
+						Submit
+					</Button>
+				</Paper>
+			</form>
 		);
 	}
 }
