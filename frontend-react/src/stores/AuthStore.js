@@ -41,33 +41,42 @@ class AuthStore {
             const { ...fields } = this.fields;
 
             const response = await axios.post('http://localhost:8080/api/auth/registration', fields, {withCredentials: true});
-            console.log(response);
             if (response.data.status === "ok") {
                 // email is sent and we to need notify user about it in some form
             } else if (response.data.status === "error") {
                 this.setErrors(response.data.reason);
             }
+
+            console.log(response);
         }
     }
 
     async login() {
-        console.log('AAAA');
         if (this._validateFields(['uname','password'])) {
-            console.log('AAAA2');
             const { uname, password } = this.fields;
             const response = await axios.post('http://localhost:8080/api/auth/login', { uname, password }, {withCredentials: true});
-            console.log(response);
             if (response.data.status === 'ok') {
-
+                
             } else {
-
+                
             }
+
+            console.log(response);
         }
     }
 
     async lostPass() {
         if (this._validateFields(['email'])) {
             
+        }
+    }
+
+    async logout() {
+        try {
+            const response = await axios.post('http://localhost:8080/api/auth/logout', null, {withCredentials: true});
+            console.log(response);
+        } catch (e) {
+            console.error(e);
         }
     }
 
@@ -92,10 +101,7 @@ class AuthStore {
     }
 
     _validateFields(fields) {
-        console.log(this.errors);
-
         let isValid = true;
-
         const {
             fname,
             lname,
@@ -110,49 +116,40 @@ class AuthStore {
                 if (uname.length < 6){
                     this.setError(name, "Username is too short.");
                     isValid = false;
-                }
-                else if (uname.length > 16) {
+                } else if (uname.length > 16) {
                     this.setError(name, "Username is too long");
                     isValid = false;
                 }
-            }
-            else if (name === "fname"){
+            } else if (name === "fname"){
                 if (fname.length < 1){
                     this.setError(name, "First name is too short.");
                     isValid = false;
-                }
-                else if (fname.length > 50) {
+                } else if (fname.length > 50) {
                     this.setError(name, "First name is too long");
                     isValid = false;
                 }
-            }
-            else if (name === "lname"){
+            } else if (name === "lname"){
                 if (lname.length < 1){
                     this.setError(name, "Last name is too short.");
                     isValid = false;
-                }
-                else if (lname.length > 50) {
+                } else if (lname.length > 50) {
                     this.setError(name, "Last name is too long");
                     isValid = false;
                 }
-            }
-            else if (name === "password"){
+            } else if (name === "password"){
                 if (password.length < 8){
                     this.setError(name, "Password is too short.");
                     isValid = false;
-                }
-                else if (password.length > 20) {
+                } else if (password.length > 20) {
                     this.setError(name, "Password is too long");
                     isValid = false;
                 }
-            }
-            else if (name === "confirmPassword") {
+            } else if (name === "confirmPassword") {
                 if (password !== confirmPassword) {
                     this.setError("confirmPassword", "Passwords doesn't match.");
                     isValid = false;
                 }
-            }
-            else if (name === "email"){
+            } else if (name === "email"){
                 if (EmailValidator.validate(email) === false){
                     this.setError(name, "Email is invalid.");
                     isValid = false;
@@ -160,6 +157,7 @@ class AuthStore {
             }
 
         });
+
         const { ...errors } = this.errors;
         console.log(errors);
         return isValid;

@@ -4,18 +4,25 @@ import axios from 'axios';
 class UserStore {
     @observable self = undefined;
     
-    pullSelf() {
-        axios.get('http://localhost:8080/api/profile', {withCredentials: true})
-            .then((response) => {
-                console.log(response);
-                this.self = response.data.payload;
-            })
-            .catch((error) =>{
-                this.self = null;
-                console.log(error);
-            })
-
+    @action setSelf(data) {
+        this.self = data;
     }
+
+    @action forgetSelf() {
+        this.self = null;
+    }
+
+    async pullSelf() {
+        try {
+            const response = await axios.get('http://localhost:8080/api/profile', { withCredentials: true })
+            this.setSelf(response.data.payload);
+            console.log(response);
+        } catch (e) {
+            this.self = null;
+            console.error(e);
+        }
+    }
+
 }
 
 export default new UserStore();
