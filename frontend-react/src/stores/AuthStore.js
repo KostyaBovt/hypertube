@@ -2,6 +2,8 @@ import { observable, action } from "mobx";
 import * as EmailValidator from 'email-validator';
 import axios from 'axios';
 
+import UserStore from './UserStore';
+
 class AuthStore {
     @observable fields = {
         fname: '',
@@ -40,28 +42,35 @@ class AuthStore {
         if (this._validateFields(['fname','lname','uname','email','password','confirmPassword'])) {
             const { ...fields } = this.fields;
 
-            const response = await axios.post('http://localhost:8080/api/auth/registration', fields, {withCredentials: true});
-            if (response.data.status === "ok") {
-                // email is sent and we to need notify user about it in some form
-            } else if (response.data.status === "error") {
-                this.setErrors(response.data.reason);
-            }
+            try {
+                const response = await axios.post('http://localhost:8080/api/auth/registration', fields, {withCredentials: true});
+                if (response.data.status === "ok") {
+                    // email is sent and we to need notify user about it in some form
+                } else if (response.data.status === "error") {
+                    this.setErrors(response.data.reason);
+                }   
 
-            console.log(response);
+                console.log(response);
+            } catch (e) {
+                console.error(e);
+            }
         }
     }
 
     async login() {
         if (this._validateFields(['uname','password'])) {
             const { uname, password } = this.fields;
-            const response = await axios.post('http://localhost:8080/api/auth/login', { uname, password }, {withCredentials: true});
-            if (response.data.status === 'ok') {
-                
-            } else {
-                
+            try {
+                const response = await axios.post('http://localhost:8080/api/auth/login', { uname, password }, {withCredentials: true});
+                if (response.data.status === 'ok') {
+                    UserStore.setSelf(response.data.payload);
+                } else {
+                    
+                }   
+                console.log(response);
+            } catch (e) {
+                console.log(e);
             }
-
-            console.log(response);
         }
     }
 

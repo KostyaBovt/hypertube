@@ -47,15 +47,15 @@ class Header extends Component {
 		const { classes } = this.props;
 		return (
 			<div className={classes.root}>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography id="logo" variant="h6" color="inherit" className={classes.grow}>
-            HyperTube
-          </Typography>
-          { this.renderAuthButtons(classes) }
-        </Toolbar>
-      </AppBar>
-    </div>
+        <AppBar position="static">
+          <Toolbar>
+            <Typography id="logo" variant="h6" color="inherit" className={classes.grow}>
+              HyperTube
+            </Typography>
+            { this.renderAuthButtons(classes) }
+          </Toolbar>
+        </AppBar>
+      </div>
 		);
 	}
 };

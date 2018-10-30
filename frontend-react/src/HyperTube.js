@@ -12,10 +12,11 @@ import { inject, observer } from 'mobx-react';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import teal from '@material-ui/core/colors/teal';
+import grey from '@material-ui/core/colors/grey';
 
 const theme = createMuiTheme({
   palette: {
-    primary: teal,
+    primary: teal
   },
   typography: {
     useNextVariants: true,
@@ -26,6 +27,7 @@ const theme = createMuiTheme({
 class HyperTube extends Component {
     componentDidMount(){
         const { UserStore } = this.props;
+        
         UserStore.pullSelf();
         console.log("us: ", UserStore.self);
     }
@@ -33,8 +35,7 @@ class HyperTube extends Component {
       const { UserStore } = this.props;
       if (UserStore.self === undefined) {
           return null;
-      }
-      else {
+      } else {
           return (
               <MuiThemeProvider theme={theme}>
                   <BrowserRouter>
