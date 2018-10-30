@@ -10,4 +10,4 @@ hyper/Mnesia*
 hyper/xrefr
 hyper/logs/erlang.log*
 hyper/logs/run_erl.log*
-
+.DS_Store
