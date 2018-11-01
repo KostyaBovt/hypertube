@@ -8,6 +8,10 @@ class UserStore {
         this.self = data;
     }
 
+    @action updateSelfField(fieldName, value) {
+        this.self[fieldName] = value;
+    }
+
     @action forgetSelf() {
         this.self = null;
     }
@@ -19,6 +23,19 @@ class UserStore {
             console.log(response);
         } catch (e) {
             this.self = null;
+            console.error(e);
+        }
+    }
+
+    async updateProfile(fieldName, value) {
+        const data = {};
+        data[fieldName] = value; 
+
+        try {
+            const response = await axios.post('http://localhost:8080/api/profile', data, { withCredentials: true });
+            this.updateSelfField(fieldName, value)
+            console.log(response);
+        } catch (e) {
             console.error(e);
         }
     }
