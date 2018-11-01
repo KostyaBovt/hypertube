@@ -5,17 +5,18 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import { inject, observer } from 'mobx-react';
+import { IconButton, Icon, Menu, MenuItem } from '@material-ui/core';
 
 const styles = {
-  root: {
-    flexGrow: 1,
-  },
-  grow: {
-    flexGrow: 1,
-	},
-	buttons: {
-		marginLeft: 5
-	}
+    root: {
+        flexGrow: 1,
+    },
+    grow: {
+        flexGrow: 1,
+    },
+    buttons: {
+        marginLeft: 5
+    }
 };
 
 @inject('UserStore', 'AuthStore') @observer
@@ -32,31 +33,36 @@ class Header extends Component {
 
   renderAuthButtons(classes) {
     if (this.props.UserStore.self) {
-      return <Button onClick={this.logoutUser} className={classes.buttons} color="inherit">Logout</Button>;
+        return (
+            <React.Fragment>
+                <Button href="/profile" className={classes.buttons} color="inherit">Profile</Button>
+                <Button onClick={this.logoutUser} className={classes.buttons} color="inherit">Logout</Button>
+            </React.Fragment>
+        )
     } else {
-      return (
-        <React.Fragment>
-          <Button href="/auth/registration" className={classes.buttons} color="inherit">Register</Button>
-          <Button href="/auth/login" className={classes.buttons} color="inherit">Login</Button>
-        </React.Fragment>
-      )
+        return (
+            <React.Fragment>
+                <Button href="/auth/registration" className={classes.buttons} color="inherit">Register</Button>
+                <Button href="/auth/login" className={classes.buttons} color="inherit">Login</Button>
+            </React.Fragment>
+        )
     }
   }
   
   render() {
-		const { classes } = this.props;
-		return (
-			<div className={classes.root}>
-        <AppBar position="static">
-          <Toolbar>
-            <Typography id="logo" variant="h6" color="inherit" className={classes.grow}>
-              HyperTube
-            </Typography>
-            { this.renderAuthButtons(classes) }
-          </Toolbar>
-        </AppBar>
-      </div>
-		);
+        const { classes } = this.props;
+        return (
+            <div className={classes.root}>
+                <AppBar position="static">
+                    <Toolbar>
+                        <Typography id="logo" variant="h6" color="inherit" className={classes.grow}>
+                            HyperTube
+                        </Typography>
+                        { this.renderAuthButtons(classes) }
+                    </Toolbar>
+                </AppBar>
+            </div>
+        );
 	}
 };
 

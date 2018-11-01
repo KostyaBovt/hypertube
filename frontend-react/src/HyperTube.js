@@ -12,7 +12,6 @@ import { inject, observer } from 'mobx-react';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import teal from '@material-ui/core/colors/teal';
-import grey from '@material-ui/core/colors/grey';
 
 const theme = createMuiTheme({
   palette: {
