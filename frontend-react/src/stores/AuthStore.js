@@ -45,9 +45,11 @@ class AuthStore {
             try {
                 const response = await axios.post('http://localhost:8080/api/auth/registration', fields, {withCredentials: true});
                 if (response.data.status === "ok") {
-                    // email is sent and we to need notify user about it in some form
+                    this.resetStore();
+                    return true;
                 } else if (response.data.status === "error") {
                     this.setErrors(response.data.reason);
+                    return false;
                 }   
 
                 console.log(response);
