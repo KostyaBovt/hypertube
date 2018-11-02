@@ -3,6 +3,7 @@ import axios from 'axios';
 
 class UserStore {
     @observable self = undefined;
+    @observable user = undefined;
 
     @observable profileError = null;
     @observable isErrorDisplayed = false;
@@ -15,9 +16,14 @@ class UserStore {
         this.isErrorDisplayed = status;
     }
 
+    @action setUser(data) {
+        this.user = data;
+    }
+
     @action setSelf(data) {
         this.self = data;
     }
+
 
     @action updateSelfField(fieldName, value) {
         this.self[fieldName] = value;
@@ -27,11 +33,22 @@ class UserStore {
         this.self = null;
     }
 
+    async pullUser(username) {
+        try {
+            const response = await axios.get('http://localhost:8080/api/user/' + username, { withCredentials: true })
+            this.setUser(response.data.payload);
+            console.log('User: ', response);
+        } catch (e) {
+            this.user = null;
+            console.error(e);
+        }
+    }
+
     async pullSelf() {
         try {
             const response = await axios.get('http://localhost:8080/api/profile', { withCredentials: true })
             this.setSelf(response.data.payload);
-            console.log(response);
+            console.log('Self: ', response);
         } catch (e) {
             this.self = null;
             console.error(e);

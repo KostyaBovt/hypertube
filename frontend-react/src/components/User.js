@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Paper, Grid, Avatar, Typography, withStyles } from '@material-ui/core';
+import { inject, observer } from 'mobx-react';
 
 const styles = theme => ({
 	layout: {
@@ -36,25 +37,36 @@ const styles = theme => ({
 	},
 });
 
+@inject('UserStore') @observer
 class User extends Component {
+
+	componentWillMount(){
+        const { UserStore } = this.props;
+        UserStore.pullUser(this.props.match.params.username);
+	}
+
 	render() {
 		const { classes } = this.props;
+		if (this.props.UserStore.user === undefined)
+		    return null;
+        const { avatar, bio, fname, lname, uname } = this.props.UserStore.user;
+		console.log(this.props.UserStore);
 		return (
 			<main className={classes.layout}>
 				<Paper className={classes.paper}>
 					<Grid className={classes.container} container spacing={16}>
 						<Grid item>
-							<Avatar className={classes.avatar} src="https://images.unsplash.com/photo-1521119989659-a83eee488004"/>
+							<Avatar className={classes.avatar} src={avatar}/>
 						</Grid>
 						<Grid item className={classes.mainUserInfo}>
 							<Typography variant="h6">
-								Roman Tarasenko
+                                {fname} {lname}
 							</Typography>
 							<Typography variant="subtitle2" color="textSecondary" gutterBottom>
-								rtarasen
+                                {uname}
 							</Typography>
 							<Typography variant="subtitle1" paragraph>
-								Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.
+                                {bio}
 							</Typography>
 						</Grid>
 					</Grid>
