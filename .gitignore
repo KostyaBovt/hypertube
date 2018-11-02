@@ -10,4 +10,5 @@ hyper/Mnesia*
 hyper/xrefr
 hyper/logs/erlang.log*
 hyper/logs/run_erl.log*
+hyper/priv/static/photos/*.*
 .DS_Store

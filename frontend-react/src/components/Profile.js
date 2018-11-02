@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
-import { Grid, Paper, withStyles, Avatar, List, ListSubheader, ListItem, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions, Button, FormControl, InputLabel, Input, FormHelperText } from '@material-ui/core';
+import { Grid, Paper, withStyles, Avatar, List, ListSubheader, ListItem, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions, Button, FormControl, InputLabel, Input, FormHelperText, Icon, ListItemIcon, Snackbar, IconButton } from '@material-ui/core';
 import { inject, observer } from 'mobx-react';
 import simpleValidator from '../helpers/simpleValidator';
+import imgHelpers from '../helpers/imgHelpers';
+
 
 const styles = theme => ({
 	layout: {
 		width: 'auto',
-		marginLeft: theme.spacing.unit * 2,
-		marginRight: theme.spacing.unit * 2,
 		[theme.breakpoints.up(600 + theme.spacing.unit * 2 * 2)]: {
 			width: 600,
 			marginLeft: 'auto',
@@ -16,8 +16,8 @@ const styles = theme => ({
 	},
 	paper: {
 		marginTop: theme.spacing.unit * 3,
-		marginBottom: theme.spacing.unit * 3,
-		padding: theme.spacing.unit * 2
+		marginBottom: theme.spacing.unit * 2,
+		padding: 0
 	},
 	container : {
 		display: 'flex',
@@ -32,20 +32,7 @@ const styles = theme => ({
 		backgroundColor: theme.palette.grey,
 		width: 256,
 		height: 256
-	},
-	mainUserInfo: {
-		margin: theme.spacing.unit
-	},
-	editButton: {
-		marginLeft: theme.spacing.unit,
-	},
-	listSection: {
-		backgroundColor: 'inherit',
-	},
-	ul: {
-		backgroundColor: 'inherit',
-		padding: 0,
-	},
+	}
 });
 
 const fieldLabels = {
@@ -54,6 +41,7 @@ const fieldLabels = {
 	"uname": "Username",
 	"email": "Email",
 	"bio": "Bio",
+	"picture": "Profile picture"
 }
 
 @inject('UserStore') @observer
@@ -73,12 +61,20 @@ class Profile extends Component {
 		this.handleItemClick = this.handleItemClick.bind(this);
 		this.handleInput = this.handleInput.bind(this);
 		this.saveFieldValue = this.saveFieldValue.bind(this);
+		this.deleteCurrentPicture = this.deleteCurrentPicture.bind(this);
+		this.onFileChange = this.onFileChange.bind(this);
+		this.handleSnackbarClose = this.handleSnackbarClose.bind(this);
+		this.fileInput = React.createRef();
 	}
 
 	handleDialogClose(e, reason) {
 		this.setState({
 			isDialogOpen: false
 		});
+	}
+
+	handleSnackbarClose(e, reason) {
+		this.props.UserStore.setError('');
 	}
 
 	handleItemClick(e) {
@@ -105,7 +101,15 @@ class Profile extends Component {
 	}
 
 	async saveFieldValue(e) {
-		const { selectedField, inputValue } = this.state;
+		const { self } = this.props.UserStore;
+		let { selectedField, inputValue } = this.state;
+		inputValue = inputValue.trim();
+
+		if (inputValue === self[selectedField]) {
+			this.setState({ isDialogOpen: false });
+			return;
+		}
+
 		const validationResult = simpleValidator(selectedField, inputValue);
 
 		if (validationResult.isValid) {
@@ -119,10 +123,102 @@ class Profile extends Component {
 			this.setState({ inputError: validationResult.error });
 		}
 	}
+
+	
+	async deleteCurrentPicture(e) {
+		const { UserStore } = this.props;
+		await UserStore.updateProfile('avatar', null);
+	}
+	
+	async onFileChange(e) {
+		const { UserStore } = this.props;
+
+		const file = e.target.files[0];
+		e.target.value = '';
+
+		if (file && file.size < 3000000) {
+			try {
+				const src = await imgHelpers.imgFileToBase64(file);
+				UserStore.updateProfile('avatar', src);
+			} catch (e) {
+				UserStore.setError('image processing failed, please try again');
+				console.error(e);
+			}
+		} else {
+			UserStore.setError('File is too big');
+		}
+	}
+
+	renderDialog(self) {
+		const { isDialogOpen, selectedField, inputError, inputValue } = this.state;
+
+		return (
+			<Dialog
+				open={isDialogOpen}
+				onClose={this.handleDialogClose}
+				aria-labelledby="form-dialog-title"
+				fullWidth
+			>
+				<DialogTitle id="form-dialog-title">Change {fieldLabels[selectedField].toLowerCase()}</DialogTitle>
+				<DialogContent>
+					<form onSubmit={this.handleFormSubmit.bind(this)}>
+						<FormControl error={!!inputError} fullWidth>
+							<InputLabel htmlFor={selectedField}>{fieldLabels[selectedField]}</InputLabel>
+							<Input
+								id={selectedField}
+								type="text"
+								name={selectedField}
+								value={inputValue || ''}
+								autoFocus
+								onChange={this.handleInput}
+								multiline={selectedField === 'bio'}
+							/>
+							<FormHelperText>{inputError}</FormHelperText>
+						</FormControl>
+					</form>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={this.handleDialogClose} color="primary">
+						Cancel
+					</Button>
+					<Button onClick={this.saveFieldValue} color="primary">
+						Save
+					</Button>
+				</DialogActions>
+			</Dialog>
+		);
+	}
+
+	renderSnackBar(error) {
+		return (
+			<Snackbar
+				anchorOrigin={{
+					vertical: 'bottom',
+					horizontal: 'left',
+				}}
+				open={!!error}
+				autoHideDuration={6000}
+				onClose={this.handleSnackbarClose}
+				message={<span>Error: {error}</span>}
+				action={[
+					<IconButton
+						key="close"
+						aria-label="Close"
+						color="inherit"
+						onClick={this.handleSnackbarClose}
+					>
+						<Icon>
+							close
+						</Icon>
+					</IconButton>
+				]}
+			/>
+		)
+	}
 	
 	renderAvatar(self, classes) {
 		if (self.avatar) {
-			return <Avatar className={classes.avatar} src={self.avatar} />;
+			return <Avatar className={classes.avatar} src={`http://localhost:8080${self.avatar}`} />;
 		} else {
 			return (
 				<Avatar className={classes.avatar} src={self.avatar} >
@@ -134,53 +230,45 @@ class Profile extends Component {
 
 	render() {
 		const { classes } = this.props;
-		const { self } = this.props.UserStore;
-		const { isDialogOpen, selectedField, inputError, inputValue } = this.state;
+		const { self, profileError } = this.props.UserStore;
 
 		return (
 			<main className={classes.layout}>
 
-				<Dialog
-					open={isDialogOpen}
-					onClose={this.handleDialogClose}
-					aria-labelledby="form-dialog-title"
-					fullWidth
-				>
-					<DialogTitle id="form-dialog-title">Change {fieldLabels[selectedField].toLowerCase()}</DialogTitle>
-					<DialogContent>
-						<form onSubmit={this.handleFormSubmit.bind(this)}>
-							<FormControl error={!!inputError} fullWidth>
-								<InputLabel htmlFor={selectedField}>{fieldLabels[selectedField]}</InputLabel>
-								<Input
-									id={selectedField}
-									type="text"
-									name={selectedField}
-									value={inputValue || ''}
-									autoFocus
-									onChange={this.handleInput}
-									multiline={selectedField === 'bio'}
-								/>
-								<FormHelperText>{inputError}</FormHelperText>
-							</FormControl>
-						</form>
-					</DialogContent>
-					<DialogActions>
-						<Button onClick={this.handleDialogClose} color="primary">
-							Cancel
-						</Button>
-						<Button onClick={this.saveFieldValue} color="primary">
-							Save
-						</Button>
-					</DialogActions>
-				</Dialog>
+				{ this.renderDialog(self) }
+				<input style={{ 'display': 'none' }} onChange={this.onFileChange} ref={this.fileInput} type="file" accept="image/*" />
 
-				<Paper className={classes.paper}>
-					<Grid className={classes.container} container spacing={16}>
-						<Grid className={classes.avatarContainer} xs={12} item>
-							{ this.renderAvatar(self, classes) }
-						</Grid>
-						<Grid item xs={12} className={classes.mainUserInfo}>
-							<List subheader={ <ListSubheader color="primary">Profile</ListSubheader> }>
+				{ this.renderSnackBar(profileError) }
+
+				<Grid className={classes.container} container spacing={0}>
+					<Grid item xs={12}>
+						<Paper className={classes.paper}>
+							<List disablePadding subheader={ <ListSubheader disableSticky color="primary">Picture</ListSubheader> }>
+								<ListItem divider className={classes.avatarContainer}>
+									{ this.renderAvatar(self, classes) }
+								</ListItem>
+								<ListItem divider button onClick={() => { this.fileInput.current.click() }}>
+									<ListItemIcon>
+										<Icon>
+											cloud_upload
+										</Icon>
+									</ListItemIcon>
+									<ListItemText primary="Upload new picture"/>
+								</ListItem>
+								<ListItem button onClick={this.deleteCurrentPicture}>
+									<ListItemIcon>
+										<Icon>
+											delete
+										</Icon>
+									</ListItemIcon>
+									<ListItemText primary="Delete current picture"/>
+								</ListItem>
+							</List>
+						</Paper>
+					</Grid>
+					<Grid item xs={12}>
+						<Paper className={classes.paper}>
+							<List disablePadding subheader={ <ListSubheader disableSticky color="primary">Info</ListSubheader> }>
 								<ListItem id="fname" button divider onClick={this.handleItemClick}>
 									<ListItemText
 										primary={self.fname}
@@ -208,9 +296,9 @@ class Profile extends Component {
 									/>
 								</ListItem>
 							</List>
-						</Grid>
+						</Paper>
 					</Grid>
-				</Paper>
+				</Grid>
 
 		  </main>	  
 		);
