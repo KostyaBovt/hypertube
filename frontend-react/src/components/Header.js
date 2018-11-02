@@ -7,6 +7,8 @@ import Button from '@material-ui/core/Button';
 import { inject, observer } from 'mobx-react';
 import { IconButton, Icon, Menu, MenuItem } from '@material-ui/core';
 
+import { Link } from 'react-router-dom'
+
 const styles = {
     root: {
         flexGrow: 1,
@@ -35,15 +37,15 @@ class Header extends Component {
     if (this.props.UserStore.self) {
         return (
             <React.Fragment>
-                <Button href="/profile" className={classes.buttons} color="inherit">Profile</Button>
+                <Button component={Link} to="/profile" className={classes.buttons} color="inherit">Profile</Button>
                 <Button onClick={this.logoutUser} className={classes.buttons} color="inherit">Logout</Button>
             </React.Fragment>
         )
     } else {
         return (
             <React.Fragment>
-                <Button href="/auth/registration" className={classes.buttons} color="inherit">Register</Button>
-                <Button href="/auth/login" className={classes.buttons} color="inherit">Login</Button>
+                <Button component={Link} to="/auth/registration" className={classes.buttons} color="inherit">Register</Button>
+                <Button component={Link} to="/auth/login" className={classes.buttons} color="inherit">Login</Button>
             </React.Fragment>
         )
     }
