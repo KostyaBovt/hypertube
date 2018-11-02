@@ -55,7 +55,8 @@ update_profile(UId, Uname, Fname, Lname, Bio, <<Avatar0/binary>>) ->
         [_, Avatar1] ->
             case process_photo(base64:decode(Avatar1)) of
                 {ok, PhotoName} ->
-                    {ok, _} = hyper_db:update_user(UId, Uname, Fname, Lname, Bio, PhotoName);
+                    {ok, U} = hyper_db:update_user(UId, Uname, Fname, Lname, Bio, PhotoName),
+					{ok, prefix_avatar_path(U)};
                 _ ->
                     {error, #{<<"avatar">> => <<"invalid format">>}}
             end;
