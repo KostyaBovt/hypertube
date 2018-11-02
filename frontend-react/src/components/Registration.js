@@ -44,6 +44,10 @@ class Registration extends Component {
 		this.handleDialogClose = this.handleDialogClose.bind(this);
 	}
 
+	componentWillUnmount() {
+		this.props.AuthStore.resetStore();
+	}
+
 	handleInput(e) {
 		const { AuthStore } = this.props;
 		const { name, value } = e.target;

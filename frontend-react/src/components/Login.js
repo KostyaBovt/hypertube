@@ -37,6 +37,10 @@ class Login extends Component {
 		this.handleSubmit = this.handleSubmit.bind(this);
 	}
 
+	componentWillUnmount() {
+		this.props.AuthStore.resetStore();
+	}
+
 	handleInput(e) {
 		const { AuthStore } = this.props;
 		const { name, value } = e.target;
