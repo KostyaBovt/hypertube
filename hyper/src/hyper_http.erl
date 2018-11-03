@@ -6,8 +6,6 @@
 
 -export([get/1, post/1]).
 
--define(FRONTEND_ORIGIN, <<"http://localhost:3000">>).
-
 -type mod() :: {delete_cookie, Name::binary()} | {set_cookie, Name::binary(), Value::binary()}.
 -type handler_ret() :: ok | {ok, map() | [map()] | mod()} | {ok, map() | [map()], mod()} |
                        {redirect, Uri::binary()} | {redirect, Uri::binary(), mod()} |

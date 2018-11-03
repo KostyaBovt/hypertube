@@ -101,7 +101,7 @@ update_email(Qs) ->
         #email_updating_state{uid = UId, email = Email} ->
             hyper_db:update_user_email(UId, Email),
             hyper_mnesia:delete_email_updating_state(Token),
-            {redirect, <<?FRONTEND_HOST, "/">>};
+            {redirect, <<?FRONTEND_ORIGIN, "/">>};
         null ->
             {redirect, ?LINK_EXPIRED_REDIRECT_PATH}
     end.

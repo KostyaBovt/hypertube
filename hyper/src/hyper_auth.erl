@@ -15,8 +15,8 @@
 
 -import(hyper_lib, [gv/2, gv/3, sv/3]).
 
--define(LOGIN_REDIRECT_PATH, <<?FRONTEND_HOST, "/">>).
--define(PASSWORD_RECOVERING_REDIRECT_PATH, <<?FRONTEND_HOST, "/auth/lostpass/newpass">>).
+-define(LOGIN_REDIRECT_PATH, <<?FRONTEND_ORIGIN, "/">>).
+-define(PASSWORD_RECOVERING_REDIRECT_PATH, <<?FRONTEND_ORIGIN, "/auth/lostpass/newpass">>).
 -define(PASSWORD_RECOVERING_COOKIE_NAME, <<"recovering-token">>).
 -define(AUTH_COOKIE_NAME, <<"x-auth-token">>).
 -define(JWT_KEY, <<"change_me">>). % TODO
