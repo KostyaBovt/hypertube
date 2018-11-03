@@ -44,7 +44,7 @@ const fieldLabels = {
 	"picture": "Profile picture"
 }
 
-@inject('UserStore') @observer
+@inject('SelfStore') @observer
 class Profile extends Component {
 	constructor(props) {
 		super(props);
@@ -61,6 +61,7 @@ class Profile extends Component {
 		this.handleItemClick = this.handleItemClick.bind(this);
 		this.handleInput = this.handleInput.bind(this);
 		this.saveFieldValue = this.saveFieldValue.bind(this);
+		this.importPictureFromSocial = this.importPictureFromSocial.bind(this);
 		this.deleteCurrentPicture = this.deleteCurrentPicture.bind(this);
 		this.onFileChange = this.onFileChange.bind(this);
 		this.handleSnackbarClose = this.handleSnackbarClose.bind(this);
@@ -74,11 +75,11 @@ class Profile extends Component {
 	}
 
 	handleSnackbarClose(e, reason) {
-		this.props.UserStore.setError('');
+		this.props.SelfStore.setError('');
 	}
 
 	handleItemClick(e) {
-		const { self } = this.props.UserStore;
+		const { self } = this.props.SelfStore;
 		const selectedField = e.currentTarget.id;
 
 		this.setState({
@@ -101,10 +102,14 @@ class Profile extends Component {
 	}
 
 	async saveFieldValue(e) {
-		const { self } = this.props.UserStore;
+		const { self } = this.props.SelfStore;
 		let { selectedField, inputValue } = this.state;
-		inputValue = inputValue.trim();
 
+		if (inputValue === null) {
+			return
+		}
+
+		inputValue = inputValue.trim();
 		if (inputValue === self[selectedField]) {
 			this.setState({ isDialogOpen: false });
 			return;
@@ -114,7 +119,7 @@ class Profile extends Component {
 
 		if (validationResult.isValid) {
 			this.setState({ isLoading: true });
-			await this.props.UserStore.updateProfile(selectedField, inputValue);
+			await this.props.SelfStore.updateProfile(selectedField, inputValue);
 			this.setState({
 				isLoading: false,
 				isDialogOpen: false
@@ -124,14 +129,18 @@ class Profile extends Component {
 		}
 	}
 
+	async importPictureFromSocial(e) {
+		const { SelfStore } = this.props;
+		SelfStore.importPictureFromSocial();
+	}
 	
 	async deleteCurrentPicture(e) {
-		const { UserStore } = this.props;
-		await UserStore.updateProfile('avatar', null);
+		const { SelfStore } = this.props;
+		await SelfStore.updateProfile('avatar', null);
 	}
 	
 	async onFileChange(e) {
-		const { UserStore } = this.props;
+		const { SelfStore } = this.props;
 
 		const file = e.target.files[0];
 		e.target.value = '';
@@ -139,17 +148,17 @@ class Profile extends Component {
 		if (file && file.size < 3000000) {
 			try {
 				const src = await imgHelpers.imgFileToBase64(file);
-				UserStore.updateProfile('avatar', src);
+				SelfStore.updateProfile('avatar', src);
 			} catch (e) {
-				UserStore.setError('image processing failed, please try again');
+				SelfStore.setError('image processing failed, please try again');
 				console.error(e);
 			}
 		} else {
-			UserStore.setError('File is too big');
+			SelfStore.setError('file is too big, max size is 3MB');
 		}
 	}
 
-	renderDialog(self) {
+	renderDialog() {
 		const { isDialogOpen, selectedField, inputError, inputValue } = this.state;
 
 		return (
@@ -230,12 +239,12 @@ class Profile extends Component {
 
 	render() {
 		const { classes } = this.props;
-		const { self, profileError } = this.props.UserStore;
+		const { self, profileError } = this.props.SelfStore;
 
 		return (
 			<main className={classes.layout}>
 
-				{ this.renderDialog(self) }
+				{ this.renderDialog() }
 				<input style={{ 'display': 'none' }} onChange={this.onFileChange} ref={this.fileInput} type="file" accept="image/*" />
 
 				{ this.renderSnackBar(profileError) }
@@ -255,6 +264,17 @@ class Profile extends Component {
 									</ListItemIcon>
 									<ListItemText primary="Upload new picture"/>
 								</ListItem>
+								{
+									self.social_provider &&
+									<ListItem divider button onClick={this.importPictureFromSocial}>
+										<ListItemIcon>
+											<Icon>
+												get_app
+											</Icon>
+										</ListItemIcon>
+										<ListItemText primary={`Import picture from ${self.social_provider}`}/>
+									</ListItem>
+								}
 								<ListItem button onClick={this.deleteCurrentPicture}>
 									<ListItemIcon>
 										<Icon>
@@ -271,12 +291,12 @@ class Profile extends Component {
 							<List disablePadding subheader={ <ListSubheader disableSticky color="primary">Info</ListSubheader> }>
 								<ListItem id="fname" button divider onClick={this.handleItemClick}>
 									<ListItemText
-										primary={self.fname}
+										primary={self.fname || "None"}
 										secondary="First name"/>
 								</ListItem>
 								<ListItem id="lname" button divider onClick={this.handleItemClick}>
 									<ListItemText
-										primary={self.lname}
+										primary={self.lname || "None"}
 										secondary="Last name"/>
 								</ListItem>
 								<ListItem id="uname" button divider onClick={this.handleItemClick}>
@@ -286,7 +306,7 @@ class Profile extends Component {
 								</ListItem>
 								<ListItem id="email" button divider onClick={this.handleItemClick}>
 									<ListItemText
-										primary={self.email}
+										primary={self.email || "None"}
 										secondary="Email"/>
 								</ListItem>
 								<ListItem id="bio" button onClick={this.handleItemClick}>
