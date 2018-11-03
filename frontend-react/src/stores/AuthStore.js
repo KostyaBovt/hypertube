@@ -2,7 +2,7 @@ import { observable, action } from "mobx";
 import * as EmailValidator from 'email-validator';
 import axios from 'axios';
 
-import UserStore from './UserStore';
+import UserStore from './SelfStore';
 
 class AuthStore {
     @observable fields = {
@@ -68,7 +68,7 @@ class AuthStore {
                 if (response.data.status === 'ok') {
                     UserStore.setSelf(response.data.payload);
                 } else {
-                    
+                    this.setErrors({ uname: 'Invalid username or password' });
                 }   
                 console.log(response);
             } catch (e) {
