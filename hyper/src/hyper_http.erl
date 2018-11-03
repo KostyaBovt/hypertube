@@ -127,8 +127,8 @@ post(<<"auth/registration">>) ->
                      end,
            v_schema = #{<<"email">> => [required, unique_email],
                         <<"uname">> => [required, unique_uname],
-                        <<"fname">> => [required, {min_length, ?MIN_FNAME_LENGTH}, {max_length, ?MAX_FNAME_LENGTH}],
-                        <<"lname">> => [required, {min_length, ?MIN_LNAME_LENGTH}, {max_length, ?MAX_LNAME_LENGTH}],
+                        <<"fname">> => [required, {length_between, [?MIN_FNAME_LENGTH, ?MAX_FNAME_LENGTH]}],
+                        <<"lname">> => [required, {length_between, [?MIN_LNAME_LENGTH, ?MAX_LNAME_LENGTH]}],
                         <<"password">> => [required, strong_password]}};
 
 post(<<"auth/lostpass">>) ->
@@ -149,9 +149,9 @@ post(<<"profile">>) ->
                                               gv(<<"lname">>, B), gv(<<"bio">>, B), gv(<<"avatar">>, B))
                      end,
            v_schema = #{<<"uname">> => [unique_uname],
-                        <<"fname">> => [{min_length, ?MIN_FNAME_LENGTH}, {max_length, ?MAX_FNAME_LENGTH}],
-                        <<"lname">> => [{min_length, ?MIN_LNAME_LENGTH}, {max_length, ?MAX_LNAME_LENGTH}],
-                        <<"bio">> => [not_empty, {max_length, ?MAX_BIO_LENGTH}],
+                        <<"fname">> => [{length_between, [?MIN_FNAME_LENGTH, ?MAX_FNAME_LENGTH]}],
+                        <<"lname">> => [{length_between, [?MIN_LNAME_LENGTH, ?MAX_LNAME_LENGTH]}],
+                        <<"bio">> => [{max_length, ?MAX_BIO_LENGTH}],
                         <<"avatar">> => [string]},
            scope = user};
 

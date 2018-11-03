@@ -50,7 +50,7 @@ get_profile(UId) ->
                      Bio::binary() | null, Avatar::binary() | null) ->
     hyper_http:handler_ret().
 update_profile(_, null, null, null, null, null) -> ok;
-update_profile(UId, Uname, Fname, Lname, Bio, <<Avatar0/binary>>) ->
+update_profile(UId, Uname, Fname, Lname, Bio, <<_:1/binary, _/binary>> = Avatar0) ->
     case binary:split(Avatar0, <<"base64,">>) of
         [_, Avatar1] ->
             case process_photo(base64:decode(Avatar1)) of
@@ -63,8 +63,8 @@ update_profile(UId, Uname, Fname, Lname, Bio, <<Avatar0/binary>>) ->
         _ ->
             {error, #{<<"avatar">> => <<"invalid format">>}}
     end;
-update_profile(UId, Uname, Fname, Lname, Bio, _) ->
-    hyper_db:update_user(UId, Uname, Fname, Lname, Bio, null).
+update_profile(UId, Uname, Fname, Lname, Bio, Avatar) ->
+    hyper_db:update_user(UId, Uname, Fname, Lname, Bio, Avatar).
 
 -spec update_pass(UId::non_neg_integer(), OldPass::binary(), NewPass::binary()) ->  hyper_http:handler_ret().
 update_pass(UId, OldPass, NewPass) ->
@@ -137,7 +137,7 @@ import_social_avatar(UId) ->
 
 -spec prefix_avatar_path(Data::map()) -> map().
 prefix_avatar_path(Data) ->
-    maps:update_with(<<"avatar">>, fun(<<P/binary>>) -> <<?PHOTOS_PATH, P/binary>>; (null) -> null end, Data).
+    maps:update_with(<<"avatar">>, fun(<<_:1/binary, _/binary>> = P) -> <<?PHOTOS_PATH, P/binary>>; (E) -> E end, Data).
 
 %% Inner
 

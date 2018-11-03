@@ -136,7 +136,7 @@ class Profile extends Component {
 	
 	async deleteCurrentPicture(e) {
 		const { SelfStore } = this.props;
-		await SelfStore.updateProfile('avatar', null);
+		await SelfStore.updateProfile('avatar', '');
 	}
 	
 	async onFileChange(e) {
