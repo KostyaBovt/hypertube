@@ -41,7 +41,7 @@ class AuthStore {
     async register() {
         if (this._validateFields(['fname','lname','uname','email','password','confirmPassword'])) {
             const { ...fields } = this.fields;
-
+            this.clearErrors();
             try {
                 const response = await axios.post('http://localhost:8080/api/auth/registration', fields, {withCredentials: true});
                 if (response.data.status === "ok") {
@@ -62,6 +62,7 @@ class AuthStore {
     async login() {
         if (this._validateFields(['uname','password'])) {
             const { uname, password } = this.fields;
+            this.clearErrors();
             try {
                 const response = await axios.post('http://localhost:8080/api/auth/login', { uname, password }, {withCredentials: true});
                 if (response.data.status === 'ok') {
@@ -89,6 +90,17 @@ class AuthStore {
         } catch (e) {
             console.error(e);
         }
+    }
+
+    @action clearErrors() {
+        this.errors = {
+            fname: '',
+            lname: '',
+            uname: '',
+            email: '',
+            password: '',
+            confirmPassword: ''
+        };
     }
 
     @action resetStore() {
