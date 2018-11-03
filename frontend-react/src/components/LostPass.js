@@ -10,6 +10,7 @@ import Typography from '@material-ui/core/Typography';
 import intra_logo from "../img/42.png";
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
+import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, CircularProgress } from '@material-ui/core';
 
 const styles = {
 	paper: {
@@ -33,8 +34,13 @@ const styles = {
 class LostPass extends Component {
 	constructor(props) {
 		super(props);
+		this.state = {
+			isLoading: false,
+			isDialogOpen: false,
+		}
 		this.handleInput = this.handleInput.bind(this);
 		this.handleSubmit = this.handleSubmit.bind(this);
+		this.handleDialogClose = this.handleDialogClose.bind(this);
 	}
 
 	componentWillUnmount() {
@@ -47,38 +53,80 @@ class LostPass extends Component {
 		AuthStore.setFieldValue(name, value);
 	}
 	
-	handleSubmit(e) {
+	async handleSubmit(e) {
 		e.preventDefault();
-		this.props.AuthStore.lostPass();
+		this.setState({ isLoading: true });
+
+		const success = await this.props.AuthStore.lostPass();
+		if (success) {
+			this.setState({ isDialogOpen: true });
+		}
+		this.setState({ isLoading: false });
+	}
+
+	handleDialogClose(e, reason) {
+		console.log(reason);
+		this.setState({ isDialogOpen: false });
 	}
 
 	render() {
 		const { fields, errors } = this.props.AuthStore;
 		const { classes } = this.props;
+		const { isLoading, isDialogOpen } = this.state;
+
 		return (
-			<form onSubmit={this.handleSubmit}>
-				<Paper className={classes.paper} elevation={1}>
-					<Typography variant="h5" gutterBottom>
-						Lost Password
-					</Typography>
+			<React.Fragment>
 
-					<FormControl error={!!errors.email} margin="dense">
-						<InputLabel htmlFor="email">Your Email</InputLabel>
-						<Input
-							id="email"
-							type="email"
-							name="email"
-							value={fields.email}
-							onChange={this.handleInput}
-						/>
-						<FormHelperText>{errors.email}</FormHelperText>
-					</FormControl>
+				<Dialog
+						open={isDialogOpen}
+						onClose={this.handleDialogClose}
+						aria-labelledby="alert-dialog-title"
+						aria-describedby="alert-dialog-description"
+				>
+						<DialogTitle id="alert-dialog-title">{"Recovering email sent"}</DialogTitle>
+						<DialogContent>
+							<DialogContentText id="alert-dialog-description">
+								Please, check your email and follow the link we've sent to recover your password.
+							</DialogContentText>
+						</DialogContent>
+						<DialogActions>
+							<Button onClick={this.handleDialogClose} color="primary" autoFocus>
+								ok
+							</Button>
+						</DialogActions>
+				</Dialog>
 
-					<Button className={classes.button} variant="contained" color="primary" type="submit">
-						Submit
-					</Button>
-				</Paper>
-			</form>
+				<form onSubmit={this.handleSubmit}>
+					<Paper className={classes.paper} elevation={1}>
+						<Typography variant="h5" gutterBottom>
+							Lost Password
+						</Typography>
+
+						<FormControl error={!!errors.email} margin="dense">
+							<InputLabel htmlFor="email">Your Email</InputLabel>
+							<Input
+								id="email"
+								type="email"
+								name="email"
+								value={fields.email}
+								onChange={this.handleInput}
+							/>
+							<FormHelperText>{errors.email}</FormHelperText>
+						</FormControl>
+
+						<Button 
+							disabled={isLoading}
+							className={classes.button} 
+							variant="contained" 
+							color="primary" 
+							type="submit"
+						>
+							{isLoading ? <CircularProgress size={24} className={classes.buttonProgress}/> : 'Submit'}
+						</Button>
+					</Paper>
+				</form>
+
+			</React.Fragment>
 		);
 	}
 }

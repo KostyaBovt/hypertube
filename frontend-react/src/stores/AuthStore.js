@@ -43,6 +43,7 @@ class AuthStore {
             const { ...fields } = this.fields;
             this.clearErrors();
             try {
+
                 const response = await axios.post('http://localhost:8080/api/auth/registration', fields, {withCredentials: true});
                 if (response.data.status === "ok") {
                     this.resetStore();
@@ -73,13 +74,30 @@ class AuthStore {
                 console.log(response);
             } catch (e) {
                 console.log(e);
+                return false;
             }
         }
     }
 
     async lostPass() {
         if (this._validateFields(['email'])) {
-            
+            const { email } = this.fields;
+            this.clearErrors();
+            try {
+                console.log("HERE");
+                const response = await axios.post('http://localhost:8080/api/auth/lostpass', { email }, {withCredentials: true});
+                console.log("HERE2 ", response);
+                if (response.data.status === 'ok') {
+                    return true;
+                } else if (response.data.status === "error"){
+                    this.setErrors(response.data.reason);
+                    return false;
+                }   
+                console.log(response);
+            } catch (e) {
+                console.log(e);
+                return false;
+            }
         }
     }
 

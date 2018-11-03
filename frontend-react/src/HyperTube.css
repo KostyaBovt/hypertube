@@ -69,22 +69,7 @@
   font-weight: 800;
   letter-spacing: -1px;
   line-height: 1;
-  text-shadow: #e36900 3px -3px 0;
+  text-shadow: #000 3px -3px 0;
   position: relative;
 }
-#logo:after {
-  content:"HyperTube";
-  position: absolute;
-  left: 60px;
-  top: 54px;
-}
-#logo:after {
-  /*background: url(https://subtlepatterns.com/patterns/crossed_stripes.png) repeat;*/
-  background-image: -webkit-linear-gradient(left top, transparent 0%, transparent 55%, #3f9384 25%, #3f9384 100%, transparent 50%, transparent 95%, #3f9384 14%);
-  background-size: 4px 5px;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  z-index: -5;
-  display: block;
-  text-shadow: none;
-}
+
