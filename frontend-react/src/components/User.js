@@ -21,13 +21,16 @@ const styles = theme => ({
 	container : {
 		display: 'flex',
 		flexDirection: 'column',
-		alignItems: 'center'
 	},
 	avatar: {
 		margin: theme.spacing.unit,
-		backgroundColor: theme.palette.secondary.main,
+		backgroundColor: theme.palette.grey,
 		width: 256,
 		height: 256
+	},
+	avatarContainer : {
+		display: 'flex',
+		justifyContent: 'center'
 	},
 	mainUserInfo: {
 		margin: theme.spacing.unit
@@ -45,29 +48,46 @@ class User extends Component {
         UserStore.pullUser(this.props.match.params.username);
 	}
 
+	renderAvatar(user, classes) {
+		if (user.avatar) {
+			return <Avatar className={classes.avatar} src={`http://localhost:8080${user.avatar}`} />;
+		} else {
+			return (
+				<Avatar className={classes.avatar} src={user.avatar} >
+					{`${user.fname.charAt(0)}${user.lname.charAt(0)}`}
+				</Avatar>
+			);
+		}
+	}
+
 	render() {
 		const { classes } = this.props;
-		if (this.props.UserStore.user === undefined)
+		const { user } = this.props.UserStore;
+		
+		if (user === undefined) {
 		    return null;
-        const { avatar, bio, fname, lname, uname } = this.props.UserStore.user;
-		console.log(this.props.UserStore);
+		}
+
 		return (
 			<main className={classes.layout}>
 				<Paper className={classes.paper}>
 					<Grid className={classes.container} container spacing={16}>
-						<Grid item>
-							<Avatar className={classes.avatar} src={avatar}/>
+						<Grid className={classes.avatarContainer} item>
+							{ this.renderAvatar(user, classes) }
 						</Grid>
 						<Grid item className={classes.mainUserInfo}>
 							<Typography variant="h6">
-                                {fname} {lname}
+                                {user.fname} {user.lname}
 							</Typography>
 							<Typography variant="subtitle2" color="textSecondary" gutterBottom>
-                                {uname}
+                                {user.uname}
 							</Typography>
-							<Typography variant="subtitle1" paragraph>
-                                {bio}
-							</Typography>
+							{
+								user.bio &&
+								<Typography variant="subtitle1" paragraph>
+									{user.bio}
+								</Typography>
+							}
 						</Grid>
 					</Grid>
 				</Paper>
