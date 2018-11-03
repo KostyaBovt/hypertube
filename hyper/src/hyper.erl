@@ -128,7 +128,7 @@ import_social_avatar(UId) ->
                         null -> {error, <<"not available">>}
                     end;
                 E ->
-                    io:format("hyper_oauth2:get_profile_info(~p, ~p) error: ~p", [Provider, Token, E]),
+                    io:format("hyper_oauth2:get_profile_info(~p, ~p) error: ~p~n", [Provider, Token, E]),
                     {error, <<"not available">>}
             end;
          {ok, _} ->
@@ -170,6 +170,6 @@ process_photo(Photo) ->
             end,
             {ok, Name};
         E ->
-            io:format("Format convertion failed: ~p", [E]),
+            io:format("Format convertion failed: ~p~n", [E]),
             error
     end.

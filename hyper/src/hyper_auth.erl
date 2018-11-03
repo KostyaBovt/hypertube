@@ -39,11 +39,13 @@ get_udata(Cookies) ->
 social(Network, Action, Url, Qs) ->
     case hyper_oauth2:dispatch(Url, Network, Action, Qs) of
         {profile, Profile} ->
-            io:format("Profile: ~p", [Profile]),
+            io:format("Profile: ~p~n", [Profile]),
             Provider = gv(<<"provider">>, Profile),
             Id = gv(<<"id">>, Profile),
             case hyper_db:get_user_by_social(Provider, Id) of
-                {ok, User} -> redirect_with_auth_token(User);
+                {ok, #{<<"id">> := UId} = User} ->
+                    hyper_db:update_social_token(UId, gv(<<"access_token">>, Profile)),
+                    redirect_with_auth_token(User);
                 null ->
                     {ok, User} = create_user_from_social_profile(Profile, Provider, Id),
                     redirect_with_auth_token(User)
@@ -68,7 +70,8 @@ check_password(Pass, #{<<"password">> := PassHash} = User0) ->
         true ->
             Token = create_auth_token(User0),
             User1 = maps:with([<<"uname">>, <<"fname">>, <<"lname">>, <<"bio">>,
-                               <<"locale">>, <<"avatar">>, <<"email">>, <<"social_provider">>], hyper:prefix_avatar_path(User0)),
+                               <<"locale">>, <<"avatar">>, <<"email">>, <<"social_provider">>],
+                              hyper:prefix_avatar_path(User0)),
             {ok, User1, {set_cookie, ?AUTH_COOKIE_NAME, Token}};
         false -> {error, #{<<"password">> => incorrect}}
     end.

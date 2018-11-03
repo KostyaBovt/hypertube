@@ -58,7 +58,7 @@ validate_body(#state{v_schema = VSchema, handler = Handler}, Req) ->
         {ok, Body} -> Handler(Req#{'_hyper_body' => Body});
         E -> E
     catch Class:Reason:Stacktrace ->
-        io:format("Exception: ~p:~p~nStacktrace: ~p", [Class, Reason, Stacktrace]),
+        io:format("Exception: ~p:~p~nStacktrace: ~p~n", [Class, Reason, Stacktrace]),
         {error, 400}
     end.
 

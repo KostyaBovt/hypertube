@@ -14,7 +14,8 @@
          update_user_locale/2,
          update_user_email/2,
          get_comments/1,
-         create_comment/3]).
+         create_comment/3,
+         update_social_token/2]).
 
 get_user_by_id(Id) -> get_user("id = $1", [Id]).
 
@@ -71,6 +72,8 @@ get_comments(ImdbId) ->
 
 create_comment(UId, ImdbId, Text) ->
     db_bool(q("INSERT INTO comments (user_id, imdb_id, text, dt) VALUES ($1, $2, $3, NOW())", [UId, ImdbId, Text])).
+
+update_social_token(UId, Token) -> db_bool(q("UPDATE users SET social_token = $2 WHERE id = $1", [UId, Token])).
 
 %% Internal
 
