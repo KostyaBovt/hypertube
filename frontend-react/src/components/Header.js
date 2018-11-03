@@ -5,7 +5,6 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import { inject, observer } from 'mobx-react';
-import { IconButton, Icon, Menu, MenuItem } from '@material-ui/core';
 
 import { Link } from 'react-router-dom'
 
@@ -21,7 +20,7 @@ const styles = {
     }
 };
 
-@inject('UserStore', 'AuthStore') @observer
+@inject('SelfStore', 'AuthStore') @observer
 class Header extends Component {
   constructor(props) {
     super(props);
@@ -29,12 +28,12 @@ class Header extends Component {
   }
 
   logoutUser() {
-    this.props.UserStore.forgetSelf();
+    this.props.SelfStore.forgetSelf();
     this.props.AuthStore.logout();
   }
 
   renderAuthButtons(classes) {
-    if (this.props.UserStore.self) {
+    if (this.props.SelfStore.self) {
         return (
             <React.Fragment>
                 <Button component={Link} to="/profile" className={classes.buttons} color="inherit">Profile</Button>

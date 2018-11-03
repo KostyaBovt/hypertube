@@ -5,15 +5,14 @@ import Login from './Login';
 import Registration from './Registration';
 import LostPass from './LostPass';
 import RecoverPass from './RecoverPass';
-import ConfirmEmail from './ConfirmEmail';
 import { inject, observer } from 'mobx-react';
 
-@inject('UserStore') @observer
+@inject('SelfStore') @observer
 class Auth extends Component {
 	render() {
-        const { UserStore, match } = this.props;
-        console.log("us: ", UserStore.self);
-        if (UserStore.self) {
+        const { SelfStore, match } = this.props;
+        console.log("us: ", SelfStore.self);
+        if (SelfStore.self) {
             return <Redirect to="/"/>;
         } else {
             return (
@@ -22,7 +21,6 @@ class Auth extends Component {
                     <Route path={`${match.path}/registration`} component={Registration}/>
                     <Route path={`${match.path}/lostpass`} component={LostPass}/>
                     <Route path={`${match.path}/recoverpass`} component={RecoverPass}/>
-                    <Route path={`${match.path}/confirmemail`} component={ConfirmEmail}/>
                     <Redirect to="/auth/login"/>
                 </Switch>
             );

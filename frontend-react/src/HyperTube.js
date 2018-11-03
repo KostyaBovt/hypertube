@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import Logo from './logo.svg';
 import './HyperTube.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -22,17 +21,17 @@ const theme = createMuiTheme({
   },
 });
 
-@inject('UserStore') @observer
+@inject('SelfStore') @observer
 class HyperTube extends Component {
     componentDidMount(){
-        const { UserStore } = this.props;
+        const { SelfStore } = this.props;
         
-        UserStore.pullSelf();
-        console.log("us: ", UserStore.self);
+        SelfStore.pullSelf();
+        console.log("us: ", SelfStore.self);
     }
   render() {
-      const { UserStore } = this.props;
-      if (UserStore.self === undefined) {
+      const { SelfStore } = this.props;
+      if (SelfStore.self === undefined) {
           return null;
       } else {
           return (
@@ -57,13 +56,13 @@ class HyperTube extends Component {
   }
 }
 
-@inject('UserStore') @observer
+@inject('SelfStore') @observer
 class PrivateRoute extends Component {
   render() {
-    const { UserStore, component: Component, ...rest } = this.props;
+    const { SelfStore, component: Component, ...rest } = this.props;
     return (
 			<Route {...rest} render={(props) => (
-				UserStore.self
+				SelfStore.self
 					? <Component {...props} />
 					: <Redirect to='/auth/login' />
 			)} />
