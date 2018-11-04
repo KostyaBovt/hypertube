@@ -16,6 +16,10 @@ const OS = new OpenSubtitles({
 	ssl: true
 });
 
+// the most trashful code you have ever seen in your life...
+// dont try it at home
+// to test: tt0078788
+
 
 var cors = require('cors')
 var torrentStream = require('torrent-stream');
@@ -411,51 +415,32 @@ var walkSync = function(dir, filelist) {
 app.get('/film', async (request, response) => {
 	console.log(request.query);
 
-	async function down_subs(imdb_id) {
 
+	async function downloadSubtitles_sub(url, name) {
 
-		async function downloadSubtitles_sub(url, name) {
+	  const path_vtt = '/tmp/videos/' + imdb_id + '/subs/' + name + '.vtt';
 
-		  const path_vtt = '/tmp/videos/' + imdb_id + '/subs/' + name + '.vtt';
+	  // axios image download with response type "stream"
+	  const response = await axios({
+	    method: 'GET',
+	    url: url,
+	    responseType: 'stream'
+	  })
 
-		  // axios image download with response type "stream"
-		  const response = await axios({
-		    method: 'GET',
-		    url: url,
-		    responseType: 'stream'
-		  })
+	  // pipe the result stream into a file on disc
+	  // response.data.pipe(fs.createWriteStream(path_srt));
+	  response.data.pipe(srt2vtt()).pipe(fs.createWriteStream(path_vtt));
 
-		  // pipe the result stream into a file on disc
-		  // response.data.pipe(fs.createWriteStream(path_srt));
-		  response.data.pipe(srt2vtt()).pipe(fs.createWriteStream(path_vtt));
+	  // return a promise and resolve when download finishes
+	  return new Promise((resolve, reject) => {
+	    response.data.on('end', () => {
+	      resolve()
+	    })
 
-		  // return a promise and resolve when download finishes
-		  return new Promise((resolve, reject) => {
-		    response.data.on('end', () => {
-		      resolve()
-		    })
-
-		    response.data.on('error', () => {
-		      reject()
-		    })
-		  })
-
-		}
-
-		var result = await OS.search({
-			imdbid: imdb_id
-		})
-
-		var locales = ['ru', 'en'];
-
-		var arrayLength = locales.length;
-		for (var i = 0; i < arrayLength; i++) {
-			if (result[locales[i]]) {
-				var url  = result[locales[i]]['url'];
-				var name = 'tt1675434' + '_' + locales[i];
-				await downloadSubtitles_sub(url, name);
-			}
-		}
+	    response.data.on('error', () => {
+	      reject()
+	    })
+	  })
 
 	}
 
@@ -474,7 +459,24 @@ app.get('/film', async (request, response) => {
 
 	if (fs.existsSync(dir_path)) {
 
-		var files = walkSync('/tmp/videos');
+		var files_sub = walkSync(dir_path_subs);
+		var return_files_sub = {};
+
+		for (var i = files_sub.length - 1; i >= 0; i--) {
+			file_name_end = files_sub[i].substring(files_sub[i].length - 7, files_sub[i].length);
+			console.log('we have file name end: ');
+			console.log(file_name_end);
+	        if (file_name_end == '_ru.vtt') {
+	        	return_files_sub['ru'] = "http://localhost:3200" + files_sub[i].substring(4, files_sub[i].length);
+	        	console.log('we have return_files_sub ru : ' + return_files_sub['ru']);
+	        }
+	        if (file_name_end == '_en.vtt') {
+	        	return_files_sub['en'] = "http://localhost:3200" + files_sub[i].substring(4, files_sub[i].length);
+	        	console.log('we have return_files_sub en : ' + return_files_sub['en']);
+	        }	        
+		}
+
+		var files = walkSync(dir_path);
 		var return_file = '';
 
 		for (var i = files.length - 1; i >= 0; i--) {
@@ -486,7 +488,11 @@ app.get('/film', async (request, response) => {
 
 	    if (return_file) {
 	    	return_object['movie_link'] = "http://localhost:3200" + return_file.substring(4, return_file.length);
+	    	return_object['subs'] = return_files_sub;
 	        console.log("will return link: http://localhost:3200" + return_file.substring(4, return_file.length));
+		    return_object['success'] = true;
+		    response.send(return_object);
+		    return;	        
 	    } else {
 		    response.send({success: false, error: "no video files aviable for this film"});
 		    return;
@@ -514,6 +520,33 @@ app.get('/film', async (request, response) => {
 	    } else {
 	    	var to_down_subs = false;
 	    }
+
+	    // download subtitles first:
+		if (to_down_subs) {
+			// down_subs(imdb_id);
+			var result = await OS.search({
+				imdbid: imdb_id
+			})
+
+			console.log('we have result on OS search: ');
+			console.log(result);
+
+			var locales = ['ru', 'en'];
+
+			var arrayLength = locales.length;
+			for (var i = 0; i < arrayLength; i++) {
+				if (result[locales[i]]) {
+					var url  = result[locales[i]]['url'];
+					var name = imdb_id + '_' + locales[i];
+					await downloadSubtitles_sub(url, name);
+					console.log('downloaded subs: ' + name);
+					var list_files = walkSync(dir_path_subs);
+					console.log('we have such subs files:');
+					console.log(list_files);
+				}
+			}
+		}
+
 
     	var url2 = 'https://tv-v2.api-fetch.website/movie/' + imdb_id;
 		try {
@@ -573,14 +606,26 @@ app.get('/film', async (request, response) => {
 					var stream = engine.files[i].createReadStream();
 					var return_file_path = engine.files[i].path;
 
-					// start download subtitles
-					if (to_down_subs) {
-						down_subs(imdb_id);
-					}
 
 					stream.on('readable', function() {
+
+						var files_sub = walkSync(dir_path_subs);
+						var return_files_sub = {};
+
+						for (var i = files_sub.length - 1; i >= 0; i--) {
+							file_name_end = files_sub[i].substring(files_sub[i].length - 7, files_sub[i].length);
+					        if (file_name_end == '_ru.vtt') {
+					        	return_files_sub['ru'] = "http://localhost:3200" + files_sub[i].substring(4, files_sub[i].length);
+					        }
+					        if (file_name_end == '_en.vtt') {
+					        	return_files_sub['en'] = "http://localhost:3200" + files_sub[i].substring(4, files_sub[i].length);
+					        }	        
+						}
+
+
 						return_object['movie_link'] = "http://localhost:3200/videos/" + imdb_id + '/' + resolution + "/" + encodeURI(return_file_path);
 				    	return_object['success'] = true;
+				    	return_object['subs'] = return_files_sub;
 					    response.send(return_object);
 					})
 				}
