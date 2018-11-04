@@ -66,8 +66,8 @@ class Registration extends Component {
 	}
 
 	handleDialogClose(e, reason) {
-		console.log(reason);
 		this.setState({ isDialogOpen: false });
+		this.props.history.push('/auth/login');
 	}
 	
 	render() {
