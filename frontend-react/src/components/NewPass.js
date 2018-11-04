@@ -10,6 +10,7 @@ import Typography from '@material-ui/core/Typography';
 import intra_logo from "../img/42.png";
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
+import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, CircularProgress } from '@material-ui/core';
 
 const styles = {
 	paper: {
@@ -33,8 +34,18 @@ const styles = {
 class NewPass extends Component {
 	constructor(props) {
 		super(props);
+
+		this.state = {
+			isDialogOpen: false,
+		}
+
 		this.handleInput = this.handleInput.bind(this);
 		this.handleSubmit = this.handleSubmit.bind(this);
+		this.handleDialogClose = this.handleDialogClose.bind(this);
+	}
+
+	componentWillUnmount() {
+		this.props.AuthStore.resetStore();
 	}
 
 	handleInput(e) {
@@ -43,47 +54,82 @@ class NewPass extends Component {
 		AuthStore.setFieldValue(name, value);
 	}
 	
-	handleSubmit(e) {
-		this.props.AuthStore.newPass();
+	async handleSubmit(e) {
+		e.preventDefault();
+
+		const success = await this.props.AuthStore.newPass();
+		if (success) {
+			this.setState({ isDialogOpen: true });
+		}
+	}
+
+	handleDialogClose(e, reason) {
+		console.log(reason);
+		this.setState({ isDialogOpen: false });
+		this.props.history.push('/auth/login');
 	}
 	
 	render() {
 		const { fields, errors } = this.props.AuthStore;
 		const { classes } = this.props;
+		const { isLoading, isDialogOpen } = this.state;
 		return (
-			<Paper className={classes.paper} elevation={1}>
-				<Typography variant="h5" gutterBottom>
-					Password Recovery
-				</Typography>
+			<React.Fragment>
 
-				<FormControl error={!!errors.password} margin="dense">
-							<InputLabel htmlFor="password">Password</InputLabel>
-							<Input
-								id="password"
-								type="password"
-								name="password"
-								value={fields.password}
-								onChange={this.handleInput}
-							/>
-							<FormHelperText>{errors.password}</FormHelperText>
-						</FormControl>
+				<Dialog
+						open={isDialogOpen}
+						onClose={this.handleDialogClose}
+						aria-labelledby="alert-dialog-title"
+						aria-describedby="alert-dialog-description"
+				>
+						<DialogTitle id="alert-dialog-title">{"Registration successfull"}</DialogTitle>
+						<DialogContent>
+							<DialogContentText id="alert-dialog-description">
+								Your password has changed, please login.
+							</DialogContentText>
+						</DialogContent>
+						<DialogActions>
+							<Button  onClick={this.handleDialogClose} color="primary" autoFocus>
+								ok
+							</Button>
+						</DialogActions>
+				</Dialog>
 
-						<FormControl error={!!errors.confirmPassword} margin="dense">
-							<InputLabel htmlFor="confirmPassword">Confirm password</InputLabel>
-							<Input
-								id="confirmPassword"
-								type="password"
-								name="confirmPassword"
-								value={fields.confirmPassword}
-								onChange={this.handleInput}
-							/>
-							<FormHelperText>{errors.confirmPassword}</FormHelperText>
-						</FormControl>
+				<Paper className={classes.paper} elevation={1}>
+					<Typography variant="h5" gutterBottom>
+						Password Recovery
+					</Typography>
 
-				<Button className={classes.button} onClick={this.handleSubmit} variant="contained" color="primary">
-					Submit
-				</Button>
-			</Paper>
+					<FormControl error={!!errors.password} margin="dense">
+								<InputLabel htmlFor="password">Password</InputLabel>
+								<Input
+									id="password"
+									type="password"
+									name="password"
+									value={fields.password}
+									onChange={this.handleInput}
+								/>
+								<FormHelperText>{errors.password}</FormHelperText>
+							</FormControl>
+
+							<FormControl error={!!errors.confirmPassword} margin="dense">
+								<InputLabel htmlFor="confirmPassword">Confirm password</InputLabel>
+								<Input
+									id="confirmPassword"
+									type="password"
+									name="confirmPassword"
+									value={fields.confirmPassword}
+									onChange={this.handleInput}
+								/>
+								<FormHelperText>{errors.confirmPassword}</FormHelperText>
+							</FormControl>
+
+					<Button className={classes.button} onClick={this.handleSubmit} variant="contained" color="primary">
+						Submit
+					</Button>
+				</Paper>
+
+			</React.Fragment>
 		);
 	}
 }

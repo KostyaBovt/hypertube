@@ -61,7 +61,7 @@ class AuthStore {
     }
 
     async login() {
-        if (this._validateFields(['uname','password'])) {
+       
             const { uname, password } = this.fields;
             this.clearErrors();
             try {
@@ -76,7 +76,6 @@ class AuthStore {
                 console.log(e);
                 return false;
             }
-        }
     }
 
     async lostPass() {
@@ -85,6 +84,26 @@ class AuthStore {
             this.clearErrors();
             try {
                 const response = await axios.post('http://localhost:8080/api/auth/lostpass', { email }, {withCredentials: true});
+                if (response.data.status === 'ok') {
+                    return true;
+                } else if (response.data.status === "error"){
+                    this.setErrors(response.data.reason);
+                    return false;
+                }   
+                console.log(response);
+            } catch (e) {
+                console.log(e);
+                return false;
+            }
+        }
+    }
+
+     async newPass() {
+        if (this._validateFields(['password', 'confirmPassword'])) {
+            const { password } = this.fields;
+            this.clearErrors();
+            try {
+                const response = await axios.post('http://localhost:8080/api/auth/lostpass/newpass', { password }, {withCredentials: true});
                 if (response.data.status === 'ok') {
                     return true;
                 } else if (response.data.status === "error"){
