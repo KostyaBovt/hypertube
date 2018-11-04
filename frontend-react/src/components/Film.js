@@ -20,7 +20,7 @@ const styles = theme => ({
   },
 });
 
-@inject('FilmsStore') @observer
+@inject('FilmStore') @observer
 class Film extends Component {
 
 	render() {

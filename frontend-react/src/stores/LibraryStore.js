@@ -1,6 +1,8 @@
 import { observable, action } from "mobx";
 import axios from 'axios';
 
-class FilmsStore {
+class LibraryStore {
 
 }
+
+export default new LibraryStore();

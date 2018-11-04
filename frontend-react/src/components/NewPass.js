@@ -30,7 +30,7 @@ const styles = {
 
 
 @inject('AuthStore') @observer
-class RecoverPass extends Component {
+class NewPass extends Component {
 	constructor(props) {
 		super(props);
 		this.handleInput = this.handleInput.bind(this);
@@ -44,7 +44,7 @@ class RecoverPass extends Component {
 	}
 	
 	handleSubmit(e) {
-		this.props.AuthStore.recoverPass();
+		this.props.AuthStore.newPass();
 	}
 	
 	render() {
@@ -56,29 +56,29 @@ class RecoverPass extends Component {
 					Password Recovery
 				</Typography>
 
-				<FormControl error={!!errors.uname} margin="dense">
-					<InputLabel htmlFor="uname">Password</InputLabel>
-					<Input
-						id="password"
-						type="password"
-						name="password"
-						value={fields.password}
-						onChange={this.handleInput}
-					/>
-					<FormHelperText>{errors.password}</FormHelperText>
-				</FormControl>
-
 				<FormControl error={!!errors.password} margin="dense">
-					<InputLabel htmlFor="password">Repeat Password</InputLabel>
-					<Input
-						id="password"
-						type="password"
-						name="password"
-						value={fields.confirmPassword}
-						onChange={this.handleInput}
-					/>
-					<FormHelperText>{errors.password}</FormHelperText>
-				</FormControl>
+							<InputLabel htmlFor="password">Password</InputLabel>
+							<Input
+								id="password"
+								type="password"
+								name="password"
+								value={fields.password}
+								onChange={this.handleInput}
+							/>
+							<FormHelperText>{errors.password}</FormHelperText>
+						</FormControl>
+
+						<FormControl error={!!errors.confirmPassword} margin="dense">
+							<InputLabel htmlFor="confirmPassword">Confirm password</InputLabel>
+							<Input
+								id="confirmPassword"
+								type="password"
+								name="confirmPassword"
+								value={fields.confirmPassword}
+								onChange={this.handleInput}
+							/>
+							<FormHelperText>{errors.confirmPassword}</FormHelperText>
+						</FormControl>
 
 				<Button className={classes.button} onClick={this.handleSubmit} variant="contained" color="primary">
 					Submit
@@ -88,4 +88,4 @@ class RecoverPass extends Component {
 	}
 }
 
-export default withStyles(styles)(RecoverPass);
+export default withStyles(styles)(NewPass);

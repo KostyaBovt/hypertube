@@ -46,8 +46,8 @@ class HyperTube extends Component {
                               <PrivateRoute exact path="/" component={Home}/>
                               <PrivateRoute exact path="/user/:username" component={User}/>
                               <PrivateRoute exact path="/profile" component={Profile}/>
+                              <PrivateRoute exact path="/film/:id" component={Film}/>
                               <Route path="*" render={() => (<h1>Not Found</h1>)}/>
-                              <PrivateRoute exact path="/film" component={Film}/>
                           </Switch>
                           <Footer/>
                       </React.Fragment>

@@ -4,7 +4,7 @@ import {Switch, Route} from 'react-router-dom';
 import Login from './Login';
 import Registration from './Registration';
 import LostPass from './LostPass';
-import RecoverPass from './RecoverPass';
+import NewPass from './NewPass';
 import { inject, observer } from 'mobx-react';
 
 @inject('SelfStore') @observer
@@ -17,10 +17,10 @@ class Auth extends Component {
         } else {
             return (
                 <Switch>
-                    <Route path={`${match.path}/login`} component={Login}/>
-                    <Route path={`${match.path}/registration`} component={Registration}/>
-                    <Route path={`${match.path}/lostpass`} component={LostPass}/>
-                    <Route path={`${match.path}/recoverpass`} component={RecoverPass}/>
+                    <Route exact path={`${match.path}/login`} component={Login}/>
+                    <Route exact path={`${match.path}/registration`} component={Registration}/>
+                    <Route exact path={`${match.path}/lostpass`} component={LostPass}/>
+                    <Route exact path={`${match.path}/lostpass/newpass`} component={NewPass}/>
                     <Redirect to="/auth/login"/>
                 </Switch>
             );

@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
-
+import { Link } from 'react-router-dom'
 
 
 const styles = theme => ({
@@ -21,7 +21,7 @@ const styles = theme => ({
   },
 });
 
-@inject('FilmsStore') @observer
+@inject('LibraryStore') @observer
 class Home extends Component {
 
 	render() {
@@ -32,7 +32,7 @@ class Home extends Component {
           <Grid container className={classes.demo} justify="center" spacing={Number(8)}>
             {[0, 1, 2, 3].map(value => (
               <Grid key={value} item>
-                <Paper className={classes.paper} />
+                <Link to={"/film/" + 'id'}><Paper className={classes.paper} /></Link>
               </Grid>
             ))}
           </Grid>

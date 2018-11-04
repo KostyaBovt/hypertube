@@ -1,7 +1,7 @@
 import { observable, action } from "mobx";
 import axios from 'axios';
 
-class UserStore {
+class SelfStore {
     @observable self = undefined;
 
     @observable profileError = null;
@@ -76,4 +76,4 @@ class UserStore {
 
 }
 
-export default new UserStore();
+export default new SelfStore();
