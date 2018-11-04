@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import Home from './components/Home';
 import Film from './components/Film';
 import Auth from './components/Auth';
+import NotFound from './components/NotFound';
 import Profile from './components/Profile';
 import User from './components/User';
 import {Switch, Route, Redirect, BrowserRouter} from 'react-router-dom';
@@ -47,7 +48,7 @@ class HyperTube extends Component {
                               <PrivateRoute exact path="/user/:username" component={User}/>
                               <PrivateRoute exact path="/profile" component={Profile}/>
                               <PrivateRoute exact path="/film/:id" component={Film}/>
-                              <Route path="*" render={() => (<h1>Not Found</h1>)}/>
+                              <Route path="*" component={NotFound}/>
                           </Switch>
                           <Footer/>
                       </React.Fragment>

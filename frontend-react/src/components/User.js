@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Paper, Grid, Avatar, Typography, withStyles } from '@material-ui/core';
 import { inject, observer } from 'mobx-react';
+import NotFound from "./NotFound";
 
 const styles = theme => ({
 	layout: {
@@ -38,6 +39,7 @@ const styles = theme => ({
 	editButton: {
 		marginLeft: theme.spacing.unit,
 	},
+	
 });
 
 @inject('UserStore') @observer
@@ -68,6 +70,10 @@ class User extends Component {
 		    return null;
 		}
 
+		if (user === null) {
+			return (<NotFound></NotFound>);
+		}
+
 		return (
 			<main className={classes.layout}>
 				<Paper className={classes.paper}>
@@ -91,7 +97,7 @@ class User extends Component {
 						</Grid>
 					</Grid>
 				</Paper>
-		  </main>	  
+		    </main>	  
 		);
 	}
 };
