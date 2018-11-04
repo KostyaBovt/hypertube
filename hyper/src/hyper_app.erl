@@ -12,7 +12,7 @@ start(_Type, _Args) ->
              {"/[...]", cowboy_static, {priv_file, hyper, "static/index.html"}}],
     Dispatch = cowboy_router:compile([{'_', Paths}]),
     {ok, _} = cowboy:start_clear(hyper_http_listener, [{port, ?HTTP_PORT}], #{env => #{dispatch => Dispatch}}),
-    hyper_mnesia:init(),
+    hyper_mnesia:init_tables(),
     hyper_validation:load(),
     pgapp:connect([{size, 10}, {host, "localhost"}, {database, "Hypertube"}, {password, "12345"},
                    {username, "Hypertube"}, {port, 5432}]),
