@@ -46,6 +46,7 @@ class RecoverPass extends Component {
 	handleSubmit(e) {
 		this.props.AuthStore.recoverPass();
 	}
+	
 	render() {
 		const { fields, errors } = this.props.AuthStore;
 		const { classes } = this.props;

@@ -11,8 +11,8 @@ const styles = theme => ({
     	flexGrow: 1,
   	},
   	paper: {
-    height: 200,
-    width: 150,
+    height: 300,
+    width: 350,
     margin: 20
   },
   control: {
@@ -21,7 +21,7 @@ const styles = theme => ({
 });
 
 @inject('FilmsStore') @observer
-class Films extends Component {
+class Film extends Component {
 
 	render() {
 		const { classes } = this.props;
@@ -29,7 +29,7 @@ class Films extends Component {
        <Grid container className={classes.root} spacing={16}>
         <Grid item xs={12}>
           <Grid container className={classes.demo} justify="center" spacing={Number(8)}>
-            {[0, 1, 2, 3].map(value => (
+            {[0,].map(value => (
               <Grid key={value} item>
                 <Paper className={classes.paper} />
               </Grid>
@@ -41,8 +41,8 @@ class Films extends Component {
     }
 }
 
-Films.propTypes = {
+Film.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(Films);
+export default withStyles(styles)(Film);

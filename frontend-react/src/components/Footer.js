@@ -7,8 +7,8 @@ import Button from '@material-ui/core/Button';
 
 const styles = {
   footer: {
-    backgroundColor: '#4d4d4d',
-    color: '#f2f2f2',
+    backgroundColor: '#009688;',
+    color: '#fff',
     textAlign: 'center',
     // position: 'fixed',
    	bottom: '0',

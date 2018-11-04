@@ -84,9 +84,7 @@ class AuthStore {
             const { email } = this.fields;
             this.clearErrors();
             try {
-                console.log("HERE");
                 const response = await axios.post('http://localhost:8080/api/auth/lostpass', { email }, {withCredentials: true});
-                console.log("HERE2 ", response);
                 if (response.data.status === 'ok') {
                     return true;
                 } else if (response.data.status === "error"){
@@ -200,7 +198,6 @@ class AuthStore {
         });
 
         const { ...errors } = this.errors;
-        console.log(errors);
         return isValid;
     }
 }
