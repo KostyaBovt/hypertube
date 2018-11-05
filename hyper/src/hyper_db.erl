@@ -7,8 +7,8 @@
          get_user_by_social/2,
          user_with_email_exists/1,
          user_with_uname_exists/1,
-         create_user/5,
-         create_user_from_social_info/6,
+         create_user/6,
+         create_user_from_social_info/7,
          update_user/6,
          update_user_password/2,
          update_user_locale/2,
@@ -38,17 +38,17 @@ user_with_uname_exists(Uname) -> db_bool(q("SELECT id FROM users WHERE uname = $
 update_user_locale(UId, NewLocale) ->
     db_bool(q("UPDATE users SET locale = $2 WHERE id = $1", [UId, NewLocale])).
 
-create_user(Uname, Fname, Lname, Pass, Email) ->
-    db_val(q("INSERT INTO users (uname, fname, lname, password, email)
-              VALUES ($1, $2, $3, $4, $5)
-              RETURNING *",
-             [Uname, Fname, Lname, Pass, Email])).
-
-create_user_from_social_info(Provider, SocialId, SocialToken, Uname, Fname, Lname) ->
-    db_val(q("INSERT INTO users (social_provider, social_id, social_token, uname, fname, lname)
+create_user(Uname, Fname, Lname, Pass, Email, Locale) ->
+    db_val(q("INSERT INTO users (uname, fname, lname, password, email, locale)
               VALUES ($1, $2, $3, $4, $5, $6)
               RETURNING *",
-             [Provider, SocialId, SocialToken, Uname, Fname, Lname])).
+             [Uname, Fname, Lname, Pass, Email, Locale])).
+
+create_user_from_social_info(Provider, SocialId, SocialToken, Uname, Fname, Lname, Locale) ->
+    db_val(q("INSERT INTO users (social_provider, social_id, social_token, uname, fname, lname, locale)
+              VALUES ($1, $2, $3, $4, $5, $6, $7)
+              RETURNING *",
+             [Provider, SocialId, SocialToken, Uname, Fname, Lname, Locale])).
 
 update_user_password(UId, NewPassword) ->
     db_bool(q("UPDATE users SET password = $1 WHERE id = $2", [NewPassword, UId])).

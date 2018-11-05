@@ -32,10 +32,10 @@
          terminate/2,
          code_change/3]).
 
--define(REAP_INTERVAL, 1000 * 60). % 1 min
--define(TEMP_ACCOUNT_TTL, 60 * 5). % 5 min
--define(EMAIL_UPDATING_STATE_TTL, 60 * 2). % 2 min
--define(PASSWORD_RECOVERING_STATE_TTL, 60 * 2). % 2 min
+-define(REAP_INTERVAL, 1000 * 20). % 20 sec
+-define(TEMP_ACCOUNT_TTL, 60 * 1). % 1 min
+-define(EMAIL_UPDATING_STATE_TTL, 60 * 1). % 1 min
+-define(PASSWORD_RECOVERING_STATE_TTL, 60 * 1). % 1 min
 
 -include("hyper.hrl").
 
@@ -121,6 +121,7 @@ handle_cast(_Request, State) ->
     {noreply, State}.
 
 handle_info(reap_old_records, State) ->
+	io:format("REAP THEM ALL!"),
     delete_old(email_updating_state),
     delete_old(password_recovering_state),
     delete_old(temp_account),
@@ -162,16 +163,17 @@ delete(Tab, Keys) when is_list(Keys) ->
     ok.
 
 delete_old(email_updating_state) ->
-    Keys = mnesia:dirty_select(email_updating_state,[{#email_updating_state{token = '$1', created_at = '$2'},
-                                                     [{'>', '$2', ?NOW_SEC - ?EMAIL_UPDATING_STATE_TTL}], ['$1']}]),
+    Keys = mnesia:dirty_select(email_updating_state,[{#email_updating_state{token = '$1', created_at = '$2', _ = '_'},
+                                                     [{'<', '$2', ?NOW_SEC - ?EMAIL_UPDATING_STATE_TTL}], ['$1']}]),
     delete(email_updating_state, Keys);
 delete_old(password_recovering_state) ->
-    Keys = mnesia:dirty_select(password_recovering_state,[{#password_recovering_state{id = '$1', created_at = '$2'},
-                                                          [{'>', '$2', ?NOW_SEC - ?PASSWORD_RECOVERING_STATE_TTL}],
-                                                          ['$1']}]),
+    Keys = mnesia:dirty_select(password_recovering_state,
+				[{#password_recovering_state{id = '$1', created_at = '$2', _ = '_'},
+                                 [{'<', '$2', ?NOW_SEC - ?PASSWORD_RECOVERING_STATE_TTL}], ['$1']}]),
     delete(password_recovering_state, Keys);
 delete_old(temp_account) ->
-    Keys = mnesia:dirty_select(temp_account,[{#temp_account{token = '$1', created_at = '$2'},
-                                             [{'>', '$2', ?NOW_SEC - ?EMAIL_UPDATING_STATE_TTL}], ['$1']}]),
+    Keys = mnesia:dirty_select(temp_account,[{#temp_account{token = '$1', created_at = '$2', _ = '_'},
+                                             [{'<', '$2', ?NOW_SEC - ?EMAIL_UPDATING_STATE_TTL}], ['$1']}]),
+	io:format("K : ~p~n", [Keys]),
     delete(temp_account, Keys).
 

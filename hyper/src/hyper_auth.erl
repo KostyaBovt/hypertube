@@ -21,6 +21,7 @@
 -define(AUTH_COOKIE_NAME, <<"x-auth-token">>).
 -define(JWT_KEY, <<"change_me">>). % TODO
 -define(JWT_ALGO, <<"HS256">>).
+-define(DEFAULT_LOCALE, <<"en">>).
 
 -spec get_udata(Cookies::proplists:proplist()) -> {ok, map()} | {error, atom()}.
 get_udata(Cookies) ->
@@ -96,7 +97,7 @@ register(Qs) ->
     Token = gv(<<"token">>, Qs),
     case hyper_mnesia:get_temp_account(Token) of
         #temp_account{uname = Uname, fname = Fname, lname = Lname, password = Pass, email = Email} ->
-            {ok, User} = hyper_db:create_user(Uname, Fname, Lname, erlpass:hash(Pass), Email),
+            {ok, User} = hyper_db:create_user(Uname, Fname, Lname, erlpass:hash(Pass), Email, ?DEFAULT_LOCALE),
             hyper_mnesia:delete_temp_account(Token),
             redirect_with_auth_token(User);
         null ->
@@ -168,7 +169,8 @@ create_user_from_social_profile(Profile, Provider, SocialId) ->
                      end,
     Uname = <<"user_", (hyper_lib:rand_str(16))/binary>>,
     SocialToken = gv(<<"access_token">>, Profile),
-    {ok, _} = hyper_db:create_user_from_social_info(Provider, SocialId, SocialToken, Uname, Fname, Lname).
+    {ok, _} = hyper_db:create_user_from_social_info(Provider, SocialId, SocialToken,
+                                                    Uname, Fname, Lname, ?DEFAULT_LOCALE).
 
 -spec update_token_locale(UData::map(), Locale::binary()) -> hyper_http:handler_ret().
 update_token_locale(UData, Locale) ->
