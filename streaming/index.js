@@ -7,6 +7,7 @@ var Client 		= require('node-torrent');
 var Transmission = require('transmission');
 var pather 		= require('path');
 const srt2vtt = require('srt-to-vtt');
+var cookieParser = require('cookie-parser')
 
 const OpenSubtitles = require('opensubtitles-api');
 const OS = new OpenSubtitles({
@@ -30,6 +31,7 @@ const port = 3200;
 
 const app = express();
 app.use(cors());
+app.use(cookieParser());
 
 app.use(express.static(pather.join(__dirname, 'public')));
 app.use(express.static('public'));
@@ -43,11 +45,36 @@ var locale = 'ru';
 
 // ============================== some usefull functions
 
+app.get('/test', async (request, response) => {
+	console.log(request.cookies);
+	response.send('ok');
+});
 
 
+async function validateUser(cookies) {
+
+	return new Promise(async (resolve, reject) => {
+		if (!cookies['x-auth-token']) {
+			reject();
+		} else {
+			try {
+				var auth_info = await axios({
+					method: 'get',
+					url: 'http://localhost:8080/api/auth/udata',
+					headers: {'Cookie': "x-auth-token=" + cookies['x-auth-token']},
+					withCredentials: true
+				});
+				console.log(auth_info.data);
+			} catch (error) {
+				reject();
+			}
+		}	
+		resolve(auth_info);
+	});
+
+}
 
 app.get('/subtitles', async (request, response) => {
-
 
 	async function downloadSubtitles(url, name) {
 
@@ -103,8 +130,16 @@ app.get('/subtitles', async (request, response) => {
 app.get('/films', async (request, response) => {
 	console.log(request.query);
 
-	// language: to request from api user settings. now hardcoded
-	language = 'ru';
+	try {
+		var validation = await validateUser(request.cookies);
+		// var validation = await validateUser({'x-auth-token': "laskjdfa80ur2rh2kjh23kj4h2l3j4h2kj3h4k32j4h"});
+	} catch(error) {
+		response.send({'success': false, 'error': 'invalid token'});
+		return;
+	}
+
+	// language: to request from api user settings
+	language = validation.data['payload']['locale'] || 'en';
 
 	// integer 1 - 1000
 	page = request.query.page;
@@ -285,8 +320,16 @@ app.get('/films', async (request, response) => {
 app.get('/film_details', async (request, response) => {
 	console.log(request.query);
 
-	// language: to request from api user settings. now hardcoded
-	language = 'ru';
+	try {
+		var validation = await validateUser(request.cookies);
+		// var validation = await validateUser({'x-auth-token': "laskjdfa80ur2rh2kjh23kj4h2l3j4h2kj3h4k32j4h"});
+	} catch(error) {
+		response.send({'success': false, 'error': 'invalid token'});
+		return;
+	}
+
+	// language: to request from api user settings
+	language = validation.data['payload']['locale'] || 'en';
 
 	// integer: id
 	id = request.query.id;
@@ -419,6 +462,17 @@ var walkSync = function(dir, filelist) {
 
 app.get('/film', async (request, response) => {
 	console.log(request.query);
+
+	try {
+		var validation = await validateUser(request.cookies);
+		// var validation = await validateUser({'x-auth-token': "laskjdfa80ur2rh2kjh23kj4h2l3j4h2kj3h4k32j4h"});
+	} catch(error) {
+		response.send({'success': false, 'error': 'invalid token'});
+		return;
+	}
+
+	// language: to request from api user settings
+	language = validation.data['payload']['locale'] || 'en';
 
 
 	async function downloadSubtitles_sub(url, name) {

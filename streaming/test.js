@@ -1,20 +1,15 @@
-var walkSync = function(dir, filelist) {
-      var path = path || require('path');
-      var fs = fs || require('fs'),
-          files = fs.readdirSync(dir);
-      filelist = filelist || [];
-      files.forEach(function(file) {
-          if (fs.statSync(path.join(dir, file)).isDirectory()) {
-              filelist = walkSync(path.join(dir, file), filelist);
-          }
-          else {
-              filelist.push(path.join(dir, file));
-          }
-      });
-      return filelist;
-  };
+const axios   = require('axios');
 
-var list = walkSync('/tmp/videos');
-console.log(list);
-console.log('\n\n');
-console.log(list.map( element => element.substring(4, element.length)));
+
+axios({method: 'get', url: 'http://localhost:8080/api/auth/udata', headers: {'Cookie': "x-auth-token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOjEsImxvYyI6bnVsbCwic2NwIjoidXNlciJ9.0erryWwM7OyLwccK_TxGes2x_yciOdTM3hWPjhLrfZ0"}, withCredentials: true})
+  .then(function (response) {
+    // console.log(response);
+    console.log('granred');
+  })
+  .catch(function (error) {
+    // console.log(error);
+    console.log('forbiden');
+  });
+// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOjEsImxvYyI6bnVsbCwic2NwIjoidXNlciJ9.0erryWwM7OyLwccK_TxGes2x_yciOdTM3hWPjhLrfZ0
+// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOjEsImxvYyI6bnVsbCwic2NwIjoidXNlciJ9.0erryWwM7OyLwccK_TxGes2x_yciOdTM3hWPjhLrfZ0
+// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOjEsImxvYyI6bnVsbCwic2NwIjoidXNlciJ9.0erryWwM7OyLwccK_TxGes2x_yciOdTM3hWPjhLrfZ0
