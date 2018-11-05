@@ -252,6 +252,11 @@ app.get('/films', async (request, response) => {
 		return;
 	}
 
+	for (var i = films_res.data['results'].length - 1; i >= 0; i--) {
+		films_res.data['results'][i]['poster_path'] = 'http://image.tmdb.org/t/p/w342' + films_res.data['results'][i]['poster_path'];
+	}
+
+
 	response.send({'movies': films_res.data});
 
 
