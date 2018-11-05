@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
-import { Grid, Paper, withStyles, Avatar, List, ListSubheader, ListItem, ListItemText, Dialog, DialogTitle, DialogContent, DialogActions, Button, FormControl, InputLabel, Input, FormHelperText, Icon, ListItemIcon, Snackbar, IconButton } from '@material-ui/core';
+import { Grid, Paper, withStyles, Avatar, List, CircularProgress, ListSubheader, ListItem, ListItemText, Dialog, DialogTitle, DialogContentText, DialogContent, DialogActions, Button, FormControl, InputLabel, Input, FormHelperText, Icon, ListItemIcon, Snackbar, IconButton } from '@material-ui/core';
 import { inject, observer } from 'mobx-react';
 import simpleValidator from '../helpers/simpleValidator';
 import imgHelpers from '../helpers/imgHelpers';
+
+import grey from '@material-ui/core/colors/grey';
 
 
 const styles = theme => ({
@@ -32,6 +34,9 @@ const styles = theme => ({
 		backgroundColor: theme.palette.grey,
 		width: 256,
 		height: 256
+	},
+	buttonProgress: {
+		color: grey[500]
 	}
 });
 
@@ -51,6 +56,7 @@ class Profile extends Component {
 		this.state = {
 			isLoading: false,
 			isDialogOpen: false,
+			isEmailDialogOpen: false,
 			selectedField: "fname",
 			inputValue: '',
 			inputError: '',
@@ -70,7 +76,8 @@ class Profile extends Component {
 
 	handleDialogClose(e, reason) {
 		this.setState({
-			isDialogOpen: false
+			isDialogOpen: false,
+			isEmailDialogOpen: false
 		});
 	}
 
@@ -119,11 +126,18 @@ class Profile extends Component {
 
 		if (validationResult.isValid) {
 			this.setState({ isLoading: true });
-			await this.props.SelfStore.updateProfile(selectedField, inputValue);
+			if (selectedField === 'email'){
+				const success = await this.props.SelfStore.updateEmail(inputValue);
+				this.setState({isEmailDialogOpen: true}) ;
+			}
+			else {
+				await this.props.SelfStore.updateProfile(selectedField, inputValue);
+			}
 			this.setState({
 				isLoading: false,
 				isDialogOpen: false
 			});
+
 		} else {
 			this.setState({ inputError: validationResult.error });
 		}
@@ -159,7 +173,8 @@ class Profile extends Component {
 	}
 
 	renderDialog() {
-		const { isDialogOpen, selectedField, inputError, inputValue } = this.state;
+		const { isDialogOpen, selectedField, inputError, inputValue, isLoading } = this.state;
+		const { classes } = this.props;
 
 		return (
 			<Dialog
@@ -190,13 +205,39 @@ class Profile extends Component {
 					<Button onClick={this.handleDialogClose} color="primary">
 						Cancel
 					</Button>
-					<Button onClick={this.saveFieldValue} color="primary">
-						Save
+					<Button disabled={isLoading} onClick={this.saveFieldValue} color="primary">
+						{isLoading ? <CircularProgress size={24} className={classes.buttonProgress}/> : 'Save'}
 					</Button>
 				</DialogActions>
 			</Dialog>
 		);
 	}
+
+
+	renderEmailDialog() {
+		const { isEmailDialogOpen } = this.state;
+		return (
+				<Dialog
+					open={isEmailDialogOpen}
+					onClose={this.handleDialogClose}
+					aria-labelledby="alert-dialog-title"
+					aria-describedby="alert-dialog-description"
+				>
+					<DialogTitle id="alert-dialog-title">{"Confirm your email"}</DialogTitle>
+					<DialogContent>
+						<DialogContentText id="alert-dialog-description">
+							Please, check your email and follow the link to verify it.
+						</DialogContentText>
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={this.handleDialogClose} color="primary" autoFocus>
+							ok
+						</Button>
+					</DialogActions>
+				</Dialog>
+		);
+	}
+
 
 	renderSnackBar(error) {
 		return (
@@ -245,6 +286,7 @@ class Profile extends Component {
 			<main className={classes.layout}>
 
 				{ this.renderDialog() }
+				{ this.renderEmailDialog() }
 				<input style={{ 'display': 'none' }} onChange={this.onFileChange} ref={this.fileInput} type="file" accept="image/*" />
 
 				{ this.renderSnackBar(profileError) }

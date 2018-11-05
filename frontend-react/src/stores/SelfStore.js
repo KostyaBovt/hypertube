@@ -38,6 +38,23 @@ class SelfStore {
         }
     }
 
+    async updateEmail(value) {
+        const data = { email: value };
+        try {
+            const response = await axios.post('http://localhost:8080/api/profile/email', data, { withCredentials: true });
+            console.log(response);
+            if (response.data.status === "ok") {
+                return true;
+            } else {
+                const error = Object.values(response.data.reason)[0];
+                this.setError(error);
+                return false;
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
     async updateProfile(fieldName, value) {
         const data = {};
         data[fieldName] = value; 
