@@ -121,7 +121,6 @@ handle_cast(_Request, State) ->
     {noreply, State}.
 
 handle_info(reap_old_records, State) ->
-	io:format("REAP THEM ALL!"),
     delete_old(email_updating_state),
     delete_old(password_recovering_state),
     delete_old(temp_account),
@@ -174,6 +173,5 @@ delete_old(password_recovering_state) ->
 delete_old(temp_account) ->
     Keys = mnesia:dirty_select(temp_account,[{#temp_account{token = '$1', created_at = '$2', _ = '_'},
                                              [{'<', '$2', ?NOW_SEC - ?EMAIL_UPDATING_STATE_TTL}], ['$1']}]),
-	io:format("K : ~p~n", [Keys]),
     delete(temp_account, Keys).
 
