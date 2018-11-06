@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Grid, Paper, withStyles, Avatar, List, CircularProgress, ListSubheader, ListItem, ListItemText, Dialog, DialogTitle, DialogContentText, DialogContent, DialogActions, Button, FormControl, InputLabel, Input, FormHelperText, Icon, ListItemIcon, Snackbar, IconButton } from '@material-ui/core';
+import { Grid, Paper, withStyles, Avatar, List, CircularProgress, ListSubheader, ListItem, ListItemText, Dialog, DialogTitle, DialogContentText, DialogContent, DialogActions, Button, FormControl, InputLabel, Input, FormHelperText, Icon, ListItemIcon, Snackbar, IconButton, ListItemSecondaryAction } from '@material-ui/core';
 import { inject, observer } from 'mobx-react';
 import simpleValidator from '../helpers/simpleValidator';
 import imgHelpers from '../helpers/imgHelpers';
@@ -17,13 +17,15 @@ const styles = theme => ({
 		}
 	},
 	paper: {
-		marginTop: theme.spacing.unit * 3,
-		marginBottom: theme.spacing.unit * 2,
+		marginTop: theme.spacing.unit,
+		marginBottom: theme.spacing.unit,
 		padding: 0
 	},
 	container : {
 		display: 'flex',
-		flexDirection: 'column'
+		flexDirection: 'column',
+		marginTop: theme.spacing.unit * 2,
+		marginBottom: theme.spacing.unit * 2,
 	},
 	avatarContainer : {
 		display: 'flex',
@@ -55,11 +57,12 @@ class Profile extends Component {
 		super(props);
 		this.state = {
 			isLoading: false,
-			isDialogOpen: false,
-			isEmailDialogOpen: false,
+			isInputDialogOpen: false,
+			isMessageDialogOpen: false,
 			selectedField: "fname",
 			inputValue: '',
 			inputError: '',
+			dialogMessage: ''
 
 		}
 
@@ -76,8 +79,8 @@ class Profile extends Component {
 
 	handleDialogClose(e, reason) {
 		this.setState({
-			isDialogOpen: false,
-			isEmailDialogOpen: false
+			isInputDialogOpen: false,
+			isMessageDialogOpen: false
 		});
 	}
 
@@ -91,7 +94,7 @@ class Profile extends Component {
 
 		this.setState({
 			selectedField,
-			isDialogOpen: true,
+			isInputDialogOpen: true,
 			inputValue: self[selectedField]
 		});
 	}
@@ -113,12 +116,12 @@ class Profile extends Component {
 		let { selectedField, inputValue } = this.state;
 
 		if (inputValue === null) {
-			return
+			return;
 		}
 
 		inputValue = inputValue.trim();
 		if (inputValue === self[selectedField]) {
-			this.setState({ isDialogOpen: false });
+			this.setState({ isInputDialogOpen: false });
 			return;
 		}
 
@@ -128,16 +131,21 @@ class Profile extends Component {
 			this.setState({ isLoading: true });
 			if (selectedField === 'email'){
 				const success = await this.props.SelfStore.updateEmail(inputValue);
-				this.setState({isEmailDialogOpen: true}) ;
-			}
-			else {
+				if (success) {
+					this.setState({
+						isLoading: false,
+						isInputDialogOpen: false,
+						isMessageDialogOpen: true,
+						dialogMessage: "Please, check your new email adrees and follow the link that we've sent to verify it."
+					});
+				}
+			} else {
 				await this.props.SelfStore.updateProfile(selectedField, inputValue);
+				this.setState({
+					isLoading: false,
+					isInputDialogOpen: false
+				});
 			}
-			this.setState({
-				isLoading: false,
-				isDialogOpen: false
-			});
-
 		} else {
 			this.setState({ inputError: validationResult.error });
 		}
@@ -172,13 +180,13 @@ class Profile extends Component {
 		}
 	}
 
-	renderDialog() {
-		const { isDialogOpen, selectedField, inputError, inputValue, isLoading } = this.state;
+	renderInputDialog() {
+		const { isInputDialogOpen, selectedField, inputError, inputValue, isLoading } = this.state;
 		const { classes } = this.props;
 
 		return (
 			<Dialog
-				open={isDialogOpen}
+				open={isInputDialogOpen}
 				onClose={this.handleDialogClose}
 				aria-labelledby="form-dialog-title"
 				fullWidth
@@ -186,7 +194,33 @@ class Profile extends Component {
 				<DialogTitle id="form-dialog-title">Change {fieldLabels[selectedField].toLowerCase()}</DialogTitle>
 				<DialogContent>
 					<form onSubmit={this.handleFormSubmit.bind(this)}>
-						<FormControl error={!!inputError} fullWidth>
+						<FormControl error={!!inputError} margin="dense" fullWidth>
+							<InputLabel htmlFor={selectedField}>{fieldLabels[selectedField]}</InputLabel>
+							<Input
+								id={selectedField}
+								type="text"
+								name={selectedField}
+								value={inputValue || ''}
+								autoFocus
+								onChange={this.handleInput}
+								multiline={selectedField === 'bio'}
+							/>
+							<FormHelperText>{inputError}</FormHelperText>
+						</FormControl>
+						<FormControl error={!!inputError} margin="dense" fullWidth>
+							<InputLabel htmlFor={selectedField}>{fieldLabels[selectedField]}</InputLabel>
+							<Input
+								id={selectedField}
+								type="text"
+								name={selectedField}
+								value={inputValue || ''}
+								autoFocus
+								onChange={this.handleInput}
+								multiline={selectedField === 'bio'}
+							/>
+							<FormHelperText>{inputError}</FormHelperText>
+						</FormControl>
+						<FormControl error={!!inputError} margin="dense" fullWidth>
 							<InputLabel htmlFor={selectedField}>{fieldLabels[selectedField]}</InputLabel>
 							<Input
 								id={selectedField}
@@ -206,7 +240,7 @@ class Profile extends Component {
 						Cancel
 					</Button>
 					<Button disabled={isLoading} onClick={this.saveFieldValue} color="primary">
-						{isLoading ? <CircularProgress size={24} className={classes.buttonProgress}/> : 'Save'}
+						{isLoading ? <CircularProgress size={18} className={classes.buttonProgress}/> : 'Save'}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -214,27 +248,28 @@ class Profile extends Component {
 	}
 
 
-	renderEmailDialog() {
-		const { isEmailDialogOpen } = this.state;
+	renderMessageDialog() {
+		const { isMessageDialogOpen, dialogMessage } = this.state;
+
 		return (
-				<Dialog
-					open={isEmailDialogOpen}
-					onClose={this.handleDialogClose}
-					aria-labelledby="alert-dialog-title"
-					aria-describedby="alert-dialog-description"
-				>
-					<DialogTitle id="alert-dialog-title">{"Confirm your email"}</DialogTitle>
-					<DialogContent>
-						<DialogContentText id="alert-dialog-description">
-							Please, check your email and follow the link to verify it.
-						</DialogContentText>
-					</DialogContent>
-					<DialogActions>
-						<Button onClick={this.handleDialogClose} color="primary" autoFocus>
-							ok
-						</Button>
-					</DialogActions>
-				</Dialog>
+			<Dialog
+				open={isMessageDialogOpen}
+				onClose={this.handleDialogClose}
+				aria-labelledby="alert-dialog-title"
+				aria-describedby="alert-dialog-description"
+			>
+				<DialogTitle id="alert-dialog-title">{"Confirm your email"}</DialogTitle>
+				<DialogContent>
+					<DialogContentText id="alert-dialog-description">
+						{ dialogMessage }
+					</DialogContentText>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={this.handleDialogClose} color="primary" autoFocus>
+						OK
+					</Button>
+				</DialogActions>
+			</Dialog>
 		);
 	}
 
@@ -285,9 +320,10 @@ class Profile extends Component {
 		return (
 			<main className={classes.layout}>
 
-				{ this.renderDialog() }
-				{ this.renderEmailDialog() }
 				<input style={{ 'display': 'none' }} onChange={this.onFileChange} ref={this.fileInput} type="file" accept="image/*" />
+				
+				{ this.renderInputDialog() }
+				{ this.renderMessageDialog() }
 
 				{ this.renderSnackBar(profileError) }
 
@@ -330,31 +366,57 @@ class Profile extends Component {
 					</Grid>
 					<Grid item xs={12}>
 						<Paper className={classes.paper}>
-							<List disablePadding subheader={ <ListSubheader disableSticky color="primary">Info</ListSubheader> }>
+							<List disablePadding subheader={ <ListSubheader disableSticky color="primary">Profile</ListSubheader> }>
 								<ListItem id="fname" button divider onClick={this.handleItemClick}>
 									<ListItemText
 										primary={self.fname || "None"}
-										secondary="First name"/>
+										secondary="First name"
+									/>
 								</ListItem>
 								<ListItem id="lname" button divider onClick={this.handleItemClick}>
 									<ListItemText
 										primary={self.lname || "None"}
-										secondary="Last name"/>
+										secondary="Last name"
+									/>
 								</ListItem>
 								<ListItem id="uname" button divider onClick={this.handleItemClick}>
 									<ListItemText
 										primary={self.uname}
-										secondary="Username"/>
-								</ListItem>
-								<ListItem id="email" button divider onClick={this.handleItemClick}>
-									<ListItemText
-										primary={self.email || "None"}
-										secondary="Email"/>
+										secondary="Username"
+									/>
 								</ListItem>
 								<ListItem id="bio" button onClick={this.handleItemClick}>
 									<ListItemText
 										primary={self.bio || "None"}
 										secondary="Bio"
+									/>
+								</ListItem>
+							</List>
+						</Paper>
+					</Grid>
+					<Grid item xs={12}>
+						<Paper className={classes.paper}>
+							<List disablePadding subheader={ <ListSubheader disableSticky color="primary">Account</ListSubheader> }>
+								<ListItem id="email" button divider onClick={this.handleItemClick}>
+									<ListItemText
+										primary={"Change email"}
+									/>
+								</ListItem>
+								<ListItem button onClick={this.handleItemClick}>
+									<ListItemText
+										primary={"Change password"}
+									/>
+								</ListItem>
+							</List>
+						</Paper>
+					</Grid>
+					<Grid item xs={12}>
+						<Paper className={classes.paper}>
+							<List disablePadding subheader={ <ListSubheader disableSticky color="primary">Other</ListSubheader> }>
+								<ListItem id="email" button onClick={this.handleItemClick}>
+									<ListItemText
+										primary="English"
+										secondary="Language"
 									/>
 								</ListItem>
 							</List>

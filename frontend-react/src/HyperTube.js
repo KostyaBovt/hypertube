@@ -6,7 +6,7 @@ import Home from './components/Home';
 import Film from './components/Film';
 import Auth from './components/Auth';
 import NotFound from './components/NotFound';
-import Profile from './components/Profile';
+import Settings from './components/Settings';
 import User from './components/User';
 import {Switch, Route, Redirect, BrowserRouter} from 'react-router-dom';
 import { inject, observer } from 'mobx-react';
@@ -46,7 +46,7 @@ class HyperTube extends Component {
                               <Route path="/auth" component={Auth}/>
                               <PrivateRoute exact path="/" component={Home}/>
                               <PrivateRoute exact path="/user/:username" component={User}/>
-                              <PrivateRoute exact path="/profile" component={Profile}/>
+                              <PrivateRoute exact path="/settings" component={Settings}/>
                               <PrivateRoute exact path="/film/:id" component={Film}/>
                               <Route path="*" component={NotFound}/>
                           </Switch>
