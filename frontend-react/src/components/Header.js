@@ -7,6 +7,7 @@ import Button from '@material-ui/core/Button';
 import { inject, observer } from 'mobx-react';
 
 import { Link } from 'react-router-dom'
+import { IconButton, Avatar, Menu, MenuItem, ListItemIcon, Icon } from '@material-ui/core';
 
 const styles = {
     root: {
@@ -17,27 +18,103 @@ const styles = {
     },
     buttons: {
         marginLeft: 5
-    }
+    },
 };
 
 @inject('SelfStore', 'AuthStore') @observer
 class Header extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+        anchorEl: null
+    };
+
     this.logoutUser = this.logoutUser.bind(this);
+    this.handleMenu = this.handleMenu.bind(this);
+    this.handleMenuClose = this.handleMenuClose.bind(this);
   }
 
   logoutUser() {
+    this.handleMenuClose();
     this.props.SelfStore.forgetSelf();
     this.props.AuthStore.logout();
   }
 
+  handleMenu(e) {
+    this.setState({ anchorEl: e.currentTarget });
+  }
+
+  handleMenuClose(e) {
+    this.setState({ anchorEl: null });
+  }
+
+  renderAvatar(self, classes) {
+    if (self.avatar) {
+        return <Avatar src={`http://localhost:8080${self.avatar}`} />;
+    } else {
+        return (
+            <Avatar src={self.avatar} >
+                {`${self.fname.charAt(0)}${self.lname.charAt(0)}`}
+            </Avatar>
+        );
+    }
+}
+
   renderAuthButtons(classes) {
-    if (this.props.SelfStore.self) {
+    const { self } = this.props.SelfStore;
+    const { anchorEl } = this.state;
+
+    if (self) {
+        const isMenuOpen = !!anchorEl;
+
         return (
             <React.Fragment>
-                <Button component={Link} to="/profile" className={classes.buttons} color="inherit">Profile</Button>
-                <Button onClick={this.logoutUser} className={classes.buttons} color="inherit">Logout</Button>
+                <IconButton
+                  aria-owns={isMenuOpen ? 'menu-appbar' : undefined}
+                  aria-haspopup="true"
+                  onClick={this.handleMenu}
+                >
+                  { this.renderAvatar(self) }
+                </IconButton>
+                <Menu
+                  id="menu-appbar"
+                  anchorEl={anchorEl}
+                  anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  open={isMenuOpen}
+                  onClose={this.handleMenuClose}
+                >
+                    {/* <MenuItem onClick={this.handleMenuClose} button component={Link} to="/settings">
+                        <ListItemIcon className={classes.icon}>
+                            <Icon>account_circle</Icon>
+                        </ListItemIcon>
+                        <Typography variant="inherit" noWrap>
+                           Profile
+                        </Typography>
+                    </MenuItem> */}
+                    <MenuItem onClick={this.handleMenuClose} button component={Link} to="/settings" >
+                        <ListItemIcon className={classes.icon}>
+                            <Icon>settings</Icon>
+                        </ListItemIcon>
+                        <Typography variant="inherit" noWrap>
+                           Settings
+                        </Typography>
+                    </MenuItem>
+                    <MenuItem button onClick={this.logoutUser} >
+                        <ListItemIcon className={classes.icon}>
+                            <Icon>exit_to_app</Icon>
+                        </ListItemIcon>
+                        <Typography variant="inherit" noWrap>
+                           Logout
+                        </Typography>
+                    </MenuItem>
+                </Menu>
             </React.Fragment>
         )
     } else {
