@@ -124,6 +124,70 @@ app.get('/subtitles', async (request, response) => {
 
 })
 
+// ============================== get OUR popular films
+
+app.get('/popular_films', async (request, response) => {
+	console.log(request.query);
+
+	try {
+		var validation = await validateUser(request.cookies);
+		// var validation = await validateUser({'x-auth-token': "laskjdfa80ur2rh2kjh23kj4h2l3j4h2kj3h4k32j4h"});
+	} catch(error) {
+		response.send({'success': false, 'error': 'invalid token'});
+		return;
+	}
+
+	// language: to request from api user settings
+	language = validation.data['payload']['locale'] || 'en';
+
+	// integer 1 - 1000
+	page = request.query.page || 1;
+
+	// desc or asc
+	order = request.query.order || 'desc';
+
+	const {Client}  = require('pg');
+
+	const db = new Client({
+	  user: 'Hypertube',
+	  host: 'localhost',
+	  database: 'Hypertube',
+	  password: '12345',
+	  port: 5433,
+	});
+
+	await db.connect()
+
+	const res = await db.query('SELECT * from popular_films order by count ' + order + ' limit 20 offset ' + (page - 1) * 20 + ';');
+	await db.end()
+
+	var rows = res['rows'];
+
+
+	try {
+		const promisesArray = rows.map(element => {
+			let url = 'https://api.themoviedb.org/3/movie/' + element.imdb_id + '?api_key=' + API_KEY + '&language=' + language;
+			return axios(url);
+		});
+
+		const detailed_result_const = await axios.all(promisesArray.map(p => p.catch(() => 'NOT_RESOLVED_MOVIE_INFO')));
+		var detailed_result = detailed_result_const;
+
+	} catch(err) {
+	    console.error('Error:', err);
+	}
+
+	final_response = detailed_result.map(element => {return element.data});
+
+	for (var i = final_response.length - 1; i >= 0; i--) {
+		final_response[i]['poster_path'] = 'http://image.tmdb.org/t/p/w342' + final_response[i]['poster_path'];
+		final_response[i]['popular_films_count'] = rows[i]['count'];
+	}
+
+	response.send(final_response);
+
+});
+
 
 // ============================== get films list NEW VERSION
 
@@ -474,7 +538,6 @@ app.get('/film', async (request, response) => {
 	// language: to request from api user settings
 	language = validation.data['payload']['locale'] || 'en';
 
-
 	async function downloadSubtitles_sub(url, name) {
 
 	  const path_vtt = '/tmp/videos/' + imdb_id + '/subs/' + name + '.vtt';
@@ -512,6 +575,28 @@ app.get('/film', async (request, response) => {
 	    response.send({success: false, error: "invalid query parameters"});
 	    return;
 	}
+
+	const {Client}  = require('pg');
+
+	const db = new Client({
+	  user: 'Hypertube',
+	  host: 'localhost',
+	  database: 'Hypertube',
+	  password: '12345',
+	  port: 5433,
+	});
+
+	await db.connect()
+
+	const res = await db.query("SELECT * from popular_films where imdb_id='" + imdb_id + "';");
+	if (!res.rowCount) {
+		var sql_update = "insert into popular_films values('" + imdb_id + "', 1)";
+	} else {
+		var sql_update = "update popular_films set count=" + (parseInt(res.rows[0]['count']) + 1) + " where imdb_id='" + imdb_id + "';";
+	}
+
+	const res2 = await db.query(sql_update);
+	await db.end()
 
 	var dir_path = "/tmp/videos/" + imdb_id + "/" + resolution;
 	var dir_path_subs = "/tmp/videos/" + imdb_id + "/subs";
@@ -588,7 +673,7 @@ app.get('/film', async (request, response) => {
 			})
 
 			console.log('we have result on OS search: ');
-			console.log(result);
+			// console.log(result);
 
 			var locales = ['ru', 'en'];
 
