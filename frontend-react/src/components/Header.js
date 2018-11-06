@@ -90,14 +90,6 @@ class Header extends Component {
                   open={isMenuOpen}
                   onClose={this.handleMenuClose}
                 >
-                    {/* <MenuItem onClick={this.handleMenuClose} button component={Link} to="/settings">
-                        <ListItemIcon className={classes.icon}>
-                            <Icon>account_circle</Icon>
-                        </ListItemIcon>
-                        <Typography variant="inherit" noWrap>
-                           Profile
-                        </Typography>
-                    </MenuItem> */}
                     <MenuItem onClick={this.handleMenuClose} button component={Link} to="/settings" >
                         <ListItemIcon className={classes.icon}>
                             <Icon>settings</Icon>
