@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom'
 
 
 const styles = theme => ({
-  		root: {
+  	root: {
     	flexGrow: 1,
   	},
   	paper: {
@@ -27,17 +27,24 @@ class Home extends Component {
 	render() {
 		const { classes } = this.props;
        return (
-       <Grid container className={classes.root} spacing={16}>
-        <Grid item xs={12}>
-          <Grid container className={classes.demo} justify="center" spacing={Number(8)}>
-            {[0, 1, 2, 3].map(value => (
-              <Grid key={value} item>
-                <Link to={"/film/" + 'id'}><Paper className={classes.paper} /></Link>
-              </Grid>
-            ))}
+        <Grid
+          container
+          direction="row"
+          justify="center"
+          alignItems="center"
+          className={classes.root}
+          spacing={16}
+        >
+          <Grid item xs={12}>
+            <Grid container className={classes.demo} justify="center" spacing={Number(8)}>
+              {[0, 1, 2, 3].map(value => (
+                <Grid key={value} item>
+                  <Link to={"/film/" + 'id'}><Paper className={classes.paper} /></Link>
+                </Grid>
+              ))}
+            </Grid>
           </Grid>
         </Grid>
-      </Grid>
       );
     }
 }

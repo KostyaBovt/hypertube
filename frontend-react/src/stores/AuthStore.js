@@ -61,7 +61,6 @@ class AuthStore {
     }
 
     async login() {
-       
             const { uname, password } = this.fields;
             this.clearErrors();
             try {
@@ -216,7 +215,6 @@ class AuthStore {
 
         });
 
-        const { ...errors } = this.errors;
         return isValid;
     }
 }
