@@ -32,7 +32,14 @@ class LibraryStore {
     }
 
     async fetchMovies() {
-        axios.post()
+        const response = await axios.get("http://localhost:3200/films", { withCredentials: true });
+        if (response.data.success === true){
+            this.movies = response.data.movies.results;
+            console.log(response.data.movies.results);
+        }
+        else {
+            console.log(response.data.error);
+        }
     }
 
 }

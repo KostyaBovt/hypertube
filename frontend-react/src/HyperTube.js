@@ -7,6 +7,7 @@ import Movie from './components/Movie';
 import Auth from './components/Auth';
 import NotFound from './components/NotFound';
 import User from './components/User';
+import Library from './components/Library';
 import {Switch, Route, Redirect, BrowserRouter} from 'react-router-dom';
 import { inject, observer } from 'mobx-react';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -48,6 +49,7 @@ class HyperTube extends Component {
                               <PrivateRoute exact path="/user/:username" component={User}/>
                               <PrivateRoute exact path="/settings" component={SettingsPage}/>
                               <PrivateRoute exact path="/movie/:id([0-9]*)" component={Movie}/>
+                              <PrivateRoute exact path="/library" component={Library}/>
                               <Route path="*" component={NotFound}/>
                           </Switch>
                           <Footer/>

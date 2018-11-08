@@ -364,7 +364,7 @@ app.get('/films', async (request, response) => {
 	}
 
 
-	response.send({'movies': films_res.data});
+	response.send({'success': true, 'movies': films_res.data});
 
 
 	// this is usefull snipet to make several async requests with promises
