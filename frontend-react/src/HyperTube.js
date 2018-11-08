@@ -6,13 +6,13 @@ import Home from './components/Home';
 import Film from './components/Film';
 import Auth from './components/Auth';
 import NotFound from './components/NotFound';
-import Settings from './components/Settings';
 import User from './components/User';
 import {Switch, Route, Redirect, BrowserRouter} from 'react-router-dom';
 import { inject, observer } from 'mobx-react';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import teal from '@material-ui/core/colors/teal';
+import SettingsPage from './components/SettingsPage';
 
 const theme = createMuiTheme({
   palette: {
@@ -46,7 +46,7 @@ class HyperTube extends Component {
                               <Route path="/auth" component={Auth}/>
                               <PrivateRoute exact path="/" component={Home}/>
                               <PrivateRoute exact path="/user/:username" component={User}/>
-                              <PrivateRoute exact path="/settings" component={Settings}/>
+                              <PrivateRoute exact path="/settings" component={SettingsPage}/>
                               <PrivateRoute exact path="/film/:id" component={Film}/>
                               <Route path="*" component={NotFound}/>
                           </Switch>

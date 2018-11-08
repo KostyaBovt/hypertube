@@ -4,17 +4,6 @@ import axios from 'axios';
 class SelfStore {
     @observable self = undefined;
 
-    @observable profileError = null;
-    @observable isErrorDisplayed = false;
-    
-    @action setError(error) {
-        this.profileError = error;
-    }
-
-    @action setIsErrorDisplayed(status) {
-        this.isErrorDisplayed = status;
-    }
-
     @action setSelf(data) {
         this.self = data;
     }
@@ -38,42 +27,6 @@ class SelfStore {
         }
     }
 
-    async updateEmail(value) {
-        const data = { email: value };
-        try {
-            const response = await axios.post('http://localhost:8080/api/profile/email', data, { withCredentials: true });
-            console.log(response);
-            if (response.data.status === "ok") {
-                return true;
-            } else {
-                const error = Object.values(response.data.reason)[0];
-                this.setError(error);
-                return false;
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
-    async updateProfile(fieldName, value) {
-        const data = {};
-        data[fieldName] = value; 
-
-        try {
-            const response = await axios.post('http://localhost:8080/api/profile', data, { withCredentials: true });
-            console.log(response);
-            if (response.data.status === "ok") {
-                const updatedValue = response.data.payload[fieldName];
-                this.updateSelfField(fieldName, updatedValue);
-            } else {
-                const error = Object.values(response.data.reason)[0];
-                this.setError(error);
-            }
-        } catch (e) {
-            console.error(e);
-        }
-    }
-
     async importPictureFromSocial() {
         try {
             const response = await axios.get('http://localhost:8080/api/social_avatar', { withCredentials: true });
@@ -82,15 +35,83 @@ class SelfStore {
                 this.updateSelfField('avatar', avatar);
             } else {
                 const error = Object.values(response.data.reason)[0];
-                this.setError(error);
+                console.error(error);
             }
-
             console.log(response);
         } catch (e) {
             console.error(e);
         }
     }
+    
+    async updateProfile(fieldName, value) {
+        const data = {};
+        data[fieldName] = value;
+        
+        try {
+            const response = await axios.post('http://localhost:8080/api/profile', data, { withCredentials: true });
+            if (response.data.status === "ok") {
+                const updatedValue = response.data.payload[fieldName];
+                this.updateSelfField(fieldName, updatedValue);
+                return { success: true };
+            } else {
+                const error = Object.values(response.data.reason)[0];
+                return { success: false, error }
+            }
+        } catch (e) {
+            console.error(e);
+            return { success: false, error: 'Unexpected error occured' };
+        }
+    }
+    
+    async updateEmail(value) {
+        const data = { email: value };
+        try {
+            const response = await axios.post('http://localhost:8080/api/profile/email', data, { withCredentials: true });
+            console.log(response);
+            if (response.data.status === "ok") {
+                return { success: true };
+            } else {
+                const error = Object.values(response.data.reason)[0];
+                return { success: false, error }
+            }
+        } catch (e) {
+            console.error(e);
+            return { success: false, error: 'Unexpected error occured' };
+        }
+    }
 
+    async updateLocale(value) {
+        const data = { locale: value };
+        try {
+            const response = await axios.post('http://localhost:8080/api/profile/locale', data, { withCredentials: true });
+            if (response.data.status === "ok") {
+                this.updateSelfField('locale', value);
+            } else {
+                const error = Object.values(response.data.reason)[0];
+                return false;
+            }
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
+    }
+
+    async updatePassword(old_password, new_password) {
+        const data = { old_password, new_password };
+        try {
+            const response = await axios.post('http://localhost:8080/api/profile/pass', data, { withCredentials: true });
+            console.log(response);
+            if (response.data.status === "ok") {
+                return { success: true };
+            } else {
+                return { success: false, error: response.data.reason };
+            }
+        } catch (e) {
+            console.error(e);
+            return { success: false, error: { old_password: 'Some unexpected error occured' }}
+        }
+    }
+    
 }
 
 export default new SelfStore();
