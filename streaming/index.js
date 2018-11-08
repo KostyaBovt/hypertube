@@ -45,6 +45,15 @@ var locale = 'ru';
 
 // ============================== some usefull functions
 
+app.use((req, res, next) => {
+	res.set({
+		'Access-Control-Allow-Origin':			'http://localhost:3000',
+		'Access-Control-Allow-Credentials':		'true',
+		'Access-Control-Allow-Credentials':		'true'
+	});
+	next();
+});
+
 app.get('/test', async (request, response) => {
 	console.log(request.cookies);
 	response.send('ok');
