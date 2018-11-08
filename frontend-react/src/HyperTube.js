@@ -3,7 +3,7 @@ import './HyperTube.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Home from './components/Home';
-import Film from './components/Film';
+import Movie from './components/Movie';
 import Auth from './components/Auth';
 import NotFound from './components/NotFound';
 import User from './components/User';
@@ -47,7 +47,7 @@ class HyperTube extends Component {
                               <PrivateRoute exact path="/" component={Home}/>
                               <PrivateRoute exact path="/user/:username" component={User}/>
                               <PrivateRoute exact path="/settings" component={SettingsPage}/>
-                              <PrivateRoute exact path="/film/:id" component={Film}/>
+                              <PrivateRoute exact path="/movie/:id([0-9]*)" component={Movie}/>
                               <Route path="*" component={NotFound}/>
                           </Switch>
                           <Footer/>

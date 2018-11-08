@@ -2,14 +2,14 @@ import AuthStore from './AuthStore';
 import SelfStore from './SelfStore';
 import UserStore from './UserStore';
 import LibraryStore from './LibraryStore';
-import FilmStore from './FilmStore';
+import MovieStore from './MovieStore';
 
 const stores = {
 	AuthStore,
 	SelfStore,
 	UserStore,
 	LibraryStore,
-	FilmStore
+	MovieStore
 };
 
 export default stores;
