@@ -9,7 +9,7 @@ import OtherSection from './OtherSection';
 const styles = theme => ({
 	layout: {
 		width: 'auto',
-		[theme.breakpoints.up(600 + theme.spacing.unit * 2 * 2)]: {
+		[theme.breakpoints.up(600)]: {
 			width: 600,
 			marginLeft: 'auto',
 			marginRight: 'auto',

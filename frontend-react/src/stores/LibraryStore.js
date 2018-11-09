@@ -18,6 +18,14 @@ class LibraryStore {
         this.currentPage = page;
     }
 
+    @action setMovies(movies) {
+        this.movies = movies;
+    }
+
+    @action setQueryString(value) {
+        this.queryString = value;
+    }
+
     @action pushMovies(moreMovies) {
         this.movies.push(moreMovies);
     }
@@ -33,8 +41,9 @@ class LibraryStore {
 
     async fetchMovies() {
         const response = await axios.get("http://localhost:3200/films", { withCredentials: true });
+        console.log('movies', response);
         if (response.data.success === true){
-            this.movies = response.data.movies.results;
+            this.setMovies(response.data.movies.results);
             console.log(response.data.movies.results);
         }
         else {
