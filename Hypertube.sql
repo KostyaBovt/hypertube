@@ -99,7 +99,8 @@ ALTER SEQUENCE public.comments_id_seq OWNED BY public.comments.id;
 
 CREATE TABLE public.popular_films (
     imdb_id character varying NOT NULL,
-    count integer DEFAULT 0 NOT NULL
+    count integer DEFAULT 0 NOT NULL,
+    last_seen timestamp(0) DEFAULT now() NOT NULL
 );
 
 

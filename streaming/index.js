@@ -8,6 +8,7 @@ var Transmission = require('transmission');
 var pather 		= require('path');
 const srt2vtt = require('srt-to-vtt');
 var cookieParser = require('cookie-parser')
+var rimraf = require('rimraf');
 
 const OpenSubtitles = require('opensubtitles-api');
 const OS = new OpenSubtitles({
@@ -39,12 +40,6 @@ app.use('/public', express.static(pather.join(__dirname, 'public')));
 
 app.use('/videos', express.static('/tmp/videos'));
 
-// ============================== some hardcode values
-
-var locale = 'ru';
-
-// ============================== some usefull functions
-
 app.use((req, res, next) => {
 	res.set({
 		'Access-Control-Allow-Origin':			'http://localhost:3000',
@@ -58,6 +53,48 @@ app.get('/test', async (request, response) => {
 	response.send('ok');
 });
 
+// ============================== this is check every 10 minutes if we need to clean old(30 days unused) films
+
+setTimeout(async function runCleaner() {
+	const {Client}  = require('pg');
+
+	const db = new Client({
+	  user: 'Hypertube',
+	  host: 'localhost',
+	  database: 'Hypertube',
+	  password: '12345',
+	  port: 5433,
+	});
+
+	await db.connect()
+
+	const result_to_delete = await db.query( "SELECT * from popular_films where  NOW() - last_seen > INTERVAL '30 days'");
+	var delete_string = "(";
+	for (var i = result_to_delete.rows.length - 1; i >= 0; i--) {
+		console.log('now to delete this film :');
+		console.log(result_to_delete.rows[i]['imdb_id']);
+		delete_string += (delete_string.length != 1) ? ", '" + result_to_delete.rows[i]['imdb_id'] + "'" : "'" + result_to_delete.rows[i]['imdb_id'] + "'";
+		if (fs.existsSync('/tmp/videos/' + result_to_delete.rows[i]['imdb_id'])) {
+			var temp_imdb_id = result_to_delete.rows[i]['imdb_id'];
+			rimraf('/tmp/videos/' + result_to_delete.rows[i]['imdb_id'], function () { 
+				console.log('=========\ndeleted folder /tmp/videos/' + temp_imdb_id + '\n=========\n');
+			});
+			
+		}
+	}
+	delete_string += ")";
+	if (result_to_delete.rows.length > 0) {
+		console.log('we will run sql: ' + "DELETE from popular_films where imdb_id in " + delete_string + ";");
+		const result_to_delete2 = await db.query( "DELETE from popular_films where imdb_id in " + delete_string + ";");
+	} else {
+		console.log('nothing to clean');
+	}
+	await db.end()
+	
+	setTimeout(runCleaner, 1000 * 60 * 10);
+}, 5000);
+
+// ============================== function to validate user
 
 async function validateUser(cookies) {
 
@@ -81,6 +118,8 @@ async function validateUser(cookies) {
 	});
 
 }
+
+// ============================== this is unused now
 
 app.get('/subtitles', async (request, response) => {
 
@@ -598,9 +637,9 @@ app.get('/film', async (request, response) => {
 
 	const res = await db.query("SELECT * from popular_films where imdb_id='" + imdb_id + "';");
 	if (!res.rowCount) {
-		var sql_update = "insert into popular_films values('" + imdb_id + "', 1)";
+		var sql_update = "insert into popular_films values('" + imdb_id + "', 1, DEFAULT)";
 	} else {
-		var sql_update = "update popular_films set count=" + (parseInt(res.rows[0]['count']) + 1) + " where imdb_id='" + imdb_id + "';";
+		var sql_update = "update popular_films set count=" + (parseInt(res.rows[0]['count']) + 1) + ", last_seen=DEFAULT where imdb_id='" + imdb_id + "';";
 	}
 
 	const res2 = await db.query(sql_update);
