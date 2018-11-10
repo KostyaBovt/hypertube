@@ -26,6 +26,11 @@ class LibraryStore {
         this.queryString = value;
     }
 
+    @action setGenres(genres) {
+        this.filters.with_genres = genres;
+        console.log(genres);
+    }
+
     @action pushMovies(moreMovies) {
         this.movies.push(moreMovies);
     }
@@ -48,6 +53,37 @@ class LibraryStore {
         }
         else {
             console.log(response.data.error);
+        }
+    }
+
+    async fetchMoviesWithFilters() {
+        const definedFilters = [];
+
+        Object.keys(this.filters).forEach(filter => {
+            if (this.filters[filter] !== undefined) {
+                definedFilters.push(filter);
+            }
+        });
+
+        console.log(definedFilters);
+
+        if (definedFilters.length > 0) {
+            const params = {};
+            definedFilters.forEach(filter => {
+                params[filter] = this.filters[filter];
+            });
+
+            const response = await axios.get("http://localhost:3200/films", {
+                params,
+                withCredentials: true
+            });
+            if (response.data.success === true){
+                this.setMovies(response.data.movies.results);
+                console.log(response.data.movies.results);
+            }
+            else {
+                console.log(response.data.error);
+            }
         }
     }
 
