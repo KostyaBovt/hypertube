@@ -3,7 +3,7 @@ import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
-import { Typography, Card, CardActionArea, CardMedia, CardContent, FormControl, InputLabel, Input, FormHelperText, InputAdornment, Icon, Button, IconButton, Select, Chip, MenuItem, ListItemText, Checkbox} from '@material-ui/core';
+import { Typography, Card, CardActionArea, CardMedia, CardContent, FormControl, InputLabel, Input, InputAdornment, Icon, Button, Select, Chip, MenuItem, ListItemText, Checkbox, CircularProgress} from '@material-ui/core';
 
 const styles = theme => ({
     layout: {
@@ -17,7 +17,7 @@ const styles = theme => ({
         marginBottom: theme.spacing.unit * 2
     },
     card: {
-        maxWidth: 250,
+        width: 250,
         margin: theme.spacing.unit
     },
     formControl: {
@@ -33,6 +33,9 @@ const styles = theme => ({
     },
     media: {
         objectFit: 'cover',
+    },
+    loadMoreButton: {
+
     }
 });
 
@@ -78,7 +81,9 @@ class Library extends Component {
         this.handleGenreSelect = this.handleGenreSelect.bind(this);
         this.renderGenreSelectValues = this.renderGenreSelectValues.bind(this);
         this.deleteSelectedGenre = this.deleteSelectedGenre.bind(this);
-        this.fetchMoviesWithFilters = this.fetchMoviesWithFilters.bind(this);
+        this.renderMainContent = this.renderMainContent.bind(this);
+        this.renderMovies = this.renderMovies.bind(this);
+        this.fetchMovies = this.fetchMovies.bind(this);
     }
 
     handleFormSubmit(e) {
@@ -89,21 +94,21 @@ class Library extends Component {
         this.props.LibraryStore.fetchMovies();
     }
 
-    fetchMoviesWithFilters() {
-        this.props.LibraryStore.fetchMoviesWithFilters();
+    fetchMovies(page = 1) {
+        this.props.LibraryStore.fetchMovies(page);
     }
 
     handleGenreSelect(e) {
+        console.log('handle select', e.target.value);
         this.setState({ genres: e.target.value }, () => {
             const selectedGenres = this.state.genres.map(genreIndex => {
                 return genres[genreIndex].id;
             });
 
             this.props.LibraryStore.setGenres(selectedGenres);
-            this.fetchMoviesWithFilters();
+            this.fetchMovies();
         });
     }
-
 
     deleteSelectedGenre = genreIndex => () => {
         console.log(genreIndex);
@@ -118,9 +123,8 @@ class Library extends Component {
             });
 
             this.props.LibraryStore.setGenres(selectedGenres);
-            this.fetchMoviesWithFilters();
+            this.fetchMovies();
         });
-        this.fetchMoviesWithFilters();
     }
 
     renderGenreSelectValues(selectedGenres) {
@@ -139,10 +143,60 @@ class Library extends Component {
         );
     }
 
+    renderMovies(movies) {
+        const { classes } = this.props;
+        return movies.map((movie, index) => (
+            <Grid item key={movie.id}>
+                <Card className={classes.card}>
+                    <CardActionArea href={`/movie/${movie.id}`}>
+                        <CardMedia
+                            component="img"
+                            className={classes.media}
+                            alt={movie.title}
+                            height="375"
+                            image={movie.poster_path}
+                            title={movie.title}
+                        />
+                        <CardContent>
+                            <Typography variant="subtitle2" noWrap>
+                                {movie.id} {movie.title}
+                            </Typography>
+                            <Typography variant="subtitle2" gutterBottom color="textSecondary">
+                                { movie.release_date.split("-")[0] || 'Release date unknown' }
+                            </Typography>
+                            <Typography variant="caption" color="textSecondary">
+                                IMDb rating - {movie.vote_average}/10
+                            </Typography>
+                        </CardContent>
+                    </CardActionArea>
+                </Card>
+            </Grid>
+        ));
+    }
+
+    renderMainContent(movies) {
+        if (movies && movies.length > 0) {
+            return this.renderMovies(movies);
+        } else if (movies && movies.length === 0) {
+            return (
+                <Typography variant="subtitle2" color="textSecondary">
+                    No results found
+                </Typography>
+            );
+        } else if (movies === undefined) {
+            return <CircularProgress />;
+        } else if (movies === null) {
+            return (
+                <Typography variant="subtitle2" color="textSecondary">
+                    Error occured, try again
+                </Typography>
+            );
+        }
+    }
+
     render() {
         const { classes, LibraryStore } = this.props;
-        const { movies, filters, queryString } = LibraryStore;
-        console.log('render genres', this.state.genres);
+        const { isLoading, movies, currentPage, totalPages, filters, queryString } = LibraryStore;
         return (
             <main>
                 <Grid container className={classes.layout} direction="column">
@@ -200,36 +254,19 @@ class Library extends Component {
                     </Grid>
 
                     <Grid container className={classes.container} wrap="wrap" justify="center" zeroMinWidth>
-                        {   movies &&
-                            movies.map(movie => (
-                                <Grid item key={movie.id}>
-                                    <Card className={classes.card}>
-                                        <CardActionArea href={`/movie/${movie.id}`}>
-                                            <CardMedia
-                                                component="img"
-                                                className={classes.media}
-                                                alt={movie.title}
-                                                height="375"
-                                                image={movie.poster_path}
-                                                title={movie.title}
-                                            />
-                                            <CardContent>
-                                                <Typography variant="subtitle2" noWrap>
-                                                    {movie.title}
-                                                </Typography>
-                                                <Typography variant="subtitle2" gutterBottom color="textSecondary">
-                                                    { movie.release_date.split("-")[0] }
-                                                </Typography>
-                                                <Typography variant="caption" color="textSecondary">
-                                                    IMDb rating - {movie.vote_average}/10
-                                                </Typography>
-                                            </CardContent>
-                                        </CardActionArea>
-                                    </Card>
-                                </Grid>
-                            ))
-                        }
+                        { this.renderMainContent(movies) }
                     </Grid>
+
+                    {
+                        movies && !isLoading && currentPage < totalPages &&
+                        <Grid container className={classes.container} justify="center">
+                            <Grid item>
+                                <Button onClick={() => this.fetchMovies(currentPage + 1)} variant="outlined" size="large" color="primary">
+                                    Load more
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    }
 
                 </Grid>
             </main>

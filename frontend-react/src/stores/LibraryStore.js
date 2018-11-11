@@ -1,9 +1,11 @@
-import { observable, action } from "mobx";
+import { observable, action, toJS } from "mobx";
 import axios from 'axios';
 
 class LibraryStore {
+    @observable isLoading = false;
     @observable movies = undefined;
-    @observable currentPage = 0;
+    @observable currentPage = undefined;
+    @observable totalPages = undefined;
     @observable filters = {
         sort_by: undefined,
         release_date: undefined,
@@ -14,12 +16,24 @@ class LibraryStore {
 
     @observable queryString = '';
 
+    @action setIsLoading(status) {
+        this.isLoading = status;
+    }
+    
     @action setPage(page) {
         this.currentPage = page;
     }
 
+    @action setTotalPages(pages) {
+        this.totalPages = pages;
+    }
+
     @action setMovies(movies) {
         this.movies = movies;
+    }
+
+    @action pushMovies(moreMovies) {
+        this.movies.push(...moreMovies);
     }
 
     @action setQueryString(value) {
@@ -31,9 +45,6 @@ class LibraryStore {
         console.log(genres);
     }
 
-    @action pushMovies(moreMovies) {
-        this.movies.push(moreMovies);
-    }
 
     @action pageIncrement() {
         this.page++;
@@ -44,49 +55,57 @@ class LibraryStore {
         this.movies = undefined;
     }
 
-    async fetchMovies() {
-        const response = await axios.get("http://localhost:3200/films", { withCredentials: true });
-        console.log('movies', response);
-        if (response.data.success === true){
-            this.setMovies(response.data.movies.results);
-            console.log(response.data.movies.results);
-        }
-        else {
-            console.log(response.data.error);
-        }
-    }
-
-    async fetchMoviesWithFilters() {
-        const definedFilters = [];
-
-        Object.keys(this.filters).forEach(filter => {
-            if (this.filters[filter] !== undefined) {
-                definedFilters.push(filter);
-            }
-        });
-
-        console.log(definedFilters);
-
-        if (definedFilters.length > 0) {
-            const params = {};
-            definedFilters.forEach(filter => {
-                params[filter] = this.filters[filter];
-            });
-
+    async fetchMovies(pageToFetch = 1) {
+        const params = this._getDefinedFilters();
+        params.page = pageToFetch;
+        try {
+            this.setIsLoading(true);
             const response = await axios.get("http://localhost:3200/films", {
                 params,
                 withCredentials: true
             });
-            if (response.data.success === true){
-                this.setMovies(response.data.movies.results);
+            if (response.data.success === true) {
+                const { page, total_pages, results } = response.data.movies;
+                if (pageToFetch === 1) {
+                    this.setMovies(results);
+                } else {
+                    this.pushMovies(results)
+                }
+                this.setPage(page);
+                this.setTotalPages(total_pages);
                 console.log(response.data.movies.results);
-            }
-            else {
+            } else {
+                this.setMovies(null);
                 console.log(response.data.error);
             }
+            console.log(response);
+        } catch (e) {
+            this.setMovies(null);
+            console.log(e);
+        } finally {
+            this.setIsLoading(false);
         }
     }
 
+    _getDefinedFilters() {
+        const currentFilters = toJS(this.filters);
+        const definedFilterKeys = [];
+        Object.keys(this.filters).forEach(filter => {
+            if (this.filters[filter] !== undefined) {
+                definedFilterKeys.push(filter);
+            }
+        });
+
+        let filters = {};
+        if (definedFilterKeys.length > 0) {
+            definedFilterKeys.forEach(filter => {
+                filters[filter] = currentFilters[filter];
+            });
+        }
+
+        return toJS(filters);
+        // return filters;
+    }
 }
 
 export default new LibraryStore();
