@@ -7,9 +7,8 @@ class LibraryStore {
     @observable currentPage = undefined;
     @observable totalPages = undefined;
     @observable filters = {
-        sort_by: undefined,
+        sort_by: "popularity.desc",
         release_date: undefined,
-        vote_count: undefined,
         vote_average: undefined,
         with_genres: undefined
     }
@@ -26,6 +25,10 @@ class LibraryStore {
 
     @action setTotalPages(pages) {
         this.totalPages = pages;
+    }
+
+    @action setFilter(name, value) {
+        this.filters[name] = value;
     }
 
     @action setMovies(movies) {
@@ -56,6 +59,7 @@ class LibraryStore {
     }
 
     async fetchMovies(pageToFetch = 1) {
+        console.log('fetching movies page ', pageToFetch);
         const params = this._getDefinedFilters();
         params.page = pageToFetch;
         try {
@@ -64,6 +68,7 @@ class LibraryStore {
                 params,
                 withCredentials: true
             });
+            console.log(response);
             if (response.data.success === true) {
                 const { page, total_pages, results } = response.data.movies;
                 if (pageToFetch === 1) {
@@ -73,15 +78,44 @@ class LibraryStore {
                 }
                 this.setPage(page);
                 this.setTotalPages(total_pages);
-                console.log(response.data.movies.results);
+                // console.log(response.data.movies.results);
             } else {
                 this.setMovies(null);
                 console.log(response.data.error);
             }
-            console.log(response);
         } catch (e) {
             this.setMovies(null);
             console.log(e);
+        } finally {
+            this.setIsLoading(false);
+        }
+    }
+
+    async fetchSearchResults(pageToFetch = 1) {
+        console.log('searching for', this.queryString);
+        this.setIsLoading(true);
+        try {
+            const response = await axios.get("http://localhost:3200/films", {
+                params: { query: this.queryString, page: pageToFetch },
+                withCredentials: true
+            });
+            if (response.data.success === true) {
+                const { page, total_pages, results } = response.data.movies;
+                if (pageToFetch === 1) {
+                    console.log('setting movies', results);
+                    this.setMovies(results);
+                } else {
+                    console.log('pushing movies');
+                    this.pushMovies(results)
+                }
+                this.setPage(page);
+                this.setTotalPages(total_pages);
+            } else {
+                this.setMovies(null);
+                console.log(response.data.error);
+            }
+        } catch (e) {
+            console.error(e);
         } finally {
             this.setIsLoading(false);
         }
@@ -104,7 +138,6 @@ class LibraryStore {
         }
 
         return toJS(filters);
-        // return filters;
     }
 }
 
