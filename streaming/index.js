@@ -312,6 +312,7 @@ app.get('/films', async (request, response) => {
 
 	if (query) {
 		sign = filters ? "&" : "?";
+		query = encodeURIComponent(query);
 		filters += sign + 'query=' + query;
 	} else {
 		
@@ -399,7 +400,9 @@ app.get('/films', async (request, response) => {
 	}
 
 	for (var i = films_res.data['results'].length - 1; i >= 0; i--) {
-		films_res.data['results'][i]['poster_path'] = 'http://image.tmdb.org/t/p/w342' + films_res.data['results'][i]['poster_path'];
+		if (films_res.data['results'][i]['poster_path']) {
+			films_res.data['results'][i]['poster_path'] = 'http://image.tmdb.org/t/p/w342' + films_res.data['results'][i]['poster_path'];
+		}
 	}
 
 
