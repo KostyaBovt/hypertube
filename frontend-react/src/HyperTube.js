@@ -30,7 +30,6 @@ class HyperTube extends Component {
         const { SelfStore } = this.props;
         
         SelfStore.pullSelf();
-        console.log("us: ", SelfStore.self);
     }
   render() {
       const { SelfStore } = this.props;

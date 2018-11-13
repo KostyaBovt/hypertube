@@ -20,7 +20,6 @@ class SelfStore {
         try {
             const response = await axios.get('http://localhost:8080/api/profile', { withCredentials: true })
             this.setSelf(response.data.payload);
-            console.log('Self: ', response);
         } catch (e) {
             this.setSelf(null);
             console.error(e);
