@@ -48,14 +48,19 @@ class LibraryStore {
         console.log(genres);
     }
 
-
-    @action pageIncrement() {
-        this.page++;
+    @action resetFilters() {
+        this.filters = {
+            sort_by: "popularity.desc",
+            release_date: undefined,
+            vote_average: undefined,
+            with_genres: undefined
+        };
     }
 
-    @action resetStore() {
-        this.currentPage = 0;
+    @action resetMovies() {
         this.movies = undefined;
+        this.currentPage = undefined;
+        this.totalPages = undefined;
     }
 
     async fetchMovies(pageToFetch = 1) {
@@ -78,7 +83,6 @@ class LibraryStore {
                 }
                 this.setPage(page);
                 this.setTotalPages(total_pages);
-                // console.log(response.data.movies.results);
             } else {
                 this.setMovies(null);
                 console.log(response.data.error);
@@ -92,13 +96,14 @@ class LibraryStore {
     }
 
     async fetchSearchResults(pageToFetch = 1) {
-        console.log('searching for', this.queryString);
+        console.log(`Searching for ${this.queryString}, page ${pageToFetch}`);
         this.setIsLoading(true);
         try {
             const response = await axios.get("http://localhost:3200/films", {
                 params: { query: this.queryString, page: pageToFetch },
                 withCredentials: true
             });
+            console.log(response);
             if (response.data.success === true) {
                 const { page, total_pages, results } = response.data.movies;
                 if (pageToFetch === 1) {

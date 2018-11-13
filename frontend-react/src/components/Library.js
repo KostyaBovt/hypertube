@@ -3,7 +3,8 @@ import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
-import { Typography, Card, CardActionArea, CardMedia, CardContent, FormControl, InputLabel, Input, InputAdornment, Icon, Button, Select, Chip, MenuItem, ListItemText, Checkbox, CircularProgress, FilledInput, TextField, IconButton, ButtonBase} from '@material-ui/core';
+import { Typography, Card, CardActionArea, CardMedia, CardContent, FormControl, InputLabel, Input, InputAdornment, Icon, Button, Select, Chip, MenuItem, ListItemText, Checkbox, CircularProgress, FilledInput, TextField, ButtonBase, IconButton} from '@material-ui/core';
+import { Link } from 'react-router-dom'
 
 const styles = theme => ({
     layout: {
@@ -40,8 +41,8 @@ const styles = theme => ({
     media: {
         objectFit: 'cover',
     },
-    loadMoreButton: {
-
+    backButton: {
+        margin: theme.spacing.unit
     }
 });
 
@@ -86,7 +87,8 @@ class Library extends Component {
         this.state = {
             isLoading: false,
             genres: [],
-            searchMode: false // Very strange thing that i need to think about
+            isInSearchMode: false, // Very strange thing that i need to think about
+            currentQuery: ""
         }
         this.handleSearchFormSubmit = this.handleSearchFormSubmit.bind(this);
         this.handleGenreSelect = this.handleGenreSelect.bind(this);
@@ -94,16 +96,25 @@ class Library extends Component {
         this.deleteSelectedGenre = this.deleteSelectedGenre.bind(this);
         this.handleFilterChange = this.handleFilterChange.bind(this);
         this.clearSearchInput = this.clearSearchInput.bind(this);
-        this.renderMainContent = this.renderMainContent.bind(this);
+        this.renderHelpers = this.renderHelpers.bind(this);
         this.renderMovies = this.renderMovies.bind(this);
+        this.renderLoadMoreButton = this.renderLoadMoreButton.bind(this);
         this.fetchMovies = this.fetchMovies.bind(this);
         this.handleMovieSearch = this.handleMovieSearch.bind(this);
         this.handleLoadMore = this.handleLoadMore.bind(this);
     }
 
     handleSearchFormSubmit(e) {
+        const { LibraryStore } = this.props;
         e.preventDefault();
+        LibraryStore.resetFilters();
+        LibraryStore.resetMovies();
         this.handleMovieSearch();
+        this.setState({
+            isInSearchMode: true,
+            genres: [],
+            currentQuery: LibraryStore.queryString
+        });
     }
 
     componentDidMount() {
@@ -116,11 +127,10 @@ class Library extends Component {
 
     handleMovieSearch(page = 1) {
         this.props.LibraryStore.fetchSearchResults(page);
-        this.setState({ searchMode: true });
     }
     
     handleLoadMore(currentPage) {
-        if (this.state.searchMode) {
+        if (this.state.isInSearchMode) {
             this.handleMovieSearch(currentPage + 1)
         } else {
             this.fetchMovies(currentPage + 1);
@@ -128,8 +138,10 @@ class Library extends Component {
     }
 
     clearSearchInput() {
-        this.props.LibraryStore.setQueryString("");
-        this.setState({ searchMode: false })
+        const { LibraryStore } = this.props;
+        LibraryStore.setQueryString("");
+        LibraryStore.resetMovies();
+        this.setState({ isInSearchMode: false })
         this.fetchMovies();
     }
 
@@ -184,12 +196,66 @@ class Library extends Component {
         );
     }
 
-    renderMovies(movies) {
+    renderMovieRating(movie) {
+        if (movie.vote_count > 0) {
+            return (
+                <Typography variant="caption" color="textSecondary">
+                    IMDb rating - {movie.vote_average}/10
+                </Typography>
+            );
+        } else {
+            return (
+                <Typography variant="caption" color="textSecondary">
+                    No rating
+                </Typography>
+            );
+        }
+    }
+    
+    renderHelpers(movies) {
+        const { isInSearchMode, currentQuery } = this.state;
+        if (movies === null) {
+            return (
+                <Grid item>
+                    <Typography variant="subtitle2" color="textSecondary">
+                        Error occured, try again
+                    </Typography>
+                </Grid>
+            );
+        } else if (movies && movies.length === 0 && !isInSearchMode) {
+            return (
+                <Grid item>
+                    <Typography variant="subtitle2" color="textSecondary">
+                        No results found
+                    </Typography>
+                </Grid>
+            );
+        } else if (movies && movies.length === 0 && isInSearchMode) {
+            return (
+                <Grid item>
+                    <Typography variant="subtitle2" color="textSecondary">
+                        No results found for "{currentQuery}"
+                    </Typography>
+                </Grid>
+            );
+        } else if (isInSearchMode && movies) {
+            return (
+                <Grid item>
+                    <Typography variant="subtitle2" color="textSecondary">
+                        Search results for "{currentQuery}"
+                    </Typography>
+                </Grid>
+            );
+        }
+    }
+
+    renderMovies(movies,) {
+        if (!movies) return;
         const { classes } = this.props;
-        return movies.map((movie, index) => (
+        return movies.map(movie => (
             <Grid item key={movie.id}>
                 <Card className={classes.card}>
-                    <CardActionArea href={`/movie/${movie.id}`}>
+                    <CardActionArea component={Link} to={`/movie/${movie.id}`}>
                         <CardMedia
                             component="img"
                             className={classes.media}
@@ -205,9 +271,7 @@ class Library extends Component {
                             <Typography variant="subtitle2" gutterBottom color="textSecondary">
                                 { movie.release_date.split("-")[0] || 'Release date unknown' }
                             </Typography>
-                            <Typography variant="caption" color="textSecondary">
-                                IMDb rating - {movie.vote_average}/10
-                            </Typography>
+                            { this.renderMovieRating(movie) }
                         </CardContent>
                     </CardActionArea>
                 </Card>
@@ -215,29 +279,35 @@ class Library extends Component {
         ));
     }
 
-    renderMainContent(movies) {
-        if (movies && movies.length > 0) {
-            return this.renderMovies(movies);
-        } else if (movies && movies.length === 0) {
+    renderLoadMoreButton() {
+        const { classes, LibraryStore } = this.props;
+        const { isLoading, movies, currentPage, totalPages } = LibraryStore;
+
+        if (isLoading) {
             return (
-                <Typography variant="subtitle2" color="textSecondary">
-                    No results found
-                </Typography>
+                <Grid container className={classes.container} justify="center">
+                    <Grid item>
+                        <CircularProgress/>
+                    </Grid>
+                </Grid>
             );
-        } else if (movies === undefined) {
-            return <CircularProgress />;
-        } else if (movies === null) {
+        } else if (movies && !isLoading && currentPage < totalPages) {
             return (
-                <Typography variant="subtitle2" color="textSecondary">
-                    Error occured, try again
-                </Typography>
+                <Grid container className={classes.container} justify="center">
+                    <Grid item>
+                        <Button onClick={() => this.handleLoadMore(currentPage)} variant="outlined" size="large" color="primary">
+                            Load more
+                        </Button>
+                    </Grid>
+                </Grid>
             );
         }
     }
 
     render() {
+        const { isInSearchMode } = this.state;
         const { classes, LibraryStore } = this.props;
-        const { isLoading, movies, currentPage, totalPages, filters, queryString } = LibraryStore;
+        const { isLoading, movies, filters, queryString } = LibraryStore;
         return (
             <main>
                 <Grid container className={classes.layout} direction="column">
@@ -245,12 +315,12 @@ class Library extends Component {
                     <Grid container className={classes.filtersContainer} wrap="wrap" justify="center" alignItems="flex-end">
 
                         <Grid item className={classes.filterItem}>
-                            <FormControl disabled={!!queryString} variant="filled" className={classes.formControl}>
+                            <FormControl disabled={isInSearchMode} className={classes.formControl}>
                                 <InputLabel htmlFor="sort_by">Sort by</InputLabel>
                                 <Select
                                     value={filters.sort_by}
                                     onChange={this.handleFilterChange}
-                                    input={<FilledInput name="sort_by" id="sort_by" />}
+                                    input={<Input name="sort_by" id="sort_by" />}
                                 >
                                     <MenuItem value={"popularity.asc"}>Popularity ascending</MenuItem>
                                     <MenuItem value={"popularity.desc"}>Popularity descending</MenuItem>
@@ -260,12 +330,15 @@ class Library extends Component {
                                     <MenuItem value={"primary_release_date.desc"}>Release date descending</MenuItem>
                                     <MenuItem value={"revenue.asc"}>Revenue ascending</MenuItem>
                                     <MenuItem value={"revenue.desc"}>Revenue descending</MenuItem>
+                                    <MenuItem value={"original_title.asc"}>Title ascending</MenuItem>
+                                    <MenuItem value={"original_title.desc"}>Title descending</MenuItem>
+                                    
                                 </Select>
                             </FormControl>
                         </Grid>
 
                         <Grid item className={classes.filterItem}>
-                            <FormControl disabled={!!queryString} className={classes.formControl}>
+                            <FormControl disabled={isInSearchMode} className={classes.formControl}>
                                 <InputLabel htmlFor="select-multiple-chip">Genres</InputLabel>
                                 <Select
                                     multiple
@@ -285,59 +358,45 @@ class Library extends Component {
                             </FormControl>
                         </Grid>
 
-                        {/* <Grid item>
-                            <Grid container spacing={8} alignItems="flex-end"> */}
-                                <Grid item className={classes.filterItem}>
-                                    <form onSubmit={this.handleSearchFormSubmit}>
-                                        <FormControl>
-                                            <Input
-                                                id="search-field"
-                                                type="text"
-                                                name="queryString"
-                                                placeholder="Search..."
-                                                value={LibraryStore.queryString}
-                                                startAdornment={
-                                                    <InputAdornment position="start">
-                                                            <Icon>search</Icon>
-                                                    </InputAdornment>
-                                                }
-                                                endAdornment={
-                                                    queryString &&
-                                                    <InputAdornment position="end">
-                                                        <ButtonBase disableRipple onClick={this.clearSearchInput}>
-                                                            <Icon fontSize="small">close</Icon>
-                                                        </ButtonBase>
-                                                    </InputAdornment>
-                                                }
-                                                onChange={(e) => LibraryStore.setQueryString(e.target.value)}
-                                            />
-                                        </FormControl>
-                                    </form>
-                                </Grid>
-                                {/* <Grid item>
-                                    <Button color="primary" className={classes.button}>
-                                        Go
-                                    </Button>
-                                </Grid>
-                            </Grid>
-                        </Grid> */}
+                        <Grid item className={classes.filterItem}>
+                            <form onSubmit={this.handleSearchFormSubmit}>
+                                <FormControl>
+                                    <Input
+                                        id="search-field"
+                                        type="text"
+                                        name="queryString"
+                                        placeholder="Search..."
+                                        value={queryString}
+                                        startAdornment={
+                                            <InputAdornment position="start">
+                                                    <Icon>search</Icon>
+                                            </InputAdornment>
+                                        }
+                                        onChange={(e) => LibraryStore.setQueryString(e.target.value)}
+                                    />
+                                </FormControl>
+                            </form>
+                        </Grid>
 
+                    </Grid>
+
+                    <Grid container className={classes.filtersContainer} wrap="wrap" justify="center" alignItems="center" zeroMinWidth>
+                        { this.renderHelpers(movies, isLoading) }
+                        {
+                            isInSearchMode && !isLoading &&
+                            <Grid item className={classes.backButton}>
+                                <ButtonBase disableRipple onClick={this.clearSearchInput}>
+                                    <Icon color="action">close</Icon>
+                                </ButtonBase>
+                            </Grid>
+                        }
                     </Grid>
 
                     <Grid container className={classes.container} wrap="wrap" justify="center" zeroMinWidth>
-                        { this.renderMainContent(movies) }
+                        { this.renderMovies(movies) }
                     </Grid>
 
-                    {
-                        movies && !isLoading && currentPage < totalPages &&
-                        <Grid container className={classes.container} justify="center">
-                            <Grid item>
-                                <Button onClick={() => this.handleLoadMore(currentPage)} variant="outlined" size="large" color="primary">
-                                    Load more
-                                </Button>
-                            </Grid>
-                        </Grid>
-                    }
+                    { this.renderLoadMoreButton() }
 
                 </Grid>
             </main>
