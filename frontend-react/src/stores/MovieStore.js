@@ -6,6 +6,11 @@ class MovieStore {
 
     @action setMovie(movie) {
         this.movie = movie;
+        console.log(movie);
+    }
+
+    @action resetMovie() {
+        this.movie = undefined;
     }
 
     async fetchMovie(movieId) {
@@ -19,6 +24,7 @@ class MovieStore {
                 const details = response.data.movie_details_1;
                 const streaming = response.data.movie_details_2;
                 this.setMovie({ ...details, streaming });
+
             } else {
                 this.setMovie(null);
             }
