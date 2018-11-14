@@ -3,7 +3,7 @@ import { inject, observer } from 'mobx-react';
 import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
-import { Typography, Card, CardActionArea, CardMedia, CardContent, FormControl, InputLabel, Input, InputAdornment, Icon, Button, Select, Chip, MenuItem, ListItemText, Checkbox, CircularProgress, FilledInput, TextField, ButtonBase, IconButton} from '@material-ui/core';
+import { Typography, Card, CardActionArea, CardMedia, CardContent, FormControl, InputLabel, Input, InputAdornment, Icon, Button, Select, Chip, MenuItem, ListItemText, Checkbox, CircularProgress, ButtonBase} from '@material-ui/core';
 import { Link } from 'react-router-dom'
 
 const styles = theme => ({
@@ -43,6 +43,12 @@ const styles = theme => ({
     },
     backButton: {
         margin: theme.spacing.unit
+    },
+    yearInput: {
+        textAlign: 'center'
+    },
+    divider: {
+        margin: `0px ${theme.spacing.unit * 8}px`
     }
 });
 
@@ -85,17 +91,15 @@ class Library extends Component {
     constructor(props) {
 		super(props);
         this.state = {
-            isLoading: false,
-            genres: [],
-            isInSearchMode: false, // Very strange thing that i need to think about
-            currentQuery: ""
+            genres: [], // TODO: fix filters state after changing page!!
+            queryString: ""
         }
         this.handleSearchFormSubmit = this.handleSearchFormSubmit.bind(this);
         this.handleGenreSelect = this.handleGenreSelect.bind(this);
         this.renderGenreSelectValues = this.renderGenreSelectValues.bind(this);
         this.deleteSelectedGenre = this.deleteSelectedGenre.bind(this);
         this.handleFilterChange = this.handleFilterChange.bind(this);
-        this.clearSearchInput = this.clearSearchInput.bind(this);
+        this.disableSearchMode = this.disableSearchMode.bind(this);
         this.renderHelpers = this.renderHelpers.bind(this);
         this.renderMovies = this.renderMovies.bind(this);
         this.renderLoadMoreButton = this.renderLoadMoreButton.bind(this);
@@ -105,20 +109,27 @@ class Library extends Component {
     }
 
     handleSearchFormSubmit(e) {
-        const { LibraryStore } = this.props;
         e.preventDefault();
+        
+        const { LibraryStore } = this.props;
+        const { queryString } = this.state;
+
         LibraryStore.resetFilters();
         LibraryStore.resetMovies();
+        LibraryStore.setSearchMode(true);
+        LibraryStore.setCurrentQuery(queryString);
+
+        this.setState({ genres: [] });
         this.handleMovieSearch();
-        this.setState({
-            isInSearchMode: true,
-            genres: [],
-            currentQuery: LibraryStore.queryString
-        });
     }
 
     componentDidMount() {
-        this.props.LibraryStore.fetchMovies();
+        const { LibraryStore } = this.props;
+        if (!LibraryStore.movies) {
+            this.props.LibraryStore.fetchMovies();
+        } else {
+            
+        }
     }
 
     fetchMovies(page = 1) {
@@ -130,23 +141,25 @@ class Library extends Component {
     }
     
     handleLoadMore(currentPage) {
-        if (this.state.isInSearchMode) {
+        if (this.props.LibraryStore.searchMode) {
             this.handleMovieSearch(currentPage + 1)
         } else {
             this.fetchMovies(currentPage + 1);
         }
     }
 
-    clearSearchInput() {
+    disableSearchMode() {
         const { LibraryStore } = this.props;
-        LibraryStore.setQueryString("");
+
+        LibraryStore.setSearchMode(false);
+        LibraryStore.setCurrentQuery(undefined);
         LibraryStore.resetMovies();
-        this.setState({ isInSearchMode: false })
+
         this.fetchMovies();
     }
 
     handleGenreSelect(e) {
-        console.log('handle select', e.target.value);
+        // console.log('handle select', e.target.value);
         this.setState({ genres: e.target.value }, () => {
             const selectedGenres = this.state.genres.map(genreIndex => {
                 return genres[genreIndex].id;
@@ -164,7 +177,6 @@ class Library extends Component {
     }
 
     deleteSelectedGenre = genreIndex => () => {
-        console.log(genreIndex);
         this.setState(state => {
             const genres = [...state.genres];
             const genreToDelete = genres.indexOf(genreIndex);
@@ -174,7 +186,6 @@ class Library extends Component {
             const selectedGenres = this.state.genres.map(genreIndex => {
                 return genres[genreIndex].id;
             });
-
             this.props.LibraryStore.setGenres(selectedGenres);
             this.fetchMovies();
         });
@@ -196,6 +207,43 @@ class Library extends Component {
         );
     }
 
+    renderHelpers(movies) {
+        const { searchMode, currentQuery } = this.props.LibraryStore;
+        if (movies === null) {
+            return (
+                <Grid item>
+                    <Typography variant="subtitle2" color="textSecondary">
+                        Error occured, try again
+                    </Typography>
+                </Grid>
+            );
+        } else if (!searchMode && movies && movies.length === 0) {
+            return (
+                <Grid item>
+                    <Typography variant="subtitle2" color="textSecondary">
+                        No results found
+                    </Typography>
+                </Grid>
+            );
+        } else if (searchMode && movies && movies.length === 0) {
+            return (
+                <Grid item>
+                    <Typography variant="subtitle2" color="textSecondary">
+                        No results found for "{currentQuery}"
+                    </Typography>
+                </Grid>
+            );
+        } else if (searchMode && movies) {
+            return (
+                <Grid item>
+                    <Typography variant="subtitle2" color="textSecondary">
+                        Search results for "{currentQuery}"
+                    </Typography>
+                </Grid>
+            );
+        }
+    }
+
     renderMovieRating(movie) {
         if (movie.vote_count > 0) {
             return (
@@ -212,44 +260,7 @@ class Library extends Component {
         }
     }
     
-    renderHelpers(movies) {
-        const { isInSearchMode, currentQuery } = this.state;
-        if (movies === null) {
-            return (
-                <Grid item>
-                    <Typography variant="subtitle2" color="textSecondary">
-                        Error occured, try again
-                    </Typography>
-                </Grid>
-            );
-        } else if (movies && movies.length === 0 && !isInSearchMode) {
-            return (
-                <Grid item>
-                    <Typography variant="subtitle2" color="textSecondary">
-                        No results found
-                    </Typography>
-                </Grid>
-            );
-        } else if (movies && movies.length === 0 && isInSearchMode) {
-            return (
-                <Grid item>
-                    <Typography variant="subtitle2" color="textSecondary">
-                        No results found for "{currentQuery}"
-                    </Typography>
-                </Grid>
-            );
-        } else if (isInSearchMode && movies) {
-            return (
-                <Grid item>
-                    <Typography variant="subtitle2" color="textSecondary">
-                        Search results for "{currentQuery}"
-                    </Typography>
-                </Grid>
-            );
-        }
-    }
-
-    renderMovies(movies,) {
+    renderMovies(movies) {
         if (!movies) return;
         const { classes } = this.props;
         return movies.map(movie => (
@@ -305,57 +316,118 @@ class Library extends Component {
     }
 
     render() {
-        const { isInSearchMode } = this.state;
+        const { queryString } = this.state;
         const { classes, LibraryStore } = this.props;
-        const { isLoading, movies, filters, queryString } = LibraryStore;
+        const { isLoading, movies, filters, searchMode } = LibraryStore;
         return (
             <main>
                 <Grid container className={classes.layout} direction="column">
 
-                    <Grid container className={classes.filtersContainer} wrap="wrap" justify="center" alignItems="flex-end">
+                    <Grid container className={classes.filtersContainer} wrap="wrap" justify="space-around" alignItems="flex-end">
 
-                        <Grid item className={classes.filterItem}>
-                            <FormControl disabled={isInSearchMode} className={classes.formControl}>
-                                <InputLabel htmlFor="sort_by">Sort by</InputLabel>
-                                <Select
-                                    value={filters.sort_by}
-                                    onChange={this.handleFilterChange}
-                                    input={<Input name="sort_by" id="sort_by" />}
-                                >
-                                    <MenuItem value={"popularity.asc"}>Popularity ascending</MenuItem>
-                                    <MenuItem value={"popularity.desc"}>Popularity descending</MenuItem>
-                                    <MenuItem value={"vote_average.asc"}>Rating ascending</MenuItem>
-                                    <MenuItem value={"vote_average.desc"}>Rating descending</MenuItem>
-                                    <MenuItem value={"primary_release_date.asc"}>Release date ascending</MenuItem>
-                                    <MenuItem value={"primary_release_date.desc"}>Release date descending</MenuItem>
-                                    <MenuItem value={"revenue.asc"}>Revenue ascending</MenuItem>
-                                    <MenuItem value={"revenue.desc"}>Revenue descending</MenuItem>
-                                    <MenuItem value={"original_title.asc"}>Title ascending</MenuItem>
-                                    <MenuItem value={"original_title.desc"}>Title descending</MenuItem>
-                                    
-                                </Select>
-                            </FormControl>
-                        </Grid>
+                        <Grid item>
+                            <Grid container justify="center" alignItems="flex-end">
+                                <Grid item className={classes.filterItem}>
+                                    <FormControl disabled={searchMode} className={classes.formControl}>
+                                        <InputLabel htmlFor="sort_by">Sort by</InputLabel>
+                                        <Select
+                                            value={filters.sort_by}
+                                            onChange={this.handleFilterChange}
+                                            input={<Input name="sort_by" id="sort_by" />}
+                                        >
+                                            <MenuItem value={"popularity.asc"}>Popularity ascending</MenuItem>
+                                            <MenuItem value={"popularity.desc"}>Popularity descending</MenuItem>
+                                            <MenuItem value={"vote_average.asc"}>Rating ascending</MenuItem>
+                                            <MenuItem value={"vote_average.desc"}>Rating descending</MenuItem>
+                                            <MenuItem value={"primary_release_date.asc"}>Release date ascending</MenuItem>
+                                            <MenuItem value={"primary_release_date.desc"}>Release date descending</MenuItem>
+                                            <MenuItem value={"revenue.asc"}>Revenue ascending</MenuItem>
+                                            <MenuItem value={"revenue.desc"}>Revenue descending</MenuItem>
+                                            <MenuItem value={"original_title.asc"}>Title ascending</MenuItem>
+                                            <MenuItem value={"original_title.desc"}>Title descending</MenuItem>
+                                            
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
 
-                        <Grid item className={classes.filterItem}>
-                            <FormControl disabled={isInSearchMode} className={classes.formControl}>
-                                <InputLabel htmlFor="select-multiple-chip">Genres</InputLabel>
-                                <Select
-                                    multiple
-                                    value={this.state.genres}
-                                    onChange={this.handleGenreSelect}
-                                    input={<Input id="select-multiple-chip" />}
-                                    renderValue={this.renderGenreSelectValues}
-                                    MenuProps={MenuProps}
-                                >
-                                    {genres.map((genre, index) => (
-                                        <MenuItem key={index} value={index}>
-                                            <Checkbox checked={this.state.genres.includes(index)} />
-                                            <ListItemText primary={genre.name} />
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                                <Grid item className={classes.filterItem}>
+                                    <FormControl disabled={searchMode} className={classes.formControl}>
+                                        <InputLabel htmlFor="select-multiple-chip">Genres</InputLabel>
+                                        <Select
+                                            multiple
+                                            value={this.state.genres}
+                                            onChange={this.handleGenreSelect}
+                                            input={<Input id="select-multiple-chip" />}
+                                            renderValue={this.renderGenreSelectValues}
+                                            MenuProps={MenuProps}
+                                        >
+                                        {
+                                            genres.map((genre, index) => (
+                                            <MenuItem key={index} value={index}>
+                                                <Checkbox checked={this.state.genres.includes(index)} />
+                                                <ListItemText primary={genre.name} />
+                                            </MenuItem>
+                                            ))
+                                        }
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+
+                                <Grid item className={classes.filterItem}>
+                                    <FormControl disabled={searchMode} className={classes.formControl}>
+                                        <InputLabel htmlFor="vote_average">Rating</InputLabel>
+                                        <Select
+                                            value={filters["vote_average_gte"]}
+                                            onChange={this.handleFilterChange}
+                                            input={<Input name="vote_average_gte" id="vote_average" />}
+                                        >
+                                            <MenuItem value="">
+                                                <em>Any</em>
+                                            </MenuItem>
+                                        {
+                                            ["1+","2+","3+","4+","5+","6+","7+","8+","9+"].map((value, index) => (
+                                                <MenuItem key={index} value={value.charAt(0)}>{value}</MenuItem>
+                                            ))
+                                        }
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+
+                                <Grid item className={classes.filterItem}>
+                                    <Grid container spacing={8} alignItems="center">
+                                        <Grid item>
+                                            <Input
+                                                classes={{ input: classes.yearInput }}
+                                                inputProps={{size: 6}}
+                                                id="year-grater"
+                                                type="text"
+                                                name="release_date.gte"
+                                                placeholder="Year"
+                                                
+                                                // value={queryString}
+                                                // onChange={(e) => this.setState({queryString: e.target.value})}
+                                            />
+                                        </Grid>
+                                        <Grid item>
+                                            <Typography variant="subtitle2" color="textSecondary">
+                                                –
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item>
+                                            <Input
+                                                classes={{ input: classes.yearInput }}
+                                                inputProps={{size: 6}}
+                                                id="year-lower"
+                                                type="text"
+                                                name="release_date.lte"
+                                                placeholder="Year"
+                                                // value={queryString}
+                                                // onChange={(e) => this.setState({queryString: e.target.value})}
+                                            />
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
+                            </Grid>
                         </Grid>
 
                         <Grid item className={classes.filterItem}>
@@ -372,20 +444,20 @@ class Library extends Component {
                                                     <Icon>search</Icon>
                                             </InputAdornment>
                                         }
-                                        onChange={(e) => LibraryStore.setQueryString(e.target.value)}
+                                        onChange={(e) => this.setState({queryString: e.target.value})}
                                     />
                                 </FormControl>
                             </form>
                         </Grid>
 
                     </Grid>
-
+                    
                     <Grid container className={classes.filtersContainer} wrap="wrap" justify="center" alignItems="center" zeroMinWidth>
                         { this.renderHelpers(movies, isLoading) }
                         {
-                            isInSearchMode && !isLoading &&
+                            searchMode && !isLoading &&
                             <Grid item className={classes.backButton}>
-                                <ButtonBase disableRipple onClick={this.clearSearchInput}>
+                                <ButtonBase disableRipple onClick={this.disableSearchMode}>
                                     <Icon color="action">close</Icon>
                                 </ButtonBase>
                             </Grid>

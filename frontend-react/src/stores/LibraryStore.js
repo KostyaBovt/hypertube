@@ -3,20 +3,34 @@ import axios from 'axios';
 
 class LibraryStore {
     @observable isLoading = false;
+
+    @observable searchMode = false;
+    @observable currentQuery = undefined;
+
     @observable movies = undefined;
     @observable currentPage = undefined;
     @observable totalPages = undefined;
+
     @observable filters = {
         sort_by: "popularity.desc",
-        release_date: undefined,
-        vote_average: undefined,
+        release_date_gte: "",
+        release_date_lte: "",
+        vote_average_gte: "",
+        with_runtime_gte: "",
+        with_runtime_lte: "",
         with_genres: undefined
     }
 
-    @observable queryString = '';
-
     @action setIsLoading(status) {
         this.isLoading = status;
+    }
+
+    @action setSearchMode(status) {
+        this.searchMode = status;
+    }
+
+    @action setCurrentQuery(value) {
+        this.currentQuery = value;
     }
     
     @action setPage(page) {
@@ -39,10 +53,6 @@ class LibraryStore {
         this.movies.push(...moreMovies);
     }
 
-    @action setQueryString(value) {
-        this.queryString = value;
-    }
-
     @action setGenres(genres) {
         this.filters.with_genres = genres;
         console.log(genres);
@@ -51,8 +61,9 @@ class LibraryStore {
     @action resetFilters() {
         this.filters = {
             sort_by: "popularity.desc",
-            release_date: undefined,
-            vote_average: undefined,
+            release_date_gte: "",
+            release_date_lte: "",
+            vote_average_gte: "",
             with_genres: undefined
         };
     }
@@ -67,6 +78,7 @@ class LibraryStore {
         console.log('fetching movies page ', pageToFetch);
         const params = this._getDefinedFilters();
         params.page = pageToFetch;
+        console.log(params);
         try {
             this.setIsLoading(true);
             const response = await axios.get("http://localhost:3200/films", {
@@ -96,11 +108,11 @@ class LibraryStore {
     }
 
     async fetchSearchResults(pageToFetch = 1) {
-        console.log(`Searching for ${this.queryString}, page ${pageToFetch}`);
+        console.log(`Searching for ${this.currentQuery}, page ${pageToFetch}`);
         this.setIsLoading(true);
         try {
             const response = await axios.get("http://localhost:3200/films", {
-                params: { query: this.queryString, page: pageToFetch },
+                params: { query: this.currentQuery, page: pageToFetch },
                 withCredentials: true
             });
             console.log(response);
@@ -127,7 +139,7 @@ class LibraryStore {
     }
 
     _getDefinedFilters() {
-        const currentFilters = toJS(this.filters);
+        const currentFilters = this.filters;
         const definedFilterKeys = [];
         Object.keys(this.filters).forEach(filter => {
             if (this.filters[filter] !== undefined) {

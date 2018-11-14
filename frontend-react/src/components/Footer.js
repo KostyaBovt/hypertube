@@ -8,8 +8,7 @@ const styles = {
 		position: 'absolute',
 		bottom: '0',
 		backgroundColor: '#009688;',
-		width: '100%',
-		padding: 'auto'
+		width: '100%'
   },
   typography: {
 	  color: grey[100]
