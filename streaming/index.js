@@ -261,10 +261,10 @@ app.get('/films', async (request, response) => {
 	sort_by = request.query.sort_by;
 
 	// string yyyy-mm-dd
-	release_date_gte = request.query.release_date_gte;
+	primary_release_date_gte = request.query.primary_release_date_gte;
 
 	// string yyyy-mm-dd
-	release_date_lte = request.query.release_date_lte;
+	primary_release_date_lte = request.query.primary_release_date_lte;
 
 	// integer >= 0
 	vote_count_gte = request.query.vote_count_gte;
@@ -320,13 +320,13 @@ app.get('/films', async (request, response) => {
 			sign = filters ? "&" : "?";
 			filters += sign + 'sort_by=' + sort_by;
 		}
-		if (release_date_gte) {
+		if (primary_release_date_gte) {
 			sign = filters ? "&" : "?";
-			filters += sign + 'release_date.gte=' + release_date_gte;
+			filters += sign + 'primary_release_date.gte=' + primary_release_date_gte;
 		}
-		if (release_date_lte) {
+		if (primary_release_date_lte) {
 			sign = filters ? "&" : "?";
-			filters += sign + 'release_date.lte=' + release_date_lte;
+			filters += sign + 'primary_release_date.lte=' + primary_release_date_lte;
 		}
 		if (vote_count_gte) {
 			sign = filters ? "&" : "?";
