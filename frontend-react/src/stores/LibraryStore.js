@@ -13,11 +13,9 @@ class LibraryStore {
 
     @observable filters = {
         sort_by: "popularity.desc",
-        release_date_gte: "",
-        release_date_lte: "",
+        primary_release_date_gte: "",
+        primary_release_date_lte: "",
         vote_average_gte: "",
-        with_runtime_gte: "",
-        with_runtime_lte: "",
         with_genres: undefined
     }
 
@@ -61,8 +59,8 @@ class LibraryStore {
     @action resetFilters() {
         this.filters = {
             sort_by: "popularity.desc",
-            release_date_gte: "",
-            release_date_lte: "",
+            primary_release_date_gte: "",
+            primary_release_date_lte: "",
             vote_average_gte: "",
             with_genres: undefined
         };

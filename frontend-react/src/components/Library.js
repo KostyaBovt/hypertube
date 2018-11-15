@@ -106,21 +106,7 @@ class Library extends Component {
         this.fetchMovies = this.fetchMovies.bind(this);
         this.handleMovieSearch = this.handleMovieSearch.bind(this);
         this.handleLoadMore = this.handleLoadMore.bind(this);
-    }
-
-    handleSearchFormSubmit(e) {
-        e.preventDefault();
-        
-        const { LibraryStore } = this.props;
-        const { queryString } = this.state;
-
-        LibraryStore.resetFilters();
-        LibraryStore.resetMovies();
-        LibraryStore.setSearchMode(true);
-        LibraryStore.setCurrentQuery(queryString);
-
-        this.setState({ genres: [] });
-        this.handleMovieSearch();
+        this.searchField = React.createRef();
     }
 
     componentDidMount() {
@@ -130,6 +116,23 @@ class Library extends Component {
         } else {
             
         }
+    }
+    
+    handleSearchFormSubmit(e) {
+        e.preventDefault();
+        
+        const { LibraryStore } = this.props;
+        const { queryString } = this.state;
+
+        if (!queryString || LibraryStore.isLoading) return;
+
+        LibraryStore.resetFilters();
+        LibraryStore.resetMovies();
+        LibraryStore.setSearchMode(true);
+        LibraryStore.setCurrentQuery(queryString);
+
+        this.setState({ genres: [] });
+        this.handleMovieSearch();
     }
 
     fetchMovies(page = 1) {
@@ -155,11 +158,13 @@ class Library extends Component {
         LibraryStore.setCurrentQuery(undefined);
         LibraryStore.resetMovies();
 
+        this.searchField.current.focus();
+        this.searchField.current.setSelectionRange(0, this.state.queryString.length);
+
         this.fetchMovies();
     }
 
     handleGenreSelect(e) {
-        // console.log('handle select', e.target.value);
         this.setState({ genres: e.target.value }, () => {
             const selectedGenres = this.state.genres.map(genreIndex => {
                 return genres[genreIndex].id;
@@ -242,6 +247,25 @@ class Library extends Component {
                 </Grid>
             );
         }
+    }
+
+    renderYearOptions(grater = true) {
+        const options = [];
+        let dateTemplate;
+
+        if (grater) {
+            dateTemplate = '-01-01';
+        } else {
+            dateTemplate = '-12-31'
+        }
+
+        for (let year = 2018; year >= 1874; year--) {
+            const fullDate = year + dateTemplate
+            options.push(
+                <MenuItem key={year} value={fullDate}>{year}</MenuItem>
+            );
+        }
+        return options;
     }
 
     renderMovieRating(movie) {
@@ -374,10 +398,56 @@ class Library extends Component {
                                 </Grid>
 
                                 <Grid item className={classes.filterItem}>
+                                    <Grid container spacing={8}>
+                                        <Grid item>
+                                            <FormControl disabled={searchMode} className={classes.formControl}>
+                                                <InputLabel htmlFor="primary_release_date_gte">Year grater</InputLabel>
+                                                <Select
+                                                    value={filters.primary_release_date_gte}
+                                                    onChange={this.handleFilterChange}
+                                                    input={
+                                                        <Input
+                                                            name="primary_release_date_gte"
+                                                            id="primary_release_date_gte"
+                                                        />
+                                                    }
+                                                >
+                                                    <MenuItem value="">
+                                                        <em>Any</em>
+                                                    </MenuItem>
+                                                    { this.renderYearOptions(true) }
+                                                </Select>
+                                            </FormControl>
+                                        </Grid>
+
+                                        <Grid item>
+                                            <FormControl disabled={searchMode} className={classes.formControl}>
+                                                <InputLabel htmlFor="primary_release_date_lte">Year less</InputLabel>
+                                                <Select
+                                                    value={filters.primary_release_date_lte}
+                                                    onChange={this.handleFilterChange}
+                                                    input={
+                                                        <Input
+                                                            name="primary_release_date_lte"
+                                                            id="primary_release_date_lte"
+                                                        />
+                                                    }
+                                                >
+                                                    <MenuItem value="">
+                                                        <em>Any</em>
+                                                    </MenuItem>
+                                                    { this.renderYearOptions(false) }
+                                                </Select>
+                                            </FormControl>
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
+
+                                <Grid item className={classes.filterItem}>
                                     <FormControl disabled={searchMode} className={classes.formControl}>
                                         <InputLabel htmlFor="vote_average">Rating</InputLabel>
                                         <Select
-                                            value={filters["vote_average_gte"]}
+                                            value={filters.vote_average_gte}
                                             onChange={this.handleFilterChange}
                                             input={<Input name="vote_average_gte" id="vote_average" />}
                                         >
@@ -393,40 +463,6 @@ class Library extends Component {
                                     </FormControl>
                                 </Grid>
 
-                                <Grid item className={classes.filterItem}>
-                                    <Grid container spacing={8} alignItems="center">
-                                        <Grid item>
-                                            <Input
-                                                classes={{ input: classes.yearInput }}
-                                                inputProps={{size: 6}}
-                                                id="year-grater"
-                                                type="text"
-                                                name="release_date.gte"
-                                                placeholder="Year"
-                                                
-                                                // value={queryString}
-                                                // onChange={(e) => this.setState({queryString: e.target.value})}
-                                            />
-                                        </Grid>
-                                        <Grid item>
-                                            <Typography variant="subtitle2" color="textSecondary">
-                                                –
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item>
-                                            <Input
-                                                classes={{ input: classes.yearInput }}
-                                                inputProps={{size: 6}}
-                                                id="year-lower"
-                                                type="text"
-                                                name="release_date.lte"
-                                                placeholder="Year"
-                                                // value={queryString}
-                                                // onChange={(e) => this.setState({queryString: e.target.value})}
-                                            />
-                                        </Grid>
-                                    </Grid>
-                                </Grid>
                             </Grid>
                         </Grid>
 
@@ -445,6 +481,7 @@ class Library extends Component {
                                             </InputAdornment>
                                         }
                                         onChange={(e) => this.setState({queryString: e.target.value})}
+                                        inputRef={this.searchField}
                                     />
                                 </FormControl>
                             </form>
