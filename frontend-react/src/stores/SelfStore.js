@@ -1,5 +1,6 @@
 import { observable, action } from "mobx";
 import axios from 'axios';
+import LibraryStore from "./LibraryStore";
 
 class SelfStore {
     @observable self = undefined;
@@ -85,6 +86,9 @@ class SelfStore {
             const response = await axios.post('http://localhost:8080/api/profile/locale', data, { withCredentials: true });
             if (response.data.status === "ok") {
                 this.updateSelfField('locale', value);
+                LibraryStore.resetMovies()
+                LibraryStore.resetFilters();
+                LibraryStore.setSearchMode(false);
             } else {
                 const error = Object.values(response.data.reason)[0];
                 return false;
