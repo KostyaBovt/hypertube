@@ -27,14 +27,19 @@ const styles = theme => ({
 @inject('MovieStore') @observer
 class Movie extends Component {
     componentDidMount() {
+        console.log("mounted");
         this.props.MovieStore.fetchMovie(this.props.match.params.id);
     }
 
+    componentWillUnmount() {
+        this.props.MovieStore.resetMovie();
+        console.log('reset');
+    }
+
     render() {
-        console.log(this.props);
         const {classes} = this.props;
         const {movie} = this.props.MovieStore;
-        console.log("ss", movie);
+        console.log("render");
 
         if (movie === undefined) {
             return null;
