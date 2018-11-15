@@ -73,8 +73,11 @@ class PictureSection extends Component {
     }
     
     async deleteCurrentPicture(e) {
-		const { SelfStore } = this.props;
-		await SelfStore.updateProfile('avatar', '');
+        const { SelfStore } = this.props;
+        if (SelfStore.self.avatar) {
+            console.log('deleting picture...');
+            await SelfStore.updateProfile('avatar', '');
+        }
     }
     
     handleSnackbarClose(e, reason) {
