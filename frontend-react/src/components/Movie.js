@@ -5,6 +5,7 @@ import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import { Typography, Card, ButtonBase, IconButton} from '@material-ui/core';
+import not_found from "../img/not_found.jpg";
 
 
 const styles = theme => ({
@@ -27,19 +28,16 @@ const styles = theme => ({
 @inject('MovieStore') @observer
 class Movie extends Component {
     componentDidMount() {
-        console.log("mounted");
         this.props.MovieStore.fetchMovie(this.props.match.params.id);
     }
 
     componentWillUnmount() {
         this.props.MovieStore.resetMovie();
-        console.log('reset');
     }
 
     render() {
         const {classes} = this.props;
         const {movie} = this.props.MovieStore;
-        console.log("render");
 
         if (movie === undefined) {
             return null;
@@ -53,6 +51,9 @@ class Movie extends Component {
                         </Typography>
                         <Typography variant="subtitle2" color="textSecondary">
                             {movie.overview}
+                        </Typography>
+                        <Typography variant="subtitle2" color="textSecondary">
+                            <img src={movie.streaming.images.poster}/>
                         </Typography>
                     </Grid>
                 </main>
