@@ -12,11 +12,11 @@ class LibraryStore {
     @observable totalPages = undefined;
 
     @observable filters = {
-        sort_by: "popularity.desc",
-        primary_release_date_gte: "",
-        primary_release_date_lte: "",
-        vote_average_gte: "",
-        with_genres: undefined
+        "sort_by": "popularity.desc",
+        "primary_release_date.gte": "2000-01-01",
+        "primary_release_date.lte": "2019-12-31",
+        "vote_average.gte": "5",
+        "with_genres": undefined
     }
 
     @action setIsLoading(status) {
@@ -58,11 +58,11 @@ class LibraryStore {
 
     @action resetFilters() {
         this.filters = {
-            sort_by: "popularity.desc",
-            primary_release_date_gte: "",
-            primary_release_date_lte: "",
-            vote_average_gte: "",
-            with_genres: undefined
+            "sort_by": "popularity.desc",
+            "primary_release_date.gte": "",
+            "primary_release_date.lte": "",
+            "vote_average.gte": "",
+            "with_genres": undefined
         };
     }
 

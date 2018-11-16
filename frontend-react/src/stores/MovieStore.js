@@ -15,8 +15,7 @@ class MovieStore {
 
     async fetchMovie(movieId) {
         try {
-            const response = await axios.get('http://localhost:3200/film_details', {
-                params: { id: movieId },
+            const response = await axios.get(`http://localhost:3200/film_details/${movieId}`, {
                 withCredentials: true
             });
             console.log(response);

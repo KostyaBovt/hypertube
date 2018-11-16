@@ -259,7 +259,7 @@ class Library extends Component {
             dateTemplate = '-12-31'
         }
 
-        for (let year = 2018; year >= 1874; year--) {
+        for (let year = 2026; year >= 1874; year--) {
             const fullDate = year + dateTemplate
             options.push(
                 <MenuItem key={year} value={fullDate}>{year}</MenuItem>
@@ -272,7 +272,7 @@ class Library extends Component {
         if (movie.vote_count > 0) {
             return (
                 <Typography variant="caption" color="textSecondary">
-                    IMDb rating - {movie.vote_average}/10
+                    Rating - {movie.vote_average}/10
                 </Typography>
             );
         } else {
@@ -367,8 +367,8 @@ class Library extends Component {
                                             <MenuItem value={"primary_release_date.desc"}>Release date descending</MenuItem>
                                             <MenuItem value={"revenue.asc"}>Revenue ascending</MenuItem>
                                             <MenuItem value={"revenue.desc"}>Revenue descending</MenuItem>
-                                            <MenuItem value={"original_title.asc"}>Title ascending</MenuItem>
-                                            <MenuItem value={"original_title.desc"}>Title descending</MenuItem>
+                                            <MenuItem value={"original_title.asc"}>Original title ascending</MenuItem>
+                                            <MenuItem value={"original_title.desc"}>Original title descending</MenuItem>
                                             
                                         </Select>
                                     </FormControl>
@@ -401,14 +401,20 @@ class Library extends Component {
                                     <Grid container spacing={8}>
                                         <Grid item>
                                             <FormControl disabled={searchMode} className={classes.formControl}>
-                                                <InputLabel htmlFor="primary_release_date_gte">Year grater</InputLabel>
+                                                <InputLabel htmlFor="primary_release_date_gte">Release year</InputLabel>
                                                 <Select
-                                                    value={filters.primary_release_date_gte}
+                                                    value={filters["primary_release_date.gte"]}
                                                     onChange={this.handleFilterChange}
+                                                    displayEmpty
                                                     input={
                                                         <Input
-                                                            name="primary_release_date_gte"
                                                             id="primary_release_date_gte"
+                                                            name="primary_release_date.gte"
+                                                            startAdornment = {
+                                                                <InputAdornment position="start">
+                                                                    {">"}
+                                                                </InputAdornment>
+                                                            }
                                                         />
                                                     }
                                                 >
@@ -422,14 +428,20 @@ class Library extends Component {
 
                                         <Grid item>
                                             <FormControl disabled={searchMode} className={classes.formControl}>
-                                                <InputLabel htmlFor="primary_release_date_lte">Year less</InputLabel>
+                                                <InputLabel htmlFor="primary_release_date_lte">Release year</InputLabel>
                                                 <Select
-                                                    value={filters.primary_release_date_lte}
+                                                    value={filters["primary_release_date.lte"]}
                                                     onChange={this.handleFilterChange}
+                                                    displayEmpty
                                                     input={
                                                         <Input
-                                                            name="primary_release_date_lte"
                                                             id="primary_release_date_lte"
+                                                            name="primary_release_date.lte"
+                                                            startAdornment={
+                                                                <InputAdornment position="start">
+                                                                    {"<"}
+                                                                </InputAdornment>
+                                                            }
                                                         />
                                                     }
                                                 >
@@ -445,11 +457,12 @@ class Library extends Component {
 
                                 <Grid item className={classes.filterItem}>
                                     <FormControl disabled={searchMode} className={classes.formControl}>
-                                        <InputLabel htmlFor="vote_average">Rating</InputLabel>
+                                        <InputLabel shrink  htmlFor="vote_average">Rating</InputLabel>
                                         <Select
-                                            value={filters.vote_average_gte}
+                                            value={filters["vote_average.gte"]}
                                             onChange={this.handleFilterChange}
-                                            input={<Input name="vote_average_gte" id="vote_average" />}
+                                            displayEmpty
+                                            input={<Input name="vote_average.gte" id="vote_average" />}
                                         >
                                             <MenuItem value="">
                                                 <em>Any</em>
