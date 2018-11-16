@@ -90,7 +90,7 @@ class SelfStore {
                 LibraryStore.resetFilters();
                 LibraryStore.setSearchMode(false);
             } else {
-                const error = Object.values(response.data.reason)[0];
+                // const error = Object.values(response.data.reason)[0];
                 return false;
             }
         } catch (e) {

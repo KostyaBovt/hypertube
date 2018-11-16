@@ -2,6 +2,7 @@ import { observable, action } from "mobx";
 import axios from 'axios';
 
 class MovieStore {
+    @observable isLoading = false;
     @observable movie = undefined;
 
     @action setMovie(movie) {
@@ -14,8 +15,9 @@ class MovieStore {
     }
 
     async fetchMovie(movieId) {
+        const url = `http://localhost:3200/film_details/${movieId}`;
         try {
-            const response = await axios.get(`http://localhost:3200/film_details/${movieId}`, {
+            const response = await axios.get(url, {
                 withCredentials: true
             });
             console.log(response);
@@ -23,7 +25,6 @@ class MovieStore {
                 const details = response.data.movie_details_1;
                 const streaming = response.data.movie_details_2;
                 this.setMovie({ ...details, streaming });
-
             } else {
                 this.setMovie(null);
             }
