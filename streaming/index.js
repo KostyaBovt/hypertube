@@ -26,7 +26,8 @@ const OS = new OpenSubtitles({
 var cors = require('cors')
 var torrentStream = require('torrent-stream');
 
-var API_KEY = 'ec8920bdb431590b48d7b0205e7d6a49';  // API key for themoviedb.org
+const API_KEY = 'ec8920bdb431590b48d7b0205e7d6a49';  // API key for themoviedb.org
+const OMDB_API_KEY = '651e2d43';
 
 const port = 3200;
 
@@ -117,6 +118,26 @@ async function validateUser(cookies) {
 		resolve(auth_info);
 	});
 
+}
+
+const userAuth = async (req, res, next) => {
+	const { cookies } = req;
+	if (cookies['x-auth-token']) {
+		try {
+			const response = await axios({
+				method: 'GET',
+				url: 'http://localhost:8080/api/auth/udata',
+				headers: { 'Cookie': "x-auth-token=" + cookies['x-auth-token'] },
+				withCredentials: true
+			});
+			req.user = response.data.payload;
+			next();
+		} catch (e) {
+			res.json({'success': false, 'error': 'invalid token'});
+		}
+	} else {
+		res.json({'success': false, 'error': 'invalid token'});
+	}
 }
 
 // ============================== this is unused now
@@ -238,320 +259,95 @@ app.get('/popular_films', async (request, response) => {
 
 // ============================== get films list NEW VERSION
 
-app.get('/films', async (request, response) => {
-	console.log(request.query);
+app.all('*', userAuth);
+
+app.get('/films', (req, res, next) => {
+	if (req.query.with_genres) {
+		req.query.with_genres += "";
+	}
+	next();
+}, async (req, res) => {
+	const defaultFilters = {
+		search: {
+			"include_adult": "false"
+		},
+		discover: {
+			"include_adult": "false",
+			"include_video": "false",
+			"with_release_type": "1|2|3",
+			"vote_count.gte": "5"
+		}
+	};
+	let url = "https://api.themoviedb.org/3";
+	let params = {};
+	const filters = req.query;
+
+	if (filters.query) {
+		url += "/search/movie";
+		filters.query = encodeURIComponent(filters.query);
+		params = { ...defaultFilters.search, ...filters };
+	} else {
+		url += "/discover/movie";
+		params = { ...defaultFilters.discover, ...filters };
+	}
+
+	params.api_key = API_KEY;
+	params.language = req.user.locale;
+	
+	console.log(`Making a request (${url}) with params`, params);
 
 	try {
-		var validation = await validateUser(request.cookies);
-		// var validation = await validateUser({'x-auth-token': "laskjdfa80ur2rh2kjh23kj4h2l3j4h2kj3h4k32j4h"});
-	} catch(error) {
-		response.send({'success': false, 'error': 'invalid token'});
-		return;
-	}
-
-	// language: to request from api user settings
-	language = validation.data['payload']['locale'] || 'en';
-
-	// integer 1 - 1000
-	page = request.query.page;
-
-
-	// popularity.asc, popularity.desc, release_date.asc, release_date.desc, revenue.asc, revenue.desc, primary_release_date.asc, primary_release_date.desc, original_title.asc, original_title.desc, vote_average.asc, vote_average.desc, vote_count.asc, vote_count.desc
-	// default: popularity.desc
-	sort_by = request.query.sort_by;
-
-	// string yyyy-mm-dd
-	primary_release_date_gte = request.query.primary_release_date_gte;
-
-	// string yyyy-mm-dd
-	primary_release_date_lte = request.query.primary_release_date_lte;
-
-	// integer >= 0
-	vote_count_gte = request.query.vote_count_gte;
-
-	// integer >= 1
-	vote_count_lte = request.query.vote_count_lte;
-
-	// integer >= 0
-	vote_average_gte = request.query.vote_average_gte;
-
-	// integer >= 0
-	vote_average_lte = request.query.vote_average_lte;
-
-	// string: list of ganres ids
-	// en
-	// {"genres":[{"id":28,"name":"боевик"},{"id":12,"name":"приключения"},{"id":16,"name":"мультфильм"},{"id":35,"name":"комедия"},{"id":80,"name":"криминал"},{"id":99,"name":"документальный"},{"id":18,"name":"драма"},{"id":10751,"name":"семейный"},{"id":14,"name":"фэнтези"},{"id":36,"name":"история"},{"id":27,"name":"ужасы"},{"id":10402,"name":"музыка"},{"id":9648,"name":"детектив"},{"id":10749,"name":"мелодрама"},{"id":878,"name":"фантастика"},{"id":10770,"name":"телевизионный фильм"},{"id":53,"name":"триллер"},{"id":10752,"name":"военный"},{"id":37,"name":"вестерн"}]}
-	// ru
-	// {"genres":[{"id":28,"name":"Action"},{"id":12,"name":"Adventure"},{"id":16,"name":"Animation"},{"id":35,"name":"Comedy"},{"id":80,"name":"Crime"},{"id":99,"name":"Documentary"},{"id":18,"name":"Drama"},{"id":10751,"name":"Family"},{"id":14,"name":"Fantasy"},{"id":36,"name":"History"},{"id":27,"name":"Horror"},{"id":10402,"name":"Music"},{"id":9648,"name":"Mystery"},{"id":10749,"name":"Romance"},{"id":878,"name":"Science Fiction"},{"id":10770,"name":"TV Movie"},{"id":53,"name":"Thriller"},{"id":10752,"name":"War"},{"id":37,"name":"Western"}]}
-	with_genres = request.query.with_genres;
-
-
-	// string: matching search
-	query = request.query.query;
-
-	// common filters: language, page
-	// filters only without query: sort_by, release_date_lte, release_date_gte, vote_count_gte, vote_count_lte, vote_average_gte, vote_average_lte, with_genres
-
-
-	filters = '';
-
-	if (API_KEY) {
-		sign = filters ? "&" : "?";
-		filters += sign + 'api_key=' + API_KEY;
-	}
-	if (page) {
-		sign = filters ? "&" : "?";
-		filters += sign + 'page=' + page;
-	}
-
-	if (language) {
-		sign = filters ? "&" : "?";
-		filters += sign + 'language=' + language;
-	}
-
-
-	if (query) {
-		sign = filters ? "&" : "?";
-		query = encodeURIComponent(query);
-		filters += sign + 'query=' + query;
-	} else {
-		
-		if (sort_by) {
-			sign = filters ? "&" : "?";
-			filters += sign + 'sort_by=' + sort_by;
-		}
-		if (primary_release_date_gte) {
-			sign = filters ? "&" : "?";
-			filters += sign + 'primary_release_date.gte=' + primary_release_date_gte;
-		}
-		if (primary_release_date_lte) {
-			sign = filters ? "&" : "?";
-			filters += sign + 'primary_release_date.lte=' + primary_release_date_lte;
-		}
-		if (vote_count_gte) {
-			sign = filters ? "&" : "?";
-			filters += sign + 'vote_count.gte=' + vote_count_gte;
-		}
-		if (vote_count_lte) {
-			sign = filters ? "&" : "?";
-			filters += sign + 'vote_count.lte=' + vote_count_lte;
-		}
-		if (vote_average_gte) {
-			sign = filters ? "&" : "?";
-			filters += sign + 'vote_average.gte=' + vote_average_gte;
-		}
-		if (vote_average_lte) {
-			sign = filters ? "&" : "?";
-			filters += sign + 'vote_average.lte=' + vote_average_lte;
-		}
-		if (with_genres) {
-			sign = filters ? "&" : "?";
-			filters += sign + 'with_genres=' + with_genres;
-		}
-	}
-
-
-	if (query) {
-		var url = 'https://api.themoviedb.org/3/search/movie' + filters;
-	} else {
-		var url = 'https://api.themoviedb.org/3/discover/movie' + filters;
-	}
-
-	const interceptorId = rax.attach();
-	try {
-		console.log('MAKING API REQUEST: ' + url);
-		var films_res = await axios({
-		  url: url,
-		  raxConfig: {
-		    // Retry 3 times on requests that return a response (500, etc) before giving up.  Defaults to 3.
-		    retry: 2,
-
-		    // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
-		    noResponseRetries: 2,
-		 
-		    // Milliseconds to delay at first.  Defaults to 100.
-		    retryDelay: 100,
-		 
-		    // HTTP methods to automatically retry.  Defaults to:
-		    // ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT']
-		    httpMethodsToRetry: ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT'],
-		 
-		    // The response status codes to retry.  Supports a double
-		    // array with a list of ranges.  Defaults to:
-		    // [[100, 199], [429, 429], [500, 599]]
-		    httpStatusCodesToRetry: [[100, 199], [429, 429], [500, 599]],
-		 
-		    // If you are using a non static instance of Axios you need
-		    // to pass that instance here (const ax = axios.create())
-		    // instance: ax,
-		 
-		    // You can detect when a retry is happening, and figure out how many
-		    // retry attempts have been made
-		    onRetryAttempt: (err) => {
-		      const cfg = rax.getConfig(err);
-		      console.log(`Retry attempt (movie list) #${cfg.currentRetryAttempt}`);
-		    }
-		  }
+		const response = await axios.get(url, { params });
+		const { data } = response;
+		data.results.forEach(movie => {
+			if (movie.poster_path) {
+				movie.poster_path = 'http://image.tmdb.org/t/p/w342' + movie.poster_path;
+			}
 		});
-	} catch(err) {
-		// console.log(err);
-		response.send({'success': false, 'error': 'api failed'});
-		return;
+		res.json({ 'success': true, 'movies': data });
+	} catch (e) {
+		console.error(e);
+		res.json({ 'success': false, 'error': 'api failed' });
 	}
-
-	for (var i = films_res.data['results'].length - 1; i >= 0; i--) {
-		if (films_res.data['results'][i]['poster_path']) {
-			films_res.data['results'][i]['poster_path'] = 'http://image.tmdb.org/t/p/w342' + films_res.data['results'][i]['poster_path'];
-		}
-	}
-
-
-	response.send({'success': true, 'movies': films_res.data});
-
-
-	// this is usefull snipet to make several async requests with promises
-	// try {
-	// 	const promisesArray = films.map(element => {
-	// 		let url = 'https://api.themoviedb.org/3/movie/' + element.imdb_code + '?api_key=' + API_KEY + ( locale == 'ru' ? '&language=ru' : '') + '&append_to_response=credits&language=ru';
-	// 		console.log('url: ' + url);
-	// 		return axios(url);
-	// 	});
-
-	// 	const detailed_result_const = await axios.all(promisesArray.map(p => p.catch(() => 'NOT_RESOLVED_MOVIE_INFO')));
-	// 	var detailed_result = detailed_result_const;
-	// 	console.log(detailed_result);
-
-	// } catch(err) {
-	//     console.error('Error:', err);
-	// }
-
-
-})
-
+});
 
 // ============================== get film details by id
 
-app.get('/film_details', async (request, response) => {
-	console.log(request.query);
+app.get('/film_details/:movieId', async (req, res, next) => {
+	const { movieId } = req.params;
+	const url = `https://api.themoviedb.org/3/movie/${movieId}`;
+	const params = {
+		api_key: API_KEY,
+		language: req.user.locale,
+		id: movieId,
+		append_to_response: "credits"
+	};
+
+	console.log(`Making a request (${url}) with params`, params);
 
 	try {
-		var validation = await validateUser(request.cookies);
-		// var validation = await validateUser({'x-auth-token': "laskjdfa80ur2rh2kjh23kj4h2l3j4h2kj3h4k32j4h"});
-	} catch(error) {
-		response.send({'success': false, 'error': 'invalid token'});
-		return;
+		const response = await axios.get(url, { params });
+		const { imdb_id } = response.data;
+		req.movie = { imdb_id, movie_details_1: response.data };
+		next();
+	} catch (e) {
+		console.error(e);
+		res.json({'success': false, 'error': 'TMDb request failed'});
 	}
-
-	// language: to request from api user settings
-	language = validation.data['payload']['locale'] || 'en';
-
-	// integer: id
-	id = request.query.id;
-
-	filters = '';
-
-	if (API_KEY) {
-		sign = filters ? "&" : "?";
-		filters += sign + 'api_key=' + API_KEY;
-	}
-
-	if (language) {
-		sign = filters ? "&" : "?";
-		filters += sign + 'language=' + language;
-	}
-
-	var url = 'https://api.themoviedb.org/3/movie/' + id + filters + '&append_to_response=credits';
-
-	const interceptorId = rax.attach();
-	try {
-		console.log('MAKING API REQUEST: ' + url);
-		var films_res = await axios({
-		  url: url,
-		  raxConfig: {
-		    // Retry 3 times on requests that return a response (500, etc) before giving up.  Defaults to 3.
-		    retry: 2,
-
-		    // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
-		    noResponseRetries: 2,
-		 
-		    // Milliseconds to delay at first.  Defaults to 100.
-		    retryDelay: 100,
-		 
-		    // HTTP methods to automatically retry.  Defaults to:
-		    // ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT']
-		    httpMethodsToRetry: ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT'],
-		 
-		    // The response status codes to retry.  Supports a double
-		    // array with a list of ranges.  Defaults to:
-		    // [[100, 199], [429, 429], [500, 599]]
-		    httpStatusCodesToRetry: [[100, 199], [429, 429], [500, 599]],
-		 
-		    // If you are using a non static instance of Axios you need
-		    // to pass that instance here (const ax = axios.create())
-		    // instance: ax,
-		 
-		    // You can detect when a retry is happening, and figure out how many
-		    // retry attempts have been made
-		    onRetryAttempt: (err) => {
-		      const cfg = rax.getConfig(err);
-		      console.log(`Retry attempt (movie list) #${cfg.currentRetryAttempt}`);
-		    }
-		  }
-		});
-	} catch(err) {
-		// console.log(err);
-		response.send({'success': false, 'error': 'api failed'});
-		return;
-	}
-
-	var imdb_id = films_res.data['imdb_id'];
-	var url2 = 'https://tv-v2.api-fetch.website/movie/' + imdb_id;
+}, async (req, res) => {
+	const { imdb_id, movie_details_1 } = req.movie;
+	const url = `https://tv-v2.api-fetch.website/movie/${imdb_id}`;
+	console.log(`Making a request (${url})`);
 
 	try {
-		console.log('MAKING API REQUEST2: ' + url2);
-		var films_res2 = await axios({
-		  url: url2,
-		  raxConfig: {
-		    // Retry 3 times on requests that return a response (500, etc) before giving up.  Defaults to 3.
-		    retry: 2,
-
-		    // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
-		    noResponseRetries: 2,
-		 
-		    // Milliseconds to delay at first.  Defaults to 100.
-		    retryDelay: 100,
-		 
-		    // HTTP methods to automatically retry.  Defaults to:
-		    // ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT']
-		    httpMethodsToRetry: ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT'],
-		 
-		    // The response status codes to retry.  Supports a double
-		    // array with a list of ranges.  Defaults to:
-		    // [[100, 199], [429, 429], [500, 599]]
-		    httpStatusCodesToRetry: [[100, 199], [429, 429], [500, 599]],
-		 
-		    // If you are using a non static instance of Axios you need
-		    // to pass that instance here (const ax = axios.create())
-		    // instance: ax,
-		 
-		    // You can detect when a retry is happening, and figure out how many
-		    // retry attempts have been made
-		    onRetryAttempt: (err) => {
-		      const cfg = rax.getConfig(err);
-		      console.log(`Retry attempt (movie list) #${cfg.currentRetryAttempt}`);
-		    }
-		  }
-		});
-	} catch(err) {
-		// console.log(err);
-		response.send({'success': false, 'error': 'api2 failed'});
-		return;
+		const response = await axios.get(url);
+		const movie_details_2 = response.data;
+		res.json({'success': true,  movie_details_1, movie_details_2 });
+	} catch (e) {
+		console.error(e);
+		res.json({'success': false, 'error': 'tv-v2 request failed'});
 	}
-
-
-	response.send({'success': true, 'movie_details_1': films_res.data, 'movie_details_2': films_res2.data});
-})
-
+});
 
 
 // ============================== start download and return links to movie and subtitles files
