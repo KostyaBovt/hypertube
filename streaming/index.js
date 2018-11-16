@@ -97,29 +97,6 @@ setTimeout(async function runCleaner() {
 
 // ============================== function to validate user
 
-async function validateUser(cookies) {
-
-	return new Promise(async (resolve, reject) => {
-		if (!cookies['x-auth-token']) {
-			reject();
-		} else {
-			try {
-				var auth_info = await axios({
-					method: 'get',
-					url: 'http://localhost:8080/api/auth/udata',
-					headers: {'Cookie': "x-auth-token=" + cookies['x-auth-token']},
-					withCredentials: true
-				});
-				console.log(auth_info.data);
-			} catch (error) {
-				reject();
-			}
-		}	
-		resolve(auth_info);
-	});
-
-}
-
 const userAuth = async (req, res, next) => {
 	const { cookies } = req;
 	if (cookies['x-auth-token']) {
@@ -144,14 +121,6 @@ const userAuth = async (req, res, next) => {
 
 app.get('/popular_films', async (request, response) => {
 	console.log(request.query);
-
-	try {
-		var validation = await validateUser(request.cookies);
-		// var validation = await validateUser({'x-auth-token': "laskjdfa80ur2rh2kjh23kj4h2l3j4h2kj3h4k32j4h"});
-	} catch(error) {
-		response.send({'success': false, 'error': 'invalid token'});
-		return;
-	}
 
 	// language: to request from api user settings
 	language = validation.data['payload']['locale'] || 'en';
@@ -318,14 +287,6 @@ var walkSync = function(dir, filelist) {
 
 app.get('/film', async (request, response) => {
 	console.log(request.query);
-
-	try {
-		var validation = await validateUser(request.cookies);
-		// var validation = await validateUser({'x-auth-token': "laskjdfa80ur2rh2kjh23kj4h2l3j4h2kj3h4k32j4h"});
-	} catch(error) {
-		response.send({'success': false, 'error': 'invalid token'});
-		return;
-	}
 
 	// language: to request from api user settings
 	language = validation.data['payload']['locale'] || 'en';
