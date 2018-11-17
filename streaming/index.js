@@ -70,11 +70,11 @@ setTimeout(async function runCleaner() {
 	await db.connect()
 
 	const result_to_delete = await db.query( "SELECT * from popular_films where  NOW() - last_seen > INTERVAL '30 days'");
-	var delete_string = "(";
+	var params = [];
 	for (var i = result_to_delete.rows.length - 1; i >= 0; i--) {
 		console.log('now to delete this film :');
 		console.log(result_to_delete.rows[i]['imdb_id']);
-		delete_string += (delete_string.length != 1) ? ", '" + result_to_delete.rows[i]['imdb_id'] + "'" : "'" + result_to_delete.rows[i]['imdb_id'] + "'";
+		params.push(result_to_delete.rows[i]['imdb_id']);
 		if (fs.existsSync('/tmp/videos/' + result_to_delete.rows[i]['imdb_id'])) {
 			var temp_imdb_id = result_to_delete.rows[i]['imdb_id'];
 			rimraf('/tmp/videos/' + result_to_delete.rows[i]['imdb_id'], function () { 
@@ -83,10 +83,8 @@ setTimeout(async function runCleaner() {
 			
 		}
 	}
-	delete_string += ")";
 	if (result_to_delete.rows.length > 0) {
-		console.log('we will run sql: ' + "DELETE from popular_films where imdb_id in " + delete_string + ";");
-		const result_to_delete2 = await db.query( "DELETE from popular_films where imdb_id in " + delete_string + ";");
+		const result_to_delete2 = await db.query( "DELETE from popular_films where imdb_id = ANY($1) ", [params]);
 	} else {
 		console.log('nothing to clean');
 	}
@@ -117,10 +115,12 @@ const userAuth = async (req, res, next) => {
 	}
 }
 
+app.all('*', userAuth);
+
 // ============================== get OUR popular films
 
 app.get('/popular_films', async (request, response) => {
-	console.log(request.query);
+	// console.log(request.user);
 
 	// language: to request from api user settings
 	language = request.user.locale || 'en';
@@ -173,9 +173,6 @@ app.get('/popular_films', async (request, response) => {
 
 });
 
-
-
-app.all('*', userAuth);
 
 app.get('/films', (req, res, next) => {
 	if (req.query.with_genres) {
@@ -324,7 +321,7 @@ app.get('/film', async (request, response) => {
 
 	var return_object = {};
 
-	if (!imdb_id || !resolution) {
+	if (!imdb_id || !resolution || !(resolution =='720p' || resolution == '1080p')) {
 	    response.send({success: false, error: "invalid query parameters"});
 	    return;
 	}
@@ -341,14 +338,17 @@ app.get('/film', async (request, response) => {
 
 	await db.connect()
 
-	const res = await db.query("SELECT * from popular_films where imdb_id='" + imdb_id + "';");
+	const res = await db.query("SELECT * from popular_films where imdb_id = $1;", [imdb_id]);
 	if (!res.rowCount) {
-		var sql_update = "insert into popular_films values('" + imdb_id + "', 1, DEFAULT)";
+		var sql_update = "insert into popular_films values($1, 1, DEFAULT)";
+		var params = [imdb_id];
 	} else {
-		var sql_update = "update popular_films set count=" + (parseInt(res.rows[0]['count']) + 1) + ", last_seen=DEFAULT where imdb_id='" + imdb_id + "';";
+		var sql_update = "update popular_films set count=$1, last_seen=DEFAULT where imdb_id = $2;";
+		var params = [parseInt(res.rows[0]['count']) + 1, imdb_id];
 	}
 
-	const res2 = await db.query(sql_update);
+	const res2 = await db.query(sql_update, params);
+	const res3 = await db.query("insert into history values($1, $2, DEFAULT)", [request.user.id, imdb_id]);
 	await db.end()
 
 	var dir_path = "/tmp/videos/" + imdb_id + "/" + resolution;
