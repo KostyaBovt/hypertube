@@ -36,6 +36,7 @@ const styles = theme => ({
     }
 });
 
+@inject('SelfStore') 
 @inject('MovieStore') @observer
 class Movie extends Component {
     componentDidMount() {
@@ -46,18 +47,24 @@ class Movie extends Component {
         this.props.MovieStore.resetMovie();
     }
     renderPlayer(){
-        console.log("here");
+        console.log(this.props.SelfStore.self.locale);
         const { stream } = this.props.MovieStore;
         if (stream) {
+            console.log(stream.subs);
             return (<ReactPlayer
                         controls
+                        crossOrigin="anonymous"
                         url = {stream.movie_link}
                         config = {{ file: {
-                            tracks: [
-                                //{kind: 'subtitles', src: 'subs/subtitles.en.vtt', srcLang: 'en', default: true},
-                                //{kind: 'subtitles', src: 'subs/subtitles.ja.vtt', srcLang: 'ja'},
-                                //{kind: 'subtitles', src: 'subs/subtitles.de.vtt', srcLang: 'de'}
-                            ]
+                            attributes: {
+                                crossOrigin: 'true'
+                            },
+                            tracks: Object.entries(stream.subs).map(a => {
+                                return {kind: 'subtitles',
+                                        src: a[1],
+                                        srcLang: a[0],
+                                        default: a[0] == this.props.SelfStore.self.locale}
+                            })   
                         }}}
                      />)
         } else {
