@@ -123,7 +123,7 @@ app.get('/popular_films', async (request, response) => {
 	console.log(request.query);
 
 	// language: to request from api user settings
-	language = validation.data['payload']['locale'] || 'en';
+	language = request.user.locale || 'en';
 
 	// integer 1 - 1000
 	page = request.query.page || 1;
@@ -286,10 +286,10 @@ var walkSync = function(dir, filelist) {
 
 
 app.get('/film', async (request, response) => {
-	console.log(request.query);
+	console.log(request.user);
 
 	// language: to request from api user settings
-	language = validation.data['payload']['locale'] || 'en';
+	language = request.user.locale || 'en';
 
 	async function downloadSubtitles_sub(url, name) {
 

@@ -6,6 +6,7 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import { Typography, Card, ButtonBase, IconButton, CircularProgress, List, ListSubheader, ListItemText, ListItem} from '@material-ui/core';
 import not_found from "../img/not_found.jpg";
+import ReactPlayer from 'react-player';
 
 
 const styles = theme => ({
@@ -38,11 +39,30 @@ const styles = theme => ({
 @inject('MovieStore') @observer
 class Movie extends Component {
     componentDidMount() {
-        this.props.MovieStore.fetchMovie(this.props.match.params.id);
+        this.props.MovieStore.fetchMovieDetails(this.props.match.params.id);
     }
 
     componentWillUnmount() {
         this.props.MovieStore.resetMovie();
+    }
+    renderPlayer(){
+        console.log("here");
+        const { stream } = this.props.MovieStore;
+        if (stream) {
+            return (<ReactPlayer
+                        controls
+                        url = {stream.movie_link}
+                        config = {{ file: {
+                            tracks: [
+                                //{kind: 'subtitles', src: 'subs/subtitles.en.vtt', srcLang: 'en', default: true},
+                                //{kind: 'subtitles', src: 'subs/subtitles.ja.vtt', srcLang: 'ja'},
+                                //{kind: 'subtitles', src: 'subs/subtitles.de.vtt', srcLang: 'de'}
+                            ]
+                        }}}
+                     />)
+        } else {
+            return null;
+        }
     }
 
     render() {
@@ -88,13 +108,13 @@ class Movie extends Component {
                                                     {movie.overview}
                                                 </Typography>
                                             </Grid>
+                                            
                                         </Grid>
                                     </Grid>
-
                                 </Grid>
                             </Paper>
                         </Grid>
-
+                        {this.renderPlayer()}
                     </Grid>
                 </main>
             );
