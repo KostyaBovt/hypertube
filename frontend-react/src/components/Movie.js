@@ -4,8 +4,9 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
-import { Typography, CircularProgress } from '@material-ui/core';
+import { Typography, CircularProgress, FilledInput, InputLabel, Icon, Button, FormControl} from '@material-ui/core';
 import ReactPlayer from 'react-player';
+
 
 
 const styles = theme => ({
@@ -24,7 +25,27 @@ const styles = theme => ({
     },
     media: {
         width: "100%",
-    }
+    },
+    iconSmall: {
+        fontSize: 10,
+    },
+    button: {
+        margin: theme.spacing.unit,
+        width: 100,
+        marginLeft: 445,
+        marginTop: 15,
+        padding: 10
+    },
+    formControl: {
+        width: 520,
+        marginLeft: 25,
+        marginTop: 25,
+        backgroundColor: "#009688",
+        color: "#000000"
+  },
+  fo: {
+    wordBreak: "break-all"
+  }
 });
 
 @inject('MovieStore', 'SelfStore') @observer
@@ -77,16 +98,15 @@ class Movie extends Component {
         } else {
             return (
                 <main className={classes.layout}>
+
                     <Grid container spacing={16} className={classes.container} direction="column" justify="center" alignItems="center">
 
                         <Grid item xs={12} md={6}>
                             <Paper>
                                 <Grid container>
-
                                     <Grid item xs={5} className={classes.item}>
                                         <img className={classes.media} src={movie.poster_path} alt="Movie poster"/>
                                     </Grid>
-
                                     <Grid item xs className={classes.item}>
                                         <Grid container direction="column">
                                             <Grid item>
@@ -109,7 +129,6 @@ class Movie extends Component {
                                                     {movie.overview}
                                                 </Typography>
                                             </Grid>
-                                            
                                         </Grid>
                                     </Grid>
 
@@ -122,6 +141,33 @@ class Movie extends Component {
                                 <Paper>
                                     <Grid item className={classes.item}>
                                         { this.renderPlayer() }
+                                    </Grid>
+                                </Paper>
+                            </Grid>
+                        </Grid>
+
+                        <Grid item xs={12} md={6}>
+                            <Grid container>
+                                <Paper>
+                                    <FormControl  className={classes.formControl} variant="filled">
+                                        <InputLabel htmlFor="component-filled">Your Comments</InputLabel>
+                                        <FilledInput id="component-filled" />
+                                    </FormControl>
+                                    <Button variant="contained" color="primary" className={classes.button}>
+                                        Send
+                                        <Icon className={classes.rightIcon}>send</Icon>
+                                    </Button>
+                                </Paper>
+                            </Grid>
+                        </Grid>
+
+                        <Grid item xs={12} md={6}>
+                            <Grid container>
+                                <Paper>
+                                    <Grid item className={classes.item}>
+                                        <Typography variant="p" component="p" className={classes.fo}>
+                                            test
+                                        </Typography>
                                     </Grid>
                                 </Paper>
                             </Grid>
