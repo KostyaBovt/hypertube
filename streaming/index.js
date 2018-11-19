@@ -115,7 +115,40 @@ const userAuth = async (req, res, next) => {
 	}
 }
 
-app.all('*', userAuth);
+const getWatched = async (req, res, next) => {
+	
+	var user_id = req.user.id;
+
+	const {Client}  = require('pg');
+
+	const db = new Client({
+	  user: 'Hypertube',
+	  host: 'localhost',
+	  database: 'Hypertube',
+	  password: '12345',
+	  port: 5433,
+	});
+
+	await db.connect()
+
+	const result_watched = await db.query( "SELECT imdb_id, count(*) from history where user_id=$1 group by imdb_id", [user_id]);
+	// console.log('============== watched films============');
+	// console.log(result_watched.rows);
+
+	var watched_films_rows = result_watched.rows;
+
+	var watched_films_mapped = {};
+	for (var i = watched_films_rows.length - 1; i >= 0; i--) {
+		watched_films_mapped[watched_films_rows[i]['imdb_id']] = parseInt(watched_films_rows[i]['count']);
+	}
+	req.user.watched_films = watched_films_mapped;
+	// console.log(watched_films_mapped);
+
+	await db.end();
+	next();
+}
+
+app.all('*', userAuth, getWatched);
 
 // ============================== get OUR popular films
 
@@ -167,6 +200,7 @@ app.get('/popular_films', async (request, response) => {
 	for (var i = final_response.length - 1; i >= 0; i--) {
 		final_response[i]['poster_path'] = 'http://image.tmdb.org/t/p/w342' + final_response[i]['poster_path'];
 		final_response[i]['popular_films_count'] = rows[i]['count'];
+		final_response[i]['watched_films_count'] = request.user.watched_films[final_response[i]['imdb_id']] || 0 ;
 	}
 
 	response.send(final_response);
