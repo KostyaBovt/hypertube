@@ -115,6 +115,8 @@ const userAuth = async (req, res, next) => {
 	}
 }
 
+// ======================= function to get watched films by curent user
+
 const getWatched = async (req, res, next) => {
 	
 	var user_id = req.user.id;
@@ -131,7 +133,7 @@ const getWatched = async (req, res, next) => {
 
 	await db.connect()
 
-	const result_watched = await db.query( "SELECT imdb_id, count(*) from history where user_id=$1 group by imdb_id", [user_id]);
+	const result_watched = await db.query( "SELECT film_id, count(*) from history where user_id=$1 group by film_id", [user_id]);
 	// console.log('============== watched films============');
 	// console.log(result_watched.rows);
 
@@ -139,16 +141,40 @@ const getWatched = async (req, res, next) => {
 
 	var watched_films_mapped = {};
 	for (var i = watched_films_rows.length - 1; i >= 0; i--) {
-		watched_films_mapped[watched_films_rows[i]['imdb_id']] = parseInt(watched_films_rows[i]['count']);
+		watched_films_mapped[watched_films_rows[i]['film_id']] = parseInt(watched_films_rows[i]['count']);
 	}
 	req.user.watched_films = watched_films_mapped;
-	// console.log(watched_films_mapped);
 
 	await db.end();
 	next();
 }
 
-app.all('*', userAuth, getWatched);
+// ======================= function to put watched film by curent user in DB
+
+const putWatched = async (req, res, next) => {
+	
+	var user_id = req.user.id;
+	var imdb_id = req.query.imdb_id;
+	var film_id = req.query.film_id;
+
+	const {Client}  = require('pg');
+
+	const db = new Client({
+	  user: 'Hypertube',
+	  host: 'localhost',
+	  database: 'Hypertube',
+	  password: '12345',
+	  port: 5433,
+	});
+
+	await db.connect()
+	const result_watched = await db.query( "INSERT into history values ($1, $2, $3)", [user_id, film_id, imdb_id]);
+	await db.end();
+	next();
+}
+
+
+app.all('*', userAuth);
 
 // ============================== get OUR popular films
 
@@ -436,7 +462,7 @@ app.get('/film/:id/:resolution', async (req, res, next) => {
 	}
 });
 
-app.get('/film', async (request, response) => {
+app.get('/film2', async (request, response) => {
 	console.log(request.user);
 
 	// language: to request from api user settings
@@ -490,6 +516,7 @@ app.get('/film', async (request, response) => {
 	  port: 5433,
 	});
 
+
 	await db.connect()
 
 	const res = await db.query("SELECT * from popular_films where imdb_id = $1;", [imdb_id]);
@@ -502,8 +529,10 @@ app.get('/film', async (request, response) => {
 	}
 
 	const res2 = await db.query(sql_update, params);
-	const res3 = await db.query("insert into history values($1, $2, DEFAULT)", [request.user.id, imdb_id]);
+	// const res3 = await db.query("insert into history values($1, $2, DEFAULT)", [request.user.id, imdb_id]);
 	await db.end()
+
+
 
 	var dir_path = "/tmp/videos/" + imdb_id + "/" + resolution;
 	var dir_path_subs = "/tmp/videos/" + imdb_id + "/subs";
@@ -537,6 +566,8 @@ app.get('/film', async (request, response) => {
 	        }
 		}
 
+
+
 	    if (return_file) {
 	    	return_object['movie_link'] = "http://localhost:3200" + return_file.substring(4, return_file.length);
 	    	return_object['subs'] = return_files_sub;
@@ -550,6 +581,7 @@ app.get('/film', async (request, response) => {
 	    }
 
 	}
+
 
     if (!return_object['movie_link']) {
 
