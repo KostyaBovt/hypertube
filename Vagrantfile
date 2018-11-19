@@ -113,7 +113,6 @@ Vagrant.configure("2") do |config|
         sudo su vagrant -c  "psql < /vagrant/Hypertube.sql"
         cd /vagrant/hyper
         make
-	./start.sh
 
     SHELL
 
