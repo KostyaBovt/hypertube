@@ -314,41 +314,133 @@ var walkSync = function(dir, filelist) {
       return filelist;
 };
 
+const walk = require('walk');
+const pump = require('pump');
 
+app.get('/film/:id/:resolution', async (req, res, next) => {
+	const { id, resolution } = req.params;
+
+	const response = await axios.get(`https://tv-v2.api-fetch.website/movie/${id}`);
+	console.log('response', response.data);
+
+	const { torrents } = response.data;
+	if (torrents) {
+		const { url: magnetLink } = torrents['en'][`${resolution}p`];
+
+		const torrentEngine = torrentStream(magnetLink);
+
+        torrentEngine.on('ready', () => {
+
+			torrentEngine.files.forEach(file => {
+				const extension = file.name.split('.').pop();
+				const fileSize = file.length;
+
+				if (extension === 'mp4') {
+					const { range } = req.headers;
+					console.log('range', range);
+
+					if (range) {
+						const parts = range.replace(/bytes=/, "").split("-")
+						const start = parseInt(parts[0], 10)
+						const end = parts[1] 
+							? parseInt(parts[1], 10)
+							: fileSize - 1
+						const chunkSize = (end - start) + 1
+						const head = {
+							'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+							'Accept-Ranges': 'bytes',
+							'Content-Length': chunkSize,
+							'Content-Type': 'video/mp4',
+						}
+						res.writeHead(206, head);
+						const stream = file.createReadStream({ start, end });
+						pump(stream, res);
+					} else {
+						const head = {
+							'Content-Length': fileSize,
+							'Content-Type': 'video/mp4',
+						}
+						res.writeHead(200, head);
+						const stream = file.createReadStream();
+						pump(stream, res);
+					}
+
+				}
+			})
+		});
+	} else {
+		res.sendStatus(404);
+	}
+}, async (req, res, next) => {
+	const { id, resolution } = req.params;
+
+	const options = {
+		followLinks: false
+	};
+	const walker = walk.walk(`/tmp/videos/`, options);
+
+	walker.on("file", (root, fileStats, nextFile) => {
+		const extension = fileStats.name.split('.').pop();
+		console.log(`Current file [${fileStats.name}], extension [${extension}]`);
+
+		if (extension === "mp4") {
+			// File exists!
+		}
+
+		nextFile();
+	});
+	
+	walker.on("errors", (root, nodeStatsArray, nextFile) => {
+		console.log('walker error!');
+		console.log(root, nodeStatsArray);
+
+		nextFile();
+	});
+	
+	walker.on("end", function () {
+		console.log("all done");
+	});
+
+	next();
+}, async (req, res) => {
+	const path = '/tmp/videos/tt5463162/1080p/deadpool.mp4';
+	const stat = fs.statSync(path);
+
+	const fileSize = stat.size;
+	const range = req.headers.range;
+	console.log('range', range);
+
+	if (range) {
+		const parts = range.replace(/bytes=/, "").split("-")
+		const start = parseInt(parts[0], 10)
+		const end = parts[1] 
+			? parseInt(parts[1], 10)
+			: fileSize-1
+		const chunksize = (end - start) + 1
+		const file = fs.createReadStream(path, {start, end})
+		const head = {
+			'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+			'Accept-Ranges': 'bytes',
+			'Content-Length': chunksize,
+			'Content-Type': 'video/mp4',
+		}
+		res.writeHead(206, head);
+		file.pipe(res);
+	} else {
+		const head = {
+			'Content-Length': fileSize,
+			'Content-Type': 'video/mp4',
+		}
+		res.writeHead(200, head);
+		fs.createReadStream(path).pipe(res);
+	}
+});
 
 app.get('/film', async (request, response) => {
 	console.log(request.user);
 
 	// language: to request from api user settings
 	language = request.user.locale || 'en';
-
-	async function downloadSubtitles_sub(url, name) {
-
-	  const path_vtt = '/tmp/videos/' + imdb_id + '/subs/' + name + '.vtt';
-
-	  // axios image download with response type "stream"
-	  const response = await axios({
-	    method: 'GET',
-	    url: url,
-	    responseType: 'stream'
-	  })
-
-	  // pipe the result stream into a file on disc
-	  // response.data.pipe(fs.createWriteStream(path_srt));
-	  response.data.pipe(srt2vtt()).pipe(fs.createWriteStream(path_vtt));
-
-	  // return a promise and resolve when download finishes
-	  return new Promise((resolve, reject) => {
-	    response.data.on('end', () => {
-	      resolve()
-	    })
-
-	    response.data.on('error', () => {
-	      reject()
-	    })
-	  })
-
-	}
 
 	imdb_id = request.query.imdb_id;
 	resolution = request.query.resolution;
@@ -360,7 +452,7 @@ app.get('/film', async (request, response) => {
 	    return;
 	}
 
-	const {Client}  = require('pg');
+	const { Client }  = require('pg');
 
 	const db = new Client({
 	  user: 'Hypertube',
@@ -453,7 +545,8 @@ app.get('/film', async (request, response) => {
 	    }
 
 	    // download subtitles first:
-		if (to_down_subs) {
+		// if (to_down_subs) {
+		if (false) {
 			// down_subs(imdb_id);
 			var result = await OS.search({
 				imdbid: imdb_id
@@ -469,7 +562,7 @@ app.get('/film', async (request, response) => {
 				if (result[locales[i]]) {
 					var url  = result[locales[i]]['url'];
 					var name = imdb_id + '_' + locales[i];
-					await downloadSubtitles_sub(url, name);
+					await downloadSubtitles_sub(url, imdb_id, name);
 					console.log('downloaded subs: ' + name);
 					var list_files = walkSync(dir_path_subs);
 					console.log('we have such subs files:');
@@ -515,6 +608,8 @@ app.get('/film', async (request, response) => {
 			    }
 			  }
 			});
+
+			console.log("films_res2" ,films_res2.data);
 		} catch(err) {
 			// console.log(err);
 			response.send({'success': false, 'error': 'api2 failed'});
@@ -575,9 +670,19 @@ app.get('/film', async (request, response) => {
 
 });
 
-app.listen(port, (err) => {
-    if (err) {
-        return console.log('something bad happened', err);
-    }
-    console.log(`server is listening on ${port}`);
+app.listen(port, () => {
+	console.log(`server is listening on ${port}`);
+
+	fs.access('/tmp/test', fs.constants.F_OK, (err) => {
+		if (err) { // Directory does not exsist
+			return fs.mkdir('/tmp/test', (err) => {
+				if (err) {
+					console.log('error while creating /tmp/videos dir');
+					return;
+				};
+				console.log('/tmp/videos dir created');
+			});
+		}
+		console.log('/tmp/videos dir already exsists');
+	});
 })
