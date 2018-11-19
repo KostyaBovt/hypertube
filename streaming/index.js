@@ -442,6 +442,34 @@ app.get('/film', async (request, response) => {
 	// language: to request from api user settings
 	language = request.user.locale || 'en';
 
+	async function downloadSubtitles_sub(url, name) {
+
+	  const path_vtt = '/tmp/videos/' + imdb_id + '/subs/' + name + '.vtt';
+
+	  // axios image download with response type "stream"
+	  const response = await axios({
+	    method: 'GET',
+	    url: url,
+	    responseType: 'stream'
+	  })
+
+	  // pipe the result stream into a file on disc
+	  // response.data.pipe(fs.createWriteStream(path_srt));
+	  response.data.pipe(srt2vtt()).pipe(fs.createWriteStream(path_vtt));
+
+	  // return a promise and resolve when download finishes
+	  return new Promise((resolve, reject) => {
+	    response.data.on('end', () => {
+	      resolve()
+	    })
+
+	    response.data.on('error', () => {
+	      reject()
+	    })
+	  })
+
+	}
+
 	imdb_id = request.query.imdb_id;
 	resolution = request.query.resolution;
 
@@ -545,8 +573,7 @@ app.get('/film', async (request, response) => {
 	    }
 
 	    // download subtitles first:
-		// if (to_down_subs) {
-		if (false) {
+		if (to_down_subs) {
 			// down_subs(imdb_id);
 			var result = await OS.search({
 				imdbid: imdb_id
@@ -608,8 +635,6 @@ app.get('/film', async (request, response) => {
 			    }
 			  }
 			});
-
-			console.log("films_res2" ,films_res2.data);
 		} catch(err) {
 			// console.log(err);
 			response.send({'success': false, 'error': 'api2 failed'});
