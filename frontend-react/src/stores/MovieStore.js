@@ -28,11 +28,7 @@ class MovieStore {
                 const details = response.data.movie_details_1;
                 const streaming = response.data.movie_details_2;
                 this.setMovie({ ...details, streaming });
-                if(streaming){
-                    const resolution = Object.keys(Object.values(streaming.torrents)[0])[0];
-                    const imdb_id = streaming.imdb_id;
-                    this.fetchMovie(imdb_id, resolution);
-                }
+                console.log(details, streaming);
             } else {
                 this.setMovie(null);
             }
@@ -51,8 +47,10 @@ class MovieStore {
                     resolution
                 }
             });
+            if (response.data.success) {
+                this.setStream(response.data);
+            }
             console.log(response.data);
-            this.setStream(response.data);
         } catch (e) {
             console.error(e);
         }

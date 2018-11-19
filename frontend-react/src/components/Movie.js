@@ -6,6 +6,7 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import { Typography, CircularProgress, FilledInput, InputLabel, Icon, Button, FormControl} from '@material-ui/core';
 import ReactPlayer from 'react-player';
+import Plyr from 'react-plyr';
 
 
 
@@ -69,20 +70,14 @@ class Movie extends Component {
         const { movie } = MovieStore;
 
         return (
-            <ReactPlayer
-                controls={true}
-                
-                width="100%"
-                height="100%"
-                url={["http://localhost:3200/film/tt5463162/1080", "http://localhost:3200/film/tt5463162/720"]}
-                config={{
-                    file: {
-                        attributes: {
-                            poster: "http://image.tmdb.org/t/p/w500/3P52oz9HPQWxcwHOwxtyrVV1LKi.jpg"
-                        },
-                        tracks: []
-                    }
-                }}
+            <Plyr
+                type="video"
+                title={movie.title}
+                poster={`http://image.tmdb.org/t/p/w500/${movie.backdrop_path}`}
+                sources={[
+                    { src: `http://localhost:3200/film/${movie.imdb_id}/720`, type: 'video/mp4', size: "720" },
+                    { src: `http://localhost:3200/film/${movie.imdb_id}/1080`, type: 'video/mp4', size: "1080" }
+                ]}
             />
         )
     }
