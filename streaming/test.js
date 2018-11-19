@@ -15,29 +15,101 @@
 
 // console.log(string_sql);
 
-var rimraf = require('rimraf');
+//======================================
 
-rimraf('/tmp/videos/tt0051201', function () { 
-	console.log('====\ndeleted folder /tmp/videos/tt0051201\n=========\n');
+// var rimraf = require('rimraf');
+
+// rimraf('/tmp/videos/tt0051201', function () { 
+// 	console.log('====\ndeleted folder /tmp/videos/tt0051201\n=========\n');
+// });
+
+// const {Client}  = require('pg');
+
+// const db = new Client({
+//   user: 'Hypertube',
+//   host: 'localhost',
+//   database: 'Hypertube',
+//   password: '12345',
+//   port: 5433,
+// });
+
+// await db.connect()
+
+// const res = await db.query( "SELECT * from popular_films where  NOW() - last_seen > INTERVAL '164  minutes'");
+// for (var i = res.rows.length - 1; i >= 0; i--) {
+// 	console.log('now to delete this film :');
+// 	console.log(res.rows[i]['imdb_id']);
+// }
+// await db.end()
+
+//======================================
+
+
+const imdb_id = 'tt0047396';
+
+const axios 	= require('axios');
+const srt2vtt = require('srt-to-vtt');
+const fs 		= require('fs');
+
+const OpenSubtitles = require('opensubtitles-api');
+const OS = new OpenSubtitles({
+	useragent: "Hypertube v1",
+	username: "hypertube_optimus",
+	password: "33cats44dogs",
+	ssl: true
 });
 
-const {Client}  = require('pg');
 
-const db = new Client({
-  user: 'Hypertube',
-  host: 'localhost',
-  database: 'Hypertube',
-  password: '12345',
-  port: 5433,
-});
+async function downloadSubtitles_sub(url, name) {
 
-await db.connect()
+  const path_vtt = '/tmp/' + name + '.vtt';
 
-const res = await db.query( "SELECT * from popular_films where  NOW() - last_seen > INTERVAL '164  minutes'");
-for (var i = res.rows.length - 1; i >= 0; i--) {
-	console.log('now to delete this film :');
-	console.log(res.rows[i]['imdb_id']);
+  // axios image download with response type "stream"
+  const response = await axios({
+    method: 'GET',
+    url: url,
+    responseType: 'stream'
+  })
+
+  // pipe the result stream into a file on disc
+  // response.data.pipe(fs.createWriteStream(path_srt));
+  response.data.pipe(srt2vtt()).pipe(fs.createWriteStream(path_vtt));
+
+  // return a promise and resolve when download finishes
+  return new Promise((resolve, reject) => {
+    response.data.on('end', () => {
+      resolve()
+    })
+
+    response.data.on('error', () => {
+      reject()
+    })
+  })
+
 }
-await db.end()
 
-DELETE FROM `table` WHERE id IN (264, 265)
+(async function() {
+	OS.search({
+		imdbid: imdb_id
+	}).then(async (result) => {
+		console.log(result);
+
+		var locales = ['ru', 'en'];
+
+		var arrayLength = locales.length;
+		for (var i = 0; i < arrayLength; i++) {
+			if (result[locales[i]]) {
+				var url  = result[locales[i]]['url'];
+				var name = imdb_id + '_' + locales[i];
+				await downloadSubtitles_sub(url, name);
+				console.log('downloaded subs: ' + name);
+				// var list_files = walkSync(dir_path_subs);
+				// console.log('we have such subs files:');
+				// console.log(list_files);
+			}
+		}
+	})
+	
+})();
+
+

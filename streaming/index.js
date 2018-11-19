@@ -426,7 +426,7 @@ app.get('/film', async (request, response) => {
 			})
 
 			console.log('we have result on OS search: ');
-			// console.log(result);
+			console.log(result);
 
 			var locales = ['ru', 'en'];
 
@@ -487,11 +487,15 @@ app.get('/film', async (request, response) => {
 			return;
 		}
 
+		if (!films_res2.data) {
+			response.send({'success': false, 'error': 'no torrents for this film was found'});
+			return;
+		}
+
 		var magnet = films_res2.data['torrents']['en'][resolution]['url'];
 
 		var engine = torrentStream(magnet, {path: dir_path});
 	    var return_file = '';
-
 
 
 		engine.on('ready', function() {
@@ -520,7 +524,7 @@ app.get('/film', async (request, response) => {
 						}
 
 
-						return_object['movie_link'] = "http://localhost:3200/videos/" + imdb_id + '/' + resolution + "/" + encodeURI(return_file_path);
+						return_object['movie_link'] = "http://localhost:3200/videos/" + imdb_id + '/' + resolution + "/" + return_file_path;
 				    	return_object['success'] = true;
 				    	return_object['subs'] = return_files_sub;
 					    response.send(return_object);
