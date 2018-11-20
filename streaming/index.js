@@ -149,16 +149,32 @@ const getWatched = async (req, res, next) => {
 	next();
 }
 
-// ======================= function to put watched film by curent user in DB
+app.all('*', userAuth);
 
-const putWatched = async (req, res, next) => {
+// ======================= put watched film by curent user in DB
+
+app.get('/watched/:movieId', async (req, res) => {
 	
-	var user_id = req.user.id;
-	var imdb_id = req.query.imdb_id;
-	var film_id = req.query.film_id;
+	const { movieId } = req.params;
+	var userId = req.user.id;
+
+	const url = `https://api.themoviedb.org/3/movie/${movieId}`;
+	const params = {
+		api_key: API_KEY,
+		id: movieId
+	};
+
+	console.log(`Making a request (${url}) with params`, params);
+
+	try {
+		const response = await axios.get(url, { params });
+		const { imdb_id } = response.data;
+	} catch (e) {
+		console.error(e);
+		res.json({'success': false, 'error': 'failed while updating watched statistics'});
+	}
 
 	const {Client}  = require('pg');
-
 	const db = new Client({
 	  user: 'Hypertube',
 	  host: 'localhost',
@@ -168,13 +184,12 @@ const putWatched = async (req, res, next) => {
 	});
 
 	await db.connect()
-	const result_watched = await db.query( "INSERT into history values ($1, $2, $3)", [user_id, film_id, imdb_id]);
+	const resultWatched = await db.query( "INSERT into history values ($1, $2, $3)", [userId, filmId, imdb_id]);
 	await db.end();
-	next();
-}
 
+	res.json({'success': true, 'error': 'watched statistics was updated'});
+});
 
-app.all('*', userAuth);
 
 // ============================== get OUR popular films
 
