@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
-import { Typography, CircularProgress, FilledInput, InputLabel, Icon, Button, FormControl} from '@material-ui/core';
+import { TextField, Typography, CircularProgress, FilledInput, InputLabel, Icon, Button, FormControl} from '@material-ui/core';
 import ReactPlayer from 'react-player';
 import Plyr from 'react-plyr';
 
@@ -21,6 +21,10 @@ const styles = theme => ({
         marginTop: theme.spacing.unit * 2,
         marginBottom: theme.spacing.unit * 2
     },
+    container2: {
+        display: 'flex',
+        flexWrap: 'wrap',
+    },
     item : {
         margin: theme.spacing.unit
     },
@@ -31,18 +35,15 @@ const styles = theme => ({
         fontSize: 10,
     },
     button: {
-        margin: theme.spacing.unit,
-        width: 100,
-        marginLeft: 445,
-        marginTop: 15,
-        padding: 10
+        // margin: theme.spacing.unit,
+        // width: 100,
+        // marginLeft: 445,
+        // marginTop: 15,
+        // padding: 10
     },
     formControl: {
-        width: 520,
-        marginLeft: 25,
-        marginTop: 25,
-        backgroundColor: "#009688",
-        color: "#000000"
+        width: "100%",
+        // marginLeft: 25,
   },
   fo: {
     wordBreak: "break-all"
@@ -53,15 +54,30 @@ const styles = theme => ({
 class Movie extends Component {
     constructor(props) {
         super(props);
+        this.state = {
+            commentValue: '',
+        };
         this.renderPlayer = this.renderPlayer.bind(this);
+        this.handleInput = this.handleInput.bind(this);
     }
 
     componentDidMount() {
         this.props.MovieStore.fetchMovieDetails(this.props.match.params.id);
+        this.props.MovieStore.fetchComments(this.props.match.params.id);
     }
 
     componentWillUnmount() {
         this.props.MovieStore.resetMovie();
+    }
+
+    handleInput(e) {
+        this.setState({
+            commentValue: e.target.value
+        });
+    }
+    handleSubmit(e) {
+        e.preventDefault();
+        this.props.MovieStore.postComment(this.props.match.params.id, this.state.commentValue);
     }
 
     renderPlayer(){
@@ -96,10 +112,10 @@ class Movie extends Component {
 
                     <Grid container spacing={16} className={classes.container} direction="column" justify="center" alignItems="center">
 
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={6} md={6}>
                             <Paper>
                                 <Grid container>
-                                    <Grid item xs={5} className={classes.item}>
+                                    <Grid item xs={4} className={classes.item}>
                                         <img className={classes.media} src={movie.poster_path} alt="Movie poster"/>
                                     </Grid>
                                     <Grid item xs className={classes.item}>
@@ -131,7 +147,7 @@ class Movie extends Component {
                             </Paper>
                         </Grid>
 
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={6} md={6}>
                             <Grid container>
                                 <Paper>
                                     <Grid item className={classes.item}>
@@ -141,30 +157,43 @@ class Movie extends Component {
                             </Grid>
                         </Grid>
 
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={6} md={6} >
                             <Grid container>
-                                <Paper>
-                                    <FormControl  className={classes.formControl} variant="filled">
-                                        <InputLabel htmlFor="component-filled">Your Comments</InputLabel>
-                                        <FilledInput id="component-filled" />
-                                    </FormControl>
-                                    <Button variant="contained" color="primary" className={classes.button}>
+                                <Paper className={classes.formControl} >
+                                     <form className={classes.container2} noValidate autoComplete="off">
+                                        <TextField 
+                                          value={this.state.commentValue}
+                                          onChange={this.handleInput}
+                                          style={{ margin: 8 }}
+                                          placeholder="Comment"
+                                          fullWidth
+                                          margin="normal"
+                                          InputLabelProps={{
+                                            shrink: true,
+                                          }}
+                                        />    
+                                        <Button variant="contained" color="primary" className={classes.button}>
                                         Send
                                         <Icon className={classes.rightIcon}>send</Icon>
-                                    </Button>
+                                        </Button>
+                                    </form>
                                 </Paper>
                             </Grid>
                         </Grid>
+                        
 
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={6} md={6} >
                             <Grid container>
                                 <Paper>
                                     <Grid item className={classes.item}>
+                                        <p>fd</p>
                                         <Typography variant="p" component="p" className={classes.fo}>
-                                            test
+                                            testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest
                                         </Typography>
+                                          <p>time</p>
                                     </Grid>
                                 </Paper>
+                            
                             </Grid>
                         </Grid>
 
