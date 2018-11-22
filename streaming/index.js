@@ -143,13 +143,13 @@ const getWatched = async (req, res, next) => {
 	for (var i = watched_films_rows.length - 1; i >= 0; i--) {
 		watched_films_mapped[watched_films_rows[i]['film_id']] = parseInt(watched_films_rows[i]['count']);
 	}
-	req.user.watched_films = watched_films_mapped;
+	req.user.watched = watched_films_mapped;
 
 	await db.end();
 	next();
 }
 
-app.all('*', userAuth);
+app.all('*', userAuth, getWatched);
 
 // ======================= put watched film by curent user in DB
 
@@ -168,7 +168,8 @@ app.get('/watched/:movieId', async (req, res) => {
 
 	try {
 		const response = await axios.get(url, { params });
-		const { imdb_id } = response.data;
+		var imdb_id = response.data['imdb_id'];
+		console.log(imdb_id);
 	} catch (e) {
 		console.error(e);
 		res.json({'success': false, 'error': 'failed while updating watched statistics'});
@@ -184,10 +185,10 @@ app.get('/watched/:movieId', async (req, res) => {
 	});
 
 	await db.connect()
-	const resultWatched = await db.query( "INSERT into history values ($1, $2, $3)", [userId, filmId, imdb_id]);
+	const resultWatched = await db.query( "INSERT into history values ($1, $2, $3)", [userId, movieId, imdb_id]);
 	await db.end();
 
-	res.json({'success': true, 'error': 'watched statistics was updated'});
+	res.json({'success': true, 'result': 'watched statistics was updated'});
 });
 
 
@@ -197,13 +198,16 @@ app.get('/popular_films', async (request, response) => {
 	// console.log(request.user);
 
 	// language: to request from api user settings
-	language = request.user.locale || 'en';
+	var language = request.user.locale || 'en';
 
 	// integer 1 - 1000
-	page = request.query.page || 1;
+	var page = parseInt(request.query.page) || 1;
+	var offset = (page - 1) * 20;
 
 	// desc or asc
-	order = request.query.order || 'desc';
+	var order = request.query.order == 'asc' ?  'asc' : 'desc';
+
+	var watched = request.user.watched;
 
 	const {Client}  = require('pg');
 
@@ -217,7 +221,8 @@ app.get('/popular_films', async (request, response) => {
 
 	await db.connect()
 
-	const res = await db.query('SELECT * from popular_films order by count ' + order + ' limit 20 offset ' + (page - 1) * 20 + ';');
+	const res = await db.query("SELECT film_id, imdb_id, COUNT(seen) FROM history GROUP BY film_id, imdb_id ORDER BY COUNT(seen) " + order + " OFFSET $1", [offset]);
+
 	await db.end()
 
 	var rows = res['rows'];
@@ -241,7 +246,7 @@ app.get('/popular_films', async (request, response) => {
 	for (var i = final_response.length - 1; i >= 0; i--) {
 		final_response[i]['poster_path'] = 'http://image.tmdb.org/t/p/w342' + final_response[i]['poster_path'];
 		final_response[i]['popular_films_count'] = rows[i]['count'];
-		final_response[i]['watched_films_count'] = request.user.watched_films[final_response[i]['imdb_id']] || 0 ;
+		final_response[i]['watched_films_count'] = watched[final_response[i]['id']] || 0 ;
 	}
 
 	response.send(final_response);
@@ -270,6 +275,8 @@ app.get('/films', (req, res, next) => {
 	let params = {};
 	const filters = req.query;
 
+	var watched = req.user.watched;
+
 	if (filters.query) {
 		url += "/search/movie";
 		filters.query = encodeURIComponent(filters.query);
@@ -290,6 +297,7 @@ app.get('/films', (req, res, next) => {
 		data.results.forEach(movie => {
 			if (movie.poster_path) {
 				movie.poster_path = 'http://image.tmdb.org/t/p/w342' + movie.poster_path;
+				movie.watched_films_count = watched[movie.id] || 0;
 			}
 		});
 		res.json({ 'success': true, 'movies': data });
@@ -309,12 +317,15 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 		append_to_response: "credits"
 	};
 
+	var watched = req.user.watched;
+
 	console.log(`Making a request (${url}) with params`, params);
 
 	try {
 		const response = await axios.get(url, { params });
 		const { imdb_id, poster_path } = response.data;
 		response.data.poster_path = 'http://image.tmdb.org/t/p/w342' + poster_path;
+		response.data.watched_films_count = watched[movieId] || 0;
 		req.movie = { imdb_id, movie_details_1: response.data };
 		next();
 	} catch (e) {
