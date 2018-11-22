@@ -8,8 +8,6 @@ import { TextField, Typography, CircularProgress, FilledInput, InputLabel, Icon,
 import ReactPlayer from 'react-player';
 import Plyr from 'react-plyr';
 
-
-
 const styles = theme => ({
     layout: {
         marginLeft: 'auto',
@@ -27,6 +25,10 @@ const styles = theme => ({
     },
     item : {
         margin: theme.spacing.unit
+    },
+    playerContainer: {
+        minWidth: '100%',
+        padding: theme.spacing.unit
     },
     media: {
         width: "100%",
@@ -47,6 +49,10 @@ const styles = theme => ({
   },
   fo: {
     wordBreak: "break-all"
+  },
+  reactPlayer: {
+      padding: 0,
+      margin: 0
   }
 });
 
@@ -86,15 +92,31 @@ class Movie extends Component {
         const { movie } = MovieStore;
 
         return (
-            <Plyr
-                type="video"
-                title={movie.title}
-                poster={`http://image.tmdb.org/t/p/w500/${movie.backdrop_path}`}
-                sources={[
-                    { src: `http://localhost:3200/film/${movie.imdb_id}/720`, type: 'video/mp4', size: "720" },
-                    { src: `http://localhost:3200/film/${movie.imdb_id}/1080`, type: 'video/mp4', size: "1080" }
-                ]}
-            />
+            <Grid item xs={12} md={6}>
+                <Paper square className={classes.playerContainer}>
+                    <ReactPlayer
+                        controls
+                        className={classes.reactPlayer}
+                        url={`http://localhost:3200/film/${movie.imdb_id}/720`}
+                        // config={{
+                        //     file: {
+                        //         attributes: {
+                        //             crossOrigin: 'true'
+                        //         },
+                        //         tracks: [
+                        //             {
+                        //                 kind: 'subtitles',
+                        //                 src: `http://localhost:3200/subtitles/${movie.imdb_id}/en`,
+                        //                 srcLang: 'en'
+                        //             }
+                        //         ]
+                        //     }
+                        // }}
+                        width='100%'
+                        height='100%'
+                    />
+                </Paper>
+            </Grid>
         )
     }
 
@@ -147,15 +169,7 @@ class Movie extends Component {
                             </Paper>
                         </Grid>
 
-                        <Grid item xs={6} md={6}>
-                            <Grid container>
-                                <Paper>
-                                    <Grid item className={classes.item}>
-                                        { this.renderPlayer() }
-                                    </Grid>
-                                </Paper>
-                            </Grid>
-                        </Grid>
+                        { this.renderPlayer() }
 
                         <Grid item xs={6} md={6} >
                             <Grid container>
