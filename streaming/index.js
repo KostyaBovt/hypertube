@@ -357,124 +357,219 @@ var walkSync = function(dir, filelist) {
 
 const walk = require('walk');
 const pump = require('pump');
+const torrentEngineManager = require('./torrentEngineManager');
 
-app.get('/film/:id/:resolution', async (req, res, next) => {
+app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 	const { id, resolution } = req.params;
+	const { range } = req.headers;
 
-	const response = await axios.get(`https://tv-v2.api-fetch.website/movie/${id}`);
-	console.log('response', response.data);
+	console.log("streaming request", req.params, range);
 
-	const { torrents } = response.data;
-	if (torrents) {
-		const { url: magnetLink } = torrents['en'][`${resolution}p`];
-
-		const torrentEngine = torrentStream(magnetLink);
-
-        torrentEngine.on('ready', () => {
-
-			torrentEngine.files.forEach(file => {
-				const extension = file.name.split('.').pop();
-				const fileSize = file.length;
-
-				if (extension === 'mp4') {
-					const { range } = req.headers;
-					console.log('range', range);
-
-					if (range) {
-						const parts = range.replace(/bytes=/, "").split("-")
-						const start = parseInt(parts[0], 10)
-						const end = parts[1] 
-							? parseInt(parts[1], 10)
-							: fileSize - 1
-						const chunkSize = (end - start) + 1
-						const head = {
-							'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-							'Accept-Ranges': 'bytes',
-							'Content-Length': chunkSize,
-							'Content-Type': 'video/mp4',
-						}
-						res.writeHead(206, head);
-						const stream = file.createReadStream({ start, end });
-						pump(stream, res);
-					} else {
-						const head = {
-							'Content-Length': fileSize,
-							'Content-Type': 'video/mp4',
-						}
-						res.writeHead(200, head);
-						const stream = file.createReadStream();
-						pump(stream, res);
-					}
-
-				}
-			})
-		});
-	} else {
-		res.sendStatus(404);
-	}
-}, async (req, res, next) => {
-	const { id, resolution } = req.params;
-
-	const options = {
-		followLinks: false
-	};
-	const walker = walk.walk(`/tmp/videos/`, options);
-
-	walker.on("file", (root, fileStats, nextFile) => {
-		const extension = fileStats.name.split('.').pop();
-		console.log(`Current file [${fileStats.name}], extension [${extension}]`);
-
-		if (extension === "mp4") {
-			// File exists!
-		}
-
-		nextFile();
-	});
-	
-	walker.on("errors", (root, nodeStatsArray, nextFile) => {
-		console.log('walker error!');
-		console.log(root, nodeStatsArray);
-
-		nextFile();
-	});
-	
-	walker.on("end", function () {
-		console.log("all done");
-	});
-
-	next();
-}, async (req, res) => {
-	const path = '/tmp/videos/tt5463162/1080p/deadpool.mp4';
-	const stat = fs.statSync(path);
-
-	const fileSize = stat.size;
-	const range = req.headers.range;
-	console.log('range', range);
+	req._streaming = {};
+	req._streaming.movie = { id, resolution };
 
 	if (range) {
-		const parts = range.replace(/bytes=/, "").split("-")
-		const start = parseInt(parts[0], 10)
-		const end = parts[1] 
-			? parseInt(parts[1], 10)
-			: fileSize-1
-		const chunksize = (end - start) + 1
-		const file = fs.createReadStream(path, {start, end})
-		const head = {
-			'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-			'Accept-Ranges': 'bytes',
-			'Content-Length': chunksize,
-			'Content-Type': 'video/mp4',
-		}
-		res.writeHead(206, head);
-		file.pipe(res);
+		const parts = range.replace(/bytes=/, "").split("-");
+		req._streaming.range = {
+			start: parseInt(parts[0], 10),
+			end: parts[1] ? parseInt(parts[1], 10) : undefined
+		};
 	} else {
-		const head = {
-			'Content-Length': fileSize,
-			'Content-Type': 'video/mp4',
-		}
-		res.writeHead(200, head);
-		fs.createReadStream(path).pipe(res);
+		req._streaming.range = {
+			start: 0,
+			end: undefined
+		};
 	}
+
+	next();
+}, async (req, res, next) => { // Checking if this movie can be downloaded
+	const { id, resolution } = req._streaming.movie;
+
+	const response = await axios.get(`https://tv-v2.api-fetch.website/movie/${id}`);
+	// console.log('response', response.data.torrents);
+
+	const { torrents } = response.data;
+	if (!torrents) { // There is no torrent links for this movie, so it can't be downloaded
+		console.log("There is no torrent links for this movie, so it can't be downloaded");
+		return res.sendStatus(404); // Sending response 404 and not going further
+	} else {
+		const { url, size } = torrents['en'][`${resolution}p`];
+		req._streaming.movie.magnetLink = url;
+	}
+
+	next();
+}, (req, res, next) => { // Checking if directory for this movie is already created
+	const { id } = req._streaming.movie;
+	const movieDirPath = `/tmp/videos/${id}`;
+
+	fs.access(movieDirPath, fs.constants.R_OK, (err) => {
+		if (!err) {
+			console.log(`Directory for movie ${id} already exists`);
+			next();
+		} else if (err && err.errno === -2) { // Dir not exists
+			console.log(`Creating directory for movie ${id}...`);
+			fs.mkdir(movieDirPath, (err) => {
+				if (err) {
+					console.error(err);
+					res.sendStatus(500);
+				} else {
+					console.log('Directory created!');
+					next();
+				}
+			});
+		} else {
+			console.error(err);
+			res.sendStatus(500);
+		}
+	});
+}, (req, res, next) => { // Checking if this resolution is already downloaded
+	const { id, resolution } = req._streaming.movie;
+	const movieFilePath = `/tmp/videos/${id}/${resolution}.mp4`;
+
+	req._streaming.movie.file = {
+		name: `${resolution}.mp4`,
+		path: movieFilePath,
+		exists: false
+	}
+
+	fs.stat(movieFilePath, (err, fileStats) => {
+		if (!err) {
+			req._streaming.movie.file.size = fileStats.size;
+			req._streaming.movie.file.exists = true;
+			console.log(`Resoulution ${resolution} already exists for movie ${id}`);
+			next();
+		} else if (err && err.errno === -2) {
+			console.log(`Resoulution ${resolution} not exists yet for movie ${id}`);
+			next();
+		} else {
+			console.error(e);
+			return res.sendStatus(500);
+		}
+	});
+}, (req, res, next) => {
+	const { movie } = req._streaming;
+
+	if (movie.file.exists) {
+		next();
+	} else {
+		const engineId = `${movie.id}-${movie.resolution}`;
+		console.log(`Creating new ${engineId} engine...`);
+		torrentEngineManager.createNewEngine(engineId, movie.magnetLink, (engine) => {
+			console.log(`${engineId} engine created!`);
+			const torrentFile = torrentEngineManager.getMovieFileByEngineId(engineId);
+
+			
+			fs.readFile(`/tmp/videos/${movie.id}/${movie.resolution}.json`, 'utf8', (err, data) => {
+				if (err && err.errno !== -2) {
+					console.log(`Unexpected error while reading stat file for movie ${movie.id}`);
+					console.error(err);
+					res.sendStatus(500);
+					return;
+				}
+				
+				if (err && err.errno === -2) {
+					data = {};
+				} else {
+					data = JSON.parse(data);
+				}
+				
+
+				data[movie.resolution] = { fullSize: torrentFile.length };
+				console.log('writing data', data);
+				const stat = JSON.stringify(data);
+
+				fs.writeFile(`/tmp/videos/${movie.id}/${movie.resolution}.json`, stat, (err) => {
+					if (err) {
+						console.log(`Unexpected error while writing stat file for movie ${movie.id}`);
+						console.error(err);
+						res.sendStatus(500);
+						return;
+					}
+					
+					const torrentFileReadStream = torrentFile.createReadStream();
+					const localFileWriteStream = fs.createWriteStream(movie.file.path);
+		
+					pump(torrentFileReadStream, localFileWriteStream, (err) => {
+						if (err) {
+							console.log(`${engineId} download pipe closed with error: `);
+							console.error(err);
+						} else {
+							console.log(`${engineId} download pipe closed, movie successfully downloaded!`);
+						}
+		
+						torrentEngineManager.destroyEngine(engineId, () => {
+							console.log(`Engine ${engineId} was destroyed!`);
+						});
+					});
+					movie.file.size = 0;
+		
+					engine.on('idle', () => {
+						console.log(`Engine ${engineId} idle ...`);
+					});
+		
+					next();
+				});
+			});
+		});
+	}
+}, (req, res, next) => {
+	const { movie } = req._streaming;
+
+	fs.readFile(`/tmp/videos/${movie.id}/${movie.resolution}.json`, 'utf8', (err, data) => {
+		if (err) {
+			console.log(`Error reading stat file for movie ${movie.id}`);
+			console.error(err);
+			res.sendStatus(500);
+		} else {
+			const stat = JSON.parse(data);
+			console.log(`Stat file for movie ${movie.id} [${movie.resolution}]`, stat[movie.resolution]);
+			req._streaming.movie.fullSize = stat[movie.resolution].fullSize;
+			next();
+		}
+	});
+}, (req, res, next) => {
+	const { movie } = req._streaming;
+	
+	if (movie.file.size !== movie.fullSize) { // File is still downloading
+		console.log(`Movie full size ${movie.fullSize}, local file size ${movie.file.size} ...`);
+		console.log('File is still downloading so stream source is torrent');
+		
+		const engineId = `${movie.id}-${movie.resolution}`;
+		const torrentFile = torrentEngineManager.getMovieFileByEngineId(engineId);
+
+		req._streaming.range.end = req._streaming.range.end || torrentFile.length - 1;
+		req._streaming.source = {
+			readStream: torrentFile.createReadStream(req._streaming.range),
+			size: torrentFile.length
+		}
+	} else { // File is fully downloaded
+		console.log('File is fully downloaded so stream source is local file');
+		req._streaming.range.end = req._streaming.range.end || movie.file.size - 1;
+		req._streaming.source = {
+			readStream: fs.createReadStream(movie.file.path, req._streaming.range),
+			size: movie.file.size
+		}
+	}
+
+	next();
+}, (req, res) => {
+	const { movie, source, range } = req._streaming;
+
+	const chunkSize = (range.end - range.start) + 1
+	const head = {
+		'Content-Range': `bytes ${range.start}-${range.end}/${source.size}`,
+		'Accept-Ranges': 'bytes',
+		'Content-Length': chunkSize,
+		'Content-Type': 'video/mp4',
+	}
+
+	res.writeHead(206, head);
+	console.log('Starting stream...');
+
+	pump(source.readStream, res, (err) => {
+		console.log(`Movie streaming pipe closed`);
+		// console.error(err);
+	});
 });
 
 app.get('/film2', async (request, response) => {
@@ -487,7 +582,7 @@ app.get('/film2', async (request, response) => {
 
 	  const path_vtt = '/tmp/videos/' + imdb_id + '/subs/' + name + '.vtt';
 
-	  // axios image download with response type "stream"
+	  // axios download with response type "stream"
 	  const response = await axios({
 	    method: 'GET',
 	    url: url,
@@ -745,9 +840,9 @@ app.get('/film2', async (request, response) => {
 app.listen(port, () => {
 	console.log(`server is listening on ${port}`);
 
-	fs.access('/tmp/test', fs.constants.F_OK, (err) => {
+	fs.access('/tmp/videos', fs.constants.F_OK, (err) => {
 		if (err) { // Directory does not exsist
-			return fs.mkdir('/tmp/test', (err) => {
+			return fs.mkdir('/tmp/videos', (err) => {
 				if (err) {
 					console.log('error while creating /tmp/videos dir');
 					return;
