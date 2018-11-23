@@ -69,7 +69,8 @@ setTimeout(async function runCleaner() {
 
 	await db.connect()
 
-	const result_to_delete = await db.query( "SELECT * from popular_films where  NOW() - last_seen > INTERVAL '30 days'");
+	const result_to_delete = await db.query( "SELECT imdb_id, MAX(seen) FROM history GROUP BY imdb_id HAVING NOW() - MAX(seen) > INTERVAL '30 days'");
+
 	var params = [];
 	for (var i = result_to_delete.rows.length - 1; i >= 0; i--) {
 		console.log('now to delete this film :');
@@ -83,15 +84,13 @@ setTimeout(async function runCleaner() {
 			
 		}
 	}
-	if (result_to_delete.rows.length > 0) {
-		const result_to_delete2 = await db.query( "DELETE from popular_films where imdb_id = ANY($1) ", [params]);
-	} else {
+	if (result_to_delete.rows.length == 0) {
 		console.log('nothing to clean');
 	}
 	await db.end()
 	
-	setTimeout(runCleaner, 1000 * 60 * 10);
-}, 5000);
+	setTimeout(runCleaner, 1000 * 60 * 60);
+}, 3000);
 
 // ============================== function to validate user
 

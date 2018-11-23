@@ -1,1 +1,0 @@
-ALTER TABLE popular_films ADD last_seen timestamp(0) DEFAULT now() NOT NULL;

@@ -93,18 +93,6 @@ ALTER TABLE public.comments_id_seq OWNER TO "Hypertube";
 ALTER SEQUENCE public.comments_id_seq OWNED BY public.comments.id;
 
 
---
--- Name: popular_films; Type: TABLE; Schema: public; Owner: Hypertube
---
-
-CREATE TABLE public.popular_films (
-    imdb_id character varying NOT NULL,
-    count integer DEFAULT 0 NOT NULL,
-    last_seen timestamp(0) DEFAULT now() NOT NULL
-);
-
-
-ALTER TABLE public.popular_films OWNER TO "Hypertube";
 
 --
 -- Name: users; Type: TABLE; Schema: public; Owner: Hypertube
@@ -173,14 +161,6 @@ COPY public.comments (id, user_id, imdb_id, text, dt) FROM stdin;
 
 
 --
--- Data for Name: popular_films; Type: TABLE DATA; Schema: public; Owner: Hypertube
---
-
-COPY public.popular_films (imdb_id, count) FROM stdin;
-\.
-
-
---
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: Hypertube
 --
 
@@ -209,13 +189,6 @@ SELECT pg_catalog.setval('public.users_id_seq', 1, false);
 ALTER TABLE ONLY public.comments
     ADD CONSTRAINT comments_pk PRIMARY KEY (id);
 
-
---
--- Name: popular_films popular_films_pk; Type: CONSTRAINT; Schema: public; Owner: Hypertube
---
-
-ALTER TABLE ONLY public.popular_films
-    ADD CONSTRAINT popular_films_pk PRIMARY KEY (imdb_id);
 
 
 --
@@ -259,6 +232,7 @@ CREATE UNIQUE INDEX users_uname_idx ON public.users USING btree (uname);
 DROP TABLE IF EXISTS public.history;
 CREATE TABLE public.history (
     user_id integer NOT NULL,
+    film_id integer NOT NULL,
     imdb_id character varying NOT NULL,
     seen timestamp(0) DEFAULT now() NOT NULL
 );
