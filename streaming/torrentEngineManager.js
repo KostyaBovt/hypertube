@@ -53,7 +53,7 @@ const getMovieFileByEngineId = (id) => {
 
     for (let i = 0; i !== files.length; i++) {
         const extension = files[i].name.split('.').pop();
-        if (extension === 'mp4') {
+        if (extension === 'mp4' || extension === 'mkv') {
             return files[i];
         }
     }
