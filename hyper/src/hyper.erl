@@ -87,8 +87,7 @@ update_locale(#{<<"iss">> := UId} = UData, NewLocale) ->
 
 -spec create_comment(UId::non_neg_integer(), ImdbId::binary(), Text::binary()) -> hyper_http:handler_ret().
 create_comment(UId, ImdbId, Text) ->
-    true = hyper_db:create_comment(UId, ImdbId, Text),
-    ok.
+    {ok, _} = hyper_db:create_comment(UId, ImdbId, Text).
 
 -spec get_comments(Qs::proplists:proplist()) -> hyper_http:handler_ret().
 get_comments(Qs) ->

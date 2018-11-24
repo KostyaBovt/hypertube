@@ -111,8 +111,6 @@ Vagrant.configure("2") do |config|
         sudo su postgres -c "createuser vagrant -s"
         sudo su vagrant -c  "createdb"
         sudo su vagrant -c  "psql < /vagrant/Hypertube.sql"
-        cd /vagrant/hyper
-        make
 
     SHELL
 

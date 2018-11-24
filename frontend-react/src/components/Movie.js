@@ -61,15 +61,17 @@ class Movie extends Component {
     constructor(props) {
         super(props);
         this.state = {
+            movieId: this.props.match.params.id,
             commentValue: '',
         };
-        this.renderPlayer = this.renderPlayer.bind(this);
         this.handleInput = this.handleInput.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
     }
 
     componentDidMount() {
-        this.props.MovieStore.fetchMovieDetails(this.props.match.params.id);
-        this.props.MovieStore.fetchComments(this.props.match.params.id);
+        const { movieId } = this.state;
+        this.props.MovieStore.fetchMovieDetails(movieId);
+        this.props.MovieStore.fetchComments(movieId);
     }
 
     componentWillUnmount() {
@@ -83,7 +85,10 @@ class Movie extends Component {
     }
     handleSubmit(e) {
         e.preventDefault();
-        this.props.MovieStore.postComment(this.props.match.params.id, this.state.commentValue);
+        this.props.MovieStore.postComment(this.state.movieId, this.state.commentValue);
+        this.setState({
+            commentValue: ''
+        });
     }
 
     renderPlayer(){
@@ -122,7 +127,7 @@ class Movie extends Component {
 
     render() {
         const { classes } = this.props;
-        const { movie } = this.props.MovieStore;
+        const { movie, comments } = this.props.MovieStore;
 
         if (movie === undefined) {
             return <CircularProgress />;
@@ -186,7 +191,11 @@ class Movie extends Component {
                                             shrink: true,
                                           }}
                                         />    
-                                        <Button variant="contained" color="primary" className={classes.button}>
+                                        <Button
+                                            onClick={this.handleSubmit}
+                                            variant="contained"
+                                            color="primary"
+                                            className={classes.button}>
                                         Send
                                         <Icon className={classes.rightIcon}>send</Icon>
                                         </Button>
@@ -199,15 +208,19 @@ class Movie extends Component {
                         <Grid item xs={6} md={6} >
                             <Grid container>
                                 <Paper>
-                                    <Grid item className={classes.item}>
-                                        <p>fd</p>
-                                        <Typography variant="p" component="p" className={classes.fo}>
-                                            testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest
-                                        </Typography>
-                                          <p>time</p>
-                                    </Grid>
+                                    { comments.map( c => (
+                                        <Grid item className={classes.item}>
+                                            <p>{ c.uname }</p>
+                                            <Typography
+                                                variant="p"
+                                                component="p"
+                                                className={classes.fo}>
+                                                { c.text }
+                                            </Typography>
+                                            <p>{ c.dt }</p>
+                                        </Grid>
+                                    ))}
                                 </Paper>
-                            
                             </Grid>
                         </Grid>
 

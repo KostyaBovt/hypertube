@@ -18,6 +18,10 @@ class MovieStore {
         this.comments = comments;
     }
 
+    @action addComment(comment) {
+        this.comments.unshift(comment);
+    }
+
     @action setStream(stream) {
         this.stream = stream;
     }
@@ -76,6 +80,7 @@ class MovieStore {
             console.error(e);
         }
     }
+
     async postComment(movieId, text) { 
         const url = `http://localhost:8080/api/comments`;
         const body = {imdb_id: movieId, text: text};
@@ -85,7 +90,7 @@ class MovieStore {
                 withCredentials: true,
             });
             if (response.data.status === 'ok') {
-                this.setComments(response.data.payload);
+                this.addComment(response.data.payload);
                 console.log(response.data.payload);
             }
         } catch (e) {
