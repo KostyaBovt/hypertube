@@ -1,14 +1,9 @@
 const express 	= require('express');
 const fs 		= require('fs');
-const needle 	= require('needle');
 const axios 	= require('axios');
-const rax 		= require('retry-axios');
-var Client 		= require('node-torrent');
-var Transmission = require('transmission');
-var pather 		= require('path');
 const srt2vtt = require('srt-to-vtt');
-var cookieParser = require('cookie-parser')
-var rimraf = require('rimraf');
+const cookieParser = require('cookie-parser')
+const rimraf = require('rimraf');
 
 const OpenSubtitles = require('opensubtitles-api');
 const OS = new OpenSubtitles({
@@ -18,8 +13,7 @@ const OS = new OpenSubtitles({
 	ssl: true
 });
 
-var cors = require('cors')
-var torrentStream = require('torrent-stream');
+const cors = require('cors')
 
 const API_KEY = 'ec8920bdb431590b48d7b0205e7d6a49';  // API key for themoviedb.org
 const OMDB_API_KEY = '651e2d43';
@@ -36,11 +30,6 @@ app.use((req, res, next) => {
 		'Access-Control-Allow-Credentials':		'true',
 	});
 	next();
-});
-
-app.get('/test', async (request, response) => {
-	console.log(request.cookies);
-	response.send('ok');
 });
 
 // ============================== this is check every 10 minutes if we need to clean old(30 days unused) films
@@ -335,26 +324,6 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 	}
 });
 
-
-// ============================== start download and return links to movie and subtitles files
-
-var walkSync = function(dir, filelist) {
-      var path = path || require('path');
-      var fs = fs || require('fs'),
-          files = fs.readdirSync(dir);
-      filelist = filelist || [];
-      files.forEach(function(file) {
-          if (fs.statSync(path.join(dir, file)).isDirectory()) {
-              filelist = walkSync(path.join(dir, file), filelist);
-          }
-          else {
-              filelist.push(path.join(dir, file));
-          }
-      });
-      return filelist;
-};
-
-const walk = require('walk');
 const pump = require('pump');
 const torrentEngineManager = require('./torrentEngineManager');
 
@@ -740,271 +709,6 @@ app.get('/subtitles/:imdbid/:resolution/:language', (req, res, next) => { // Che
 			});
 		}
 	});
-});
-
-app.get('/film2', async (request, response) => {
-	console.log(request.user);
-
-	// language: to request from api user settings
-	language = request.user.locale || 'en';
-
-	async function downloadSubtitles_sub(url, name) {
-
-	  const path_vtt = '/tmp/videos/' + imdb_id + '/subs/' + name + '.vtt';
-
-	  // axios download with response type "stream"
-	  const response = await axios({
-	    method: 'GET',
-	    url: url,
-	    responseType: 'stream'
-	  })
-
-	  // pipe the result stream into a file on disc
-	  // response.data.pipe(fs.createWriteStream(path_srt));
-	  response.data.pipe(srt2vtt()).pipe(fs.createWriteStream(path_vtt));
-
-	  // return a promise and resolve when download finishes
-	  return new Promise((resolve, reject) => {
-	    response.data.on('end', () => {
-	      resolve()
-	    })
-
-	    response.data.on('error', () => {
-	      reject()
-	    })
-	  })
-
-	}
-
-	imdb_id = request.query.imdb_id;
-	resolution = request.query.resolution;
-
-	var return_object = {};
-
-	if (!imdb_id || !resolution || !(resolution =='720p' || resolution == '1080p')) {
-	    response.send({success: false, error: "invalid query parameters"});
-	    return;
-	}
-
-	const { Client }  = require('pg');
-
-	const db = new Client({
-	  user: 'Hypertube',
-	  host: 'localhost',
-	  database: 'Hypertube',
-	  password: '12345',
-	  port: 5433,
-	});
-
-
-	await db.connect()
-
-	const res = await db.query("SELECT * from popular_films where imdb_id = $1;", [imdb_id]);
-	if (!res.rowCount) {
-		var sql_update = "insert into popular_films values($1, 1, DEFAULT)";
-		var params = [imdb_id];
-	} else {
-		var sql_update = "update popular_films set count=$1, last_seen=DEFAULT where imdb_id = $2;";
-		var params = [parseInt(res.rows[0]['count']) + 1, imdb_id];
-	}
-
-	const res2 = await db.query(sql_update, params);
-	// const res3 = await db.query("insert into history values($1, $2, DEFAULT)", [request.user.id, imdb_id]);
-	await db.end()
-
-
-
-	var dir_path = "/tmp/videos/" + imdb_id + "/" + resolution;
-	var dir_path_subs = "/tmp/videos/" + imdb_id + "/subs";
-
-	if (fs.existsSync(dir_path)) {
-
-		var files_sub = walkSync(dir_path_subs);
-		var return_files_sub = {};
-
-		for (var i = files_sub.length - 1; i >= 0; i--) {
-			file_name_end = files_sub[i].substring(files_sub[i].length - 7, files_sub[i].length);
-			console.log('we have file name end: ');
-			console.log(file_name_end);
-	        if (file_name_end == '_ru.vtt') {
-	        	return_files_sub['ru'] = "http://localhost:3200" + files_sub[i].substring(4, files_sub[i].length);
-	        	console.log('we have return_files_sub ru : ' + return_files_sub['ru']);
-	        }
-	        if (file_name_end == '_en.vtt') {
-	        	return_files_sub['en'] = "http://localhost:3200" + files_sub[i].substring(4, files_sub[i].length);
-	        	console.log('we have return_files_sub en : ' + return_files_sub['en']);
-	        }	        
-		}
-
-		var files = walkSync(dir_path);
-		var return_file = '';
-
-		for (var i = files.length - 1; i >= 0; i--) {
-			ext = pather.extname(files[i]);
-	        if (ext == '.mkv' || ext == '.mp4') {
-	        	return_file = files[i];
-	        }
-		}
-
-
-
-	    if (return_file) {
-	    	return_object['movie_link'] = "http://localhost:3200" + return_file.substring(4, return_file.length);
-	    	return_object['subs'] = return_files_sub;
-	        console.log("will return link: http://localhost:3200" + return_file.substring(4, return_file.length));
-		    return_object['success'] = true;
-		    response.send(return_object);
-		    return;	        
-	    } else {
-		    response.send({success: false, error: "no video files aviable for this film"});
-		    return;
-	    }
-
-	}
-
-
-    if (!return_object['movie_link']) {
-
-	    if (!fs.existsSync('/tmp/videos')) {
-	        fs.mkdirSync('/tmp/videos');
-	    }
-
-	    if (!fs.existsSync('/tmp/videos/' + imdb_id)) {
-	        fs.mkdirSync('/tmp/videos/' + imdb_id);
-	    }
-
-	    if (!fs.existsSync(dir_path)) {
-	        fs.mkdirSync(dir_path);
-	    }
-
-	    if (!fs.existsSync(dir_path_subs)) {
-	        fs.mkdirSync(dir_path_subs);
-	        var to_down_subs = true;
-	    } else {
-	    	var to_down_subs = false;
-	    }
-
-	    // download subtitles first:
-		if (to_down_subs) {
-			// down_subs(imdb_id);
-			var result = await OS.search({
-				imdbid: imdb_id
-			})
-
-			console.log('we have result on OS search: ');
-			console.log(result);
-
-			var locales = ['ru', 'en'];
-
-			var arrayLength = locales.length;
-			for (var i = 0; i < arrayLength; i++) {
-				if (result[locales[i]]) {
-					var url  = result[locales[i]]['url'];
-					var name = imdb_id + '_' + locales[i];
-					await downloadSubtitles_sub(url, imdb_id, name);
-					console.log('downloaded subs: ' + name);
-					var list_files = walkSync(dir_path_subs);
-					console.log('we have such subs files:');
-					console.log(list_files);
-				}
-			}
-		}
-
-
-    	var url2 = 'https://tv-v2.api-fetch.website/movie/' + imdb_id;
-		try {
-			console.log('MAKING API REQUEST2: ' + url2);
-			var films_res2 = await axios({
-			  url: url2,
-			  raxConfig: {
-			    // Retry 3 times on requests that return a response (500, etc) before giving up.  Defaults to 3.
-			    retry: 2,
-
-			    // Retry twice on errors that don't return a response (ENOTFOUND, ETIMEDOUT, etc).
-			    noResponseRetries: 2,
-			 
-			    // Milliseconds to delay at first.  Defaults to 100.
-			    retryDelay: 100,
-			 
-			    // HTTP methods to automatically retry.  Defaults to:
-			    // ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT']
-			    httpMethodsToRetry: ['GET', 'HEAD', 'OPTIONS', 'DELETE', 'PUT'],
-			 
-			    // The response status codes to retry.  Supports a double
-			    // array with a list of ranges.  Defaults to:
-			    // [[100, 199], [429, 429], [500, 599]]
-			    httpStatusCodesToRetry: [[100, 199], [429, 429], [500, 599]],
-			 
-			    // If you are using a non static instance of Axios you need
-			    // to pass that instance here (const ax = axios.create())
-			    // instance: ax,
-			 
-			    // You can detect when a retry is happening, and figure out how many
-			    // retry attempts have been made
-			    onRetryAttempt: (err) => {
-			      const cfg = rax.getConfig(err);
-			      console.log(`Retry attempt (movie list) #${cfg.currentRetryAttempt}`);
-			    }
-			  }
-			});
-		} catch(err) {
-			// console.log(err);
-			response.send({'success': false, 'error': 'api2 failed'});
-			return;
-		}
-
-		if (!films_res2.data) {
-			response.send({'success': false, 'error': 'no torrents for this film was found'});
-			return;
-		}
-
-		var magnet = films_res2.data['torrents']['en'][resolution]['url'];
-
-		var engine = torrentStream(magnet, {path: dir_path});
-	    var return_file = '';
-
-
-		engine.on('ready', function() {
-
-			for (var i = engine.files.length - 1; i >= 0; i--) {
-		        ext = pather.extname(engine.files[i].name);
-		        if (ext == '.mkv' || ext == '.mp4') {
-					console.log('Start download filename:', engine.files[i].name);
-					var stream = engine.files[i].createReadStream();
-					var return_file_path = engine.files[i].path;
-
-
-					stream.on('readable', function() {
-
-						var files_sub = walkSync(dir_path_subs);
-						var return_files_sub = {};
-
-						for (var i = files_sub.length - 1; i >= 0; i--) {
-							file_name_end = files_sub[i].substring(files_sub[i].length - 7, files_sub[i].length);
-					        if (file_name_end == '_ru.vtt') {
-					        	return_files_sub['ru'] = "http://localhost:3200" + files_sub[i].substring(4, files_sub[i].length);
-					        }
-					        if (file_name_end == '_en.vtt') {
-					        	return_files_sub['en'] = "http://localhost:3200" + files_sub[i].substring(4, files_sub[i].length);
-					        }	        
-						}
-
-
-						return_object['movie_link'] = "http://localhost:3200/videos/" + imdb_id + '/' + resolution + "/" + return_file_path;
-				    	return_object['success'] = true;
-				    	return_object['subs'] = return_files_sub;
-					    response.send(return_object);
-					})
-				}
-			}
-
-		});
-
-	    engine.on('idle', () => {
-	    	console.log('finished download');
-	    });
-    }
-
 });
 
 app.listen(port, () => {

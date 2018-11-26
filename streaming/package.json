@@ -8,18 +8,13 @@
     "cookie-parser": "^1.4.3",
     "cors": "^2.8.4",
     "express": "^4.16.4",
-    "needle": "^2.2.4",
-    "node-torrent": "^0.2.1",
     "nodemon": "^1.18.6",
     "opensubtitles-api": "^4.1.0",
     "pg": "^7.6.0",
     "pump": "^3.0.0",
-    "retry-axios": "^0.3.2",
     "rimraf": "^2.6.2",
     "srt-to-vtt": "^1.1.3",
-    "torrent-stream": "^1.1.0",
-    "transmission": "^0.4.9",
-    "walk": "^2.3.14"
+    "torrent-stream": "^1.1.0"
   },
   "devDependencies": {},
   "scripts": {
