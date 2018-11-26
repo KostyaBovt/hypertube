@@ -18,11 +18,6 @@ const OS = new OpenSubtitles({
 	ssl: true
 });
 
-// the most trashful code you have ever seen in your life...
-// dont try it at home
-// to test: tt0078788
-
-
 var cors = require('cors')
 var torrentStream = require('torrent-stream');
 
@@ -34,12 +29,6 @@ const port = 3200;
 const app = express();
 app.use(cors());
 app.use(cookieParser());
-
-app.use(express.static(pather.join(__dirname, 'public')));
-app.use(express.static('public'));
-app.use('/public', express.static(pather.join(__dirname, 'public')));
-
-app.use('/videos', express.static('/tmp/videos'));
 
 app.use((req, res, next) => {
 	res.set({
@@ -396,7 +385,7 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 	const { id, resolution } = req._streaming.movie;
 
 	const response = await axios.get(`https://tv-v2.api-fetch.website/movie/${id}`);
-	// console.log('response', response.data.torrents);
+	console.log('response', response.data.torrents);
 
 	const { torrents } = response.data;
 	if (!torrents) { // There is no torrent links for this movie, so it can't be downloaded
@@ -434,10 +423,10 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 	});
 }, (req, res, next) => { // Checking if this resolution is already downloaded
 	const { id, resolution } = req._streaming.movie;
-	const movieFilePath = `/tmp/videos/${id}/${resolution}.mp4`;
+	const movieFilePath = `/tmp/videos/${id}/${resolution}`;
 
 	req._streaming.movie.file = {
-		name: `${resolution}.mp4`,
+		name: `${resolution}`,
 		path: movieFilePath,
 		exists: false
 	}
@@ -482,9 +471,14 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 				} else {
 					data = JSON.parse(data);
 				}
-				
 
-				data[movie.resolution] = { fullSize: torrentFile.length };
+				data = {
+					originalName: torrentFile.name,
+					extension: torrentFile.name.split('.').pop(),
+					path: movie.file.path,
+					fullSize: torrentFile.length
+				};
+
 				console.log('writing data', data);
 				const stat = JSON.stringify(data);
 
@@ -511,6 +505,7 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 							console.log(`Engine ${engineId} was destroyed!`);
 						});
 					});
+
 					movie.file.size = 0;
 		
 					engine.on('idle', () => {
@@ -532,8 +527,9 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 			res.sendStatus(500);
 		} else {
 			const stat = JSON.parse(data);
-			console.log(`Stat file for movie ${movie.id} [${movie.resolution}]`, stat[movie.resolution]);
-			req._streaming.movie.fullSize = stat[movie.resolution].fullSize;
+			console.log(`Stat file for movie ${movie.id}[${movie.resolution}]`, stat);
+			req._streaming.movie.fullSize = stat.fullSize;
+			req._streaming.movie.file.extension = stat.extension;
 			next();
 		}
 	});
@@ -570,7 +566,7 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 		'Content-Range': `bytes ${range.start}-${range.end}/${source.size}`,
 		'Accept-Ranges': 'bytes',
 		'Content-Length': chunkSize,
-		'Content-Type': 'video/mp4',
+		'Content-Type': `video/${movie.file.extension}`,
 	}
 
 	res.writeHead(206, head);
@@ -579,6 +575,170 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 	pump(source.readStream, res, (err) => {
 		console.log(`Movie streaming pipe closed`);
 		// console.error(err);
+	});
+});
+
+app.get('/subtitles/:imdbid/:resolution/:language', (req, res, next) => { // Cheking if /tmp/videos/subs dir exists
+	fs.access('/tmp/videos/subs', fs.constants.R_OK, (err) => {
+		if (!err) {
+			next();
+		} else if (err && err.errno === -2) {
+			fs.mkdir('/tmp/videos/subs', (err) => {
+				if (!err) {
+					next();
+				} else {
+					console.log('Unexpected error while creating /tmp/videos/subs directory')
+					console.error(err);
+					res.sendStatus(500);
+				}
+			});
+		} else {
+			console.log('Unexpected error while accessing /tmp/videos/subs directory')
+			console.error(err);
+			res.sendStatus(500);
+		}
+	});
+}, (req, res, next) => { // Checking if subtitles is already downloaded
+	const { imdbid, resolution, language } = req.params;
+
+	const fileName = `${imdbid}[${resolution}]-${language}.vtt`;
+	const fullPath = `/tmp/videos/subs/${fileName}`;
+
+	req._subtitles = {
+		file: {
+			name: fileName,
+			path: fullPath,
+			exists: false
+		}
+	}
+
+	fs.access(fullPath, fs.constants.R_OK, (err) => {
+		if (!err) {
+			req._subtitles.file.exists = true;
+			next();
+		} else if (err && err.errno === -2) {
+			next();
+		} else {
+			console.log(`Unexpected error while accessing ${fullPath}`);
+			console.error(err);
+			res.sendStatus(500);
+		}
+	});
+}, async (req, res, next) => {
+	const { imdbid, resolution } = req.params;
+	const { file } = req._subtitles;
+
+	if (file.exists) {
+		next();
+		return;
+	}
+
+	fs.readFile(`/tmp/videos/${imdbid}/${resolution}.json`, 'utf8', (err, data) => {
+		if (err) {
+			console.log(`Unexpected error while reading stat file for ${imdbid}`);
+			console.error(err);
+			res.sendStatus(500);
+			return;
+		}
+
+		const movieStat = JSON.parse(data);
+		req._subtitles.searchParams = {
+			filename: movieStat.originalName,
+			fps: "23.976",
+			imdbid
+		}
+
+		console.log(`Will search subtitles with these params: `, req._subtitles.searchParams);
+		next();
+	});
+}, async (req, res, next) => {
+	const { language } = req.params;
+	const { file, searchParams } = req._subtitles;
+
+	if (file.exists) {
+		next();
+		return;
+	}
+
+	try {
+		const searchResults = await OS.search(searchParams);
+	
+		if (!searchResults[language]) {
+			return res.sendStatus(404); // No subtitles with this language
+		} else {
+			req._subtitles.srtDownloadUrl = searchResults[language].url;
+			console.log('subtitles found', searchResults[language]);
+			next();
+		}
+	} catch (e) {
+		console.log('Error while searching subtitles:', searchParams.imdbid);
+		console.error(e);
+		res.sendStatus(500);
+	}
+}, async (req, res, next) => {
+	const { file, srtDownloadUrl } = req._subtitles;
+
+	if (file.exists) {
+		console.log(`Subtitles ${file.name} already downloaded`);
+		next();
+		return;
+	}
+
+	try {
+		const response = await axios({
+			method: 'GET',
+			url: srtDownloadUrl,
+			responseType: 'stream'
+		});
+		
+		const localFileWriteStream = fs.createWriteStream(file.path);
+
+		localFileWriteStream.on("open", () => {
+			console.log(`Subtitles ${file.name} is not downloaded yet, starting download...`);
+			pump(response.data, srt2vtt(), localFileWriteStream, (err) => {
+				if (err) {
+					console.log(`${file.name} pipe closed with error:`);
+					console.error(err);
+					res.sendStatus(500);
+				} else {
+					console.log(`${file.name} pipe closed with no errors, subtitles downloaded`);
+					next();
+				}
+			});
+		});
+	} catch (e) {
+		console.log('Error while downloading subtitles:', srtDownloadUrl);
+		console.error(e);
+		res.sendStatus(500);
+	}
+}, async (req, res) => {
+	const { file } = req._subtitles;
+
+	fs.stat(file.path, (err, stat) => {
+		if (err) {
+			console.log('Error occurred while getting subtitles file stats:');
+			console.error(err);
+			res.sendStatus(500);
+		} else {
+			const head = {
+				'Content-Length': stat.size,
+				'Content-Type': 'text/vtt',
+			}
+			res.writeHead(200, head);
+
+			const subtitlesReadStream = fs.createReadStream(file.path);
+
+			subtitlesReadStream.on("open", () => {
+				pump(subtitlesReadStream, res, (err) => {
+					if (err) {
+						console.log('Subtitles read stream closed with erorr:');
+						console.error(err);
+					} else {
+						console.log('Subtitles read stream closed with no erorrs.');
+					}
+				});
+			});
+		}
 	});
 });
 
