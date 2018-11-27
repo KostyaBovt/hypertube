@@ -303,24 +303,34 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 		const { imdb_id, poster_path } = response.data;
 		response.data.poster_path = 'http://image.tmdb.org/t/p/w342' + poster_path;
 		response.data.watched_films_count = watched[movieId] || 0;
-		req.movie = { imdb_id, movie_details_1: response.data };
+		req.movie = { imdb_id, movie_details: response.data };
 		next();
 	} catch (e) {
 		console.error(e);
 		res.json({'success': false, 'error': 'TMDb request failed'});
 	}
 }, async (req, res) => {
-	const { imdb_id, movie_details_1 } = req.movie;
+	const { imdb_id, movie_details } = req.movie;
 	const url = `https://tv-v2.api-fetch.website/movie/${imdb_id}`;
 	console.log(`Making a request (${url})`);
 
 	try {
 		const response = await axios.get(url);
-		const movie_details_2 = response.data;
-		res.json({'success': true,  movie_details_1, movie_details_2 });
+		const { torrents } = response.data;
+
+		if (torrents && torrents['en']) {
+			const streaming = [];
+			Object.keys(torrents['en']).forEach(resolution => {
+				const streamingUrl = `http://localhost:3200/film/${imdb_id}/${resolution}`;
+				streaming.push(streamingUrl);
+			});
+			req.movie.streaming = streaming;
+		}
+
+		res.json({'success': true,  movie_details, streaming: req.movie.streaming });
 	} catch (e) {
 		console.error(e);
-		res.json({'success': false, 'error': 'tv-v2 request failed'});
+		res.json({'success': false, 'error': 'Popcorntime request failed'});
 	}
 });
 
@@ -361,7 +371,7 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 		console.log("There is no torrent links for this movie, so it can't be downloaded");
 		return res.sendStatus(404); // Sending response 404 and not going further
 	} else {
-		const { url, size } = torrents['en'][`${resolution}p`];
+		const { url, size } = torrents['en'][resolution];
 		req._streaming.movie.magnetLink = url;
 	}
 
