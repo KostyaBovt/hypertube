@@ -33,8 +33,7 @@ class MovieStore {
                 withCredentials: true
             });
             if (response.data.success) {
-                const details = response.data.movie_details_1;
-                const streaming = response.data.movie_details_2;
+                const { movie_details: details, streaming } = response.data;
                 this.setMovie({ ...details, streaming });
                 console.log(details, streaming);
             } else {
@@ -45,24 +44,7 @@ class MovieStore {
             this.setMovie(null);
         }
     }
-    async fetchMovie(imdb_id, resolution) {
-        const url = 'http://localhost:3200/film';
-        try {
-            const response = await axios.get(url, {
-                withCredentials: true,
-                params: {
-                    imdb_id,
-                    resolution
-                }
-            });
-            if (response.data.success) {
-                this.setStream(response.data);
-            }
-            console.log(response.data);
-        } catch (e) {
-            console.error(e);
-        }
-    }
+
     async fetchComments(movieId) {
         const url = `http://localhost:8080/api/comments`;
         try {
