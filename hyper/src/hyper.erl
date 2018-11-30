@@ -87,11 +87,13 @@ update_locale(#{<<"iss">> := UId} = UData, NewLocale) ->
 
 -spec create_comment(UId::non_neg_integer(), ImdbId::binary(), Text::binary()) -> hyper_http:handler_ret().
 create_comment(UId, ImdbId, Text) ->
-    {ok, _} = hyper_db:create_comment(UId, ImdbId, Text).
+    {ok, C} = hyper_db:create_comment(UId, ImdbId, Text),
+    {ok, prefix_avatar_path(C)}.
 
 -spec get_comments(Qs::proplists:proplist()) -> hyper_http:handler_ret().
 get_comments(Qs) ->
-    {ok, _} = hyper_db:get_comments(gv(<<"id">>, Qs)).
+    {ok, Comments} = hyper_db:get_comments(gv(<<"id">>, Qs)),
+    {ok, [prefix_avatar_path(C) || C <- Comments]}.
 
 -spec update_email(Qs::proplists:proplist()) -> hyper_http:handler_ret().
 update_email(Qs) ->

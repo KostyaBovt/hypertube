@@ -136,13 +136,13 @@ class Movie extends Component {
         )
     }
 
-    renderAvatar(self, classes) {
-		if (self.avatar) {
-			return <Avatar className={classes.avatar} src={`http://localhost:8080${self.avatar}`} />;
+    renderAvatar(data, classes) {
+		if (data.avatar) {
+			return <Avatar className={classes.avatar} src={`http://localhost:8080${data.avatar}`} />;
 		} else {
 			return (
-				<Avatar className={classes.avatar} src={self.avatar} >
-					{`${self.fname.charAt(0)}${self.lname.charAt(0)}`}
+				<Avatar className={classes.avatar} src={data.avatar} >
+					{`${data.fname.charAt(0)}${data.lname.charAt(0)}`}
 				</Avatar>
 			);
 		}
@@ -258,9 +258,7 @@ class Movie extends Component {
                                                 comments.map((comment, i) => (
                                                     <ListItem key={i} alignItems="flex-start">
                                                         <ListItemAvatar>
-                                                            <Avatar>
-                                                                RT
-                                                            </Avatar>
+                                                            { this.renderAvatar(comment, classes) }
                                                         </ListItemAvatar>
                                                         <ListItemText
                                                             disableTypography
@@ -275,7 +273,7 @@ class Movie extends Component {
                                                                         { comment.text }
                                                                     </Typography>
                                                                     <Typography component="span" variant="body2" color="textSecondary">
-                                                                        { distanceInWordsToNow(comment.dt, { addSuffix: true }) }
+                                                                        { distanceInWordsToNow(new Date(comment.dt + " UTC"), { addSuffix: true }) }
                                                                     </Typography>
                                                                 </React.Fragment>
                                                             }

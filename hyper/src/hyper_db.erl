@@ -68,7 +68,8 @@ update_user(UId, Uname, Fname, Lname, Bio, PhotoName) ->
              [UId, Uname, Fname, Lname, Bio, PhotoName])).
 
 get_comments(ImdbId) ->
-    db_vals(q("SELECT u.uname, c.text, TO_CHAR(c.dt, 'DD-MM-YYYY HH24:MI:SS') AS dt
+    db_vals(q("SELECT u.uname, u.fname, u.lname, u.avatar,
+                      c.text, TO_CHAR(c.dt, 'YYYY-MM-DD HH24:MI:SS') AS dt
                FROM comments AS c
                JOIN users AS u ON c.user_id = u.id
                WHERE c.imdb_id = $1
@@ -78,7 +79,8 @@ create_comment(UId, ImdbId, Text) ->
     db_val(q("WITH i AS (INSERT INTO comments (user_id, imdb_id, text, dt)
                          VALUES ($1, $2, $3, NOW())
                          RETURNING text, dt)
-              SELECT u.uname, i.text, TO_CHAR(i.dt, 'DD-MM-YYYY HH24:MI:SS') AS dt
+              SELECT u.uname, u.fname, u.lname, u.avatar,
+                     i.text, TO_CHAR(i.dt, 'YYYY-MM-DD HH24:MI:SS') AS dt
               FROM users AS u, i
               WHERE u.id = $1",
              [UId, ImdbId, Text])).
