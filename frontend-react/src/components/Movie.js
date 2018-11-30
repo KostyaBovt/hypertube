@@ -3,17 +3,13 @@ import { inject, observer } from 'mobx-react';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
-import { TextField, Typography, CircularProgress, Button, Avatar} from '@material-ui/core';
+import { TextField, Typography, CircularProgress, Button, Avatar, List, ListItem, ListItemAvatar, ListItemText } from '@material-ui/core';
 import ReactPlayer from 'react-player';
 import Plyr from 'react-plyr';
 
+import { distanceInWordsToNow } from 'date-fns';
+
 const styles = theme => ({
-    layout: {
-        marginLeft: 'auto',
-        marginRight: 'auto',
-        marginTop: theme.spacing.unit * 2,
-		marginBottom: theme.spacing.unit * 2,
-    },
     root: {
         marginTop: theme.spacing.unit * 2,
         marginBottom: theme.spacing.unit * 2,
@@ -34,13 +30,27 @@ const styles = theme => ({
         padding: 0,
         margin: 0
     },
-    paper: {
+    container: {
         padding: theme.spacing.unit * 2
     },
     avatar: {
-		margin: theme.spacing.unit,
 		backgroundColor: theme.palette.grey,
-	}
+    },
+    commentSection: {
+        paddingTop: theme.spacing.unit * 2,
+    },
+    commentForm: {
+        paddingTop: theme.spacing.unit * 2,
+        paddingLeft: theme.spacing.unit * 2,
+        paddingRight: theme.spacing.unit * 2,
+        [theme.breakpoints.up(600)]: {
+            paddingLeft: theme.spacing.unit * 3,
+            paddingRight: theme.spacing.unit * 3,
+		}
+    },
+    commentText: {
+        wordWrap: 'break-word'
+    }
 });
 
 @inject('MovieStore', 'SelfStore') @observer
@@ -138,10 +148,10 @@ class Movie extends Component {
 		}
     }
 
-    renderCommentSectionActions() {
+    renderCommentSectionActions(classes) {
         return (
             <Grid container justify="flex-end">
-                <Grid item>
+                <Grid item className={classes.item}>
                     <Button
                         onClick={this.resetCommentInput}
                         variant="text"
@@ -149,10 +159,10 @@ class Movie extends Component {
                         Cancel
                     </Button>
                 </Grid>
-                <Grid item>
+                <Grid item className={classes.item}>
                     <Button
                         onClick={this.handleSubmit}
-                        variant="text"
+                        variant="contained"
                         color="primary"
                     >
                         Send
@@ -217,47 +227,67 @@ class Movie extends Component {
 
                             { !!movie.streaming && this.renderPlayer() }
 
-                            <Grid item>
-                                <Paper className={classes.paper} >
-                                    <form noValidate autoComplete="off">
-                                        <Grid container alignItems="flex-start">
-                                            <Grid item>
-                                                {  this.renderAvatar(self, classes) }
-                                            </Grid>
-                                            <Grid item xs>
-                                                <TextField
-                                                    value={this.state.commentValue}
-                                                    onChange={this.handleInput}
-                                                    placeholder="Leave a comment"
-                                                    margin="dense"
-                                                    fullWidth
-                                                    multiline
-                                                />
-                                            </Grid>
-                                        </Grid>
-                                        { commentValue && this.renderCommentSectionActions() }
-                                    </form>
-                                </Paper>
-                            </Grid>
-                            
+                            <Grid item xs>
+                                <Paper>
+                                    <Grid container direction="column">
 
-                            <Grid item>
-                                <Grid container>
-                                    <Paper>
-                                        { comments.map( c => (
-                                            <Grid item className={classes.item}>
-                                                <p>{ c.uname }</p>
-                                                <Typography
-                                                    variant="p"
-                                                    component="p"
-                                                    className={classes.fo}>
-                                                    { c.text }
-                                                </Typography>
-                                                <p>{ c.dt }</p>
-                                            </Grid>
-                                        ))}
-                                    </Paper>
-                                </Grid>
+                                        <Grid item className={classes.commentForm}>
+                                            <form noValidate autoComplete="off">
+                                                <Grid container spacing={16} alignItems="flex-start">
+                                                    <Grid item>
+                                                        {  this.renderAvatar(self, classes) }
+                                                    </Grid>
+                                                    <Grid item xs>
+                                                        <TextField
+                                                            value={this.state.commentValue}
+                                                            onChange={this.handleInput}
+                                                            placeholder="Leave a comment"
+                                                            rowsMax={4}
+                                                            fullWidth
+                                                            multiline
+                                                        />
+                                                    </Grid>
+                                                    { commentValue && this.renderCommentSectionActions(classes) }
+                                                </Grid>
+                                            </form>
+                                        </Grid>
+
+                                        <Grid item xs>
+                                            <List>
+                                            {
+                                                comments.map((comment, i) => (
+                                                    <ListItem key={i} alignItems="flex-start">
+                                                        <ListItemAvatar>
+                                                            <Avatar>
+                                                                RT
+                                                            </Avatar>
+                                                        </ListItemAvatar>
+                                                        <ListItemText
+                                                            disableTypography
+                                                            primary={
+                                                                <Typography component="span" variant="subtitle2" color="textPrimary">
+                                                                    { comment.user_id }
+                                                                </Typography>
+                                                            }
+                                                            secondary={
+                                                                <React.Fragment>
+                                                                    <Typography className={classes.commentText} component="span" variant="subtitle1" color="textPrimary">
+                                                                        { comment.text }
+                                                                    </Typography>
+                                                                    <Typography component="span" variant="body2" color="textSecondary">
+                                                                        { distanceInWordsToNow(comment.dt, { addSuffix: true }) }
+                                                                    </Typography>
+                                                                </React.Fragment>
+                                                            }
+                                                        />
+                                                    </ListItem>
+                                                ))
+                                            }
+                                            </List>
+                                        </Grid>
+
+                                    </Grid>
+                                </Paper>
                             </Grid>
 
                         </Grid>
