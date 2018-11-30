@@ -16,7 +16,7 @@ class LibraryStore {
         "primary_release_date.gte": "2000-01-01",
         "primary_release_date.lte": "2019-12-31",
         "vote_average.gte": "5",
-        "with_genres": undefined
+        "with_genres": []
     }
 
     @action setIsLoading(status) {
@@ -56,13 +56,19 @@ class LibraryStore {
         console.log(genres);
     }
 
+    @action deleteGenre(genreId) {
+        const { with_genres } = this.filters;
+        const genreToDelete = with_genres.indexOf(genreId);
+        with_genres.splice(genreToDelete, 1);
+    }
+
     @action resetFilters() {
         this.filters = {
             "sort_by": "popularity.desc",
             "primary_release_date.gte": "",
             "primary_release_date.lte": "",
             "vote_average.gte": "",
-            "with_genres": undefined
+            "with_genres": []
         };
     }
 

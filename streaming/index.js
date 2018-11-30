@@ -256,7 +256,6 @@ app.get('/films', (req, res, next) => {
 
 	if (filters.query) {
 		url += "/search/movie";
-		// filters.query = encodeURI(filters.query);
 		params = { ...defaultFilters.search, ...filters };
 	} else {
 		url += "/discover/movie";

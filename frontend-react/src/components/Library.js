@@ -46,9 +46,6 @@ const styles = theme => ({
     },
     yearInput: {
         textAlign: 'center'
-    },
-    divider: {
-        margin: `0px ${theme.spacing.unit * 8}px`
     }
 });
 
@@ -63,27 +60,27 @@ const MenuProps = {
   },
 };
 
-const genres = [
-    {"id":28,"name":"Action"},
-    {"id":12,"name":"Adventure"},
-    {"id":16,"name":"Animation"},
-    {"id":35,"name":"Comedy"},
-    {"id":80,"name":"Crime"},
-    {"id":99,"name":"Documentary"},
-    {"id":18,"name":"Drama"},
-    {"id":10751,"name":"Family"},
-    {"id":14,"name":"Fantasy"},
-    {"id":36,"name":"History"},
-    {"id":27,"name":"Horror"},
-    {"id":10402,"name":"Music"},
-    {"id":9648,"name":"Mystery"},
-    {"id":10749,"name":"Romance"},
-    {"id":878,"name":"Science Fiction"},
-    {"id":10770,"name":"TV Movie"},
-    {"id":53,"name":"Thriller"},
-    {"id":10752,"name":"War"},
-    {"id":37,"name":"Western"}
-];
+const _genres = {
+    "28": "Action",
+    "12": "Adventure",
+    "16": "Animation",
+    "35": "Comedy",
+    "80": "Crime",
+    "99": "Documentary",
+    "18": "Drama",
+    "10751": "Family",
+    "14": "Fantasy",
+    "36": "History",
+    "27": "Horror",
+    "10402": "Music",
+    "9648": "Mystery",
+    "10749": "Romance",
+    "878": "Science Fiction",
+    "10770": "TV Movie",
+    "53": "Thriller",
+    "10752": "War",
+    "37": "Western"
+};
 
 
 @inject('LibraryStore') @observer
@@ -91,7 +88,6 @@ class Library extends Component {
     constructor(props) {
 		super(props);
         this.state = {
-            genres: [], // TODO: fix filters state after changing page!!
             queryString: ""
         }
         this.handleSearchFormSubmit = this.handleSearchFormSubmit.bind(this);
@@ -111,10 +107,9 @@ class Library extends Component {
 
     componentDidMount() {
         const { LibraryStore } = this.props;
+
         if (!LibraryStore.movies) {
-            this.props.LibraryStore.fetchMovies();
-        } else {
-            
+            LibraryStore.fetchMovies();
         }
     }
     
@@ -126,10 +121,12 @@ class Library extends Component {
 
         if (!queryString || LibraryStore.isLoading) return;
 
-        LibraryStore.resetFilters();
         LibraryStore.resetMovies();
         LibraryStore.setSearchMode(true);
         LibraryStore.setCurrentQuery(queryString);
+
+        this.searchField.current.focus();
+        this.searchField.current.setSelectionRange(0, this.state.queryString.length);
 
         this.setState({ genres: [] });
         this.handleMovieSearch();
@@ -158,20 +155,10 @@ class Library extends Component {
         LibraryStore.setCurrentQuery(undefined);
         LibraryStore.resetMovies();
 
+        this.setState({ queryString: "" });
         this.searchField.current.focus();
-        this.searchField.current.setSelectionRange(0, this.state.queryString.length);
 
         this.fetchMovies();
-    }
-
-    handleGenreSelect(e) {
-        this.setState({ genres: e.target.value }, () => {
-            const selectedGenres = this.state.genres.map(genreIndex => {
-                return genres[genreIndex].id;
-            });
-            this.props.LibraryStore.setGenres(selectedGenres);
-            this.fetchMovies();
-        });
     }
 
     handleFilterChange(e) {
@@ -181,31 +168,33 @@ class Library extends Component {
         this.fetchMovies();
     }
 
-    deleteSelectedGenre = genreIndex => () => {
-        this.setState(state => {
-            const genres = [...state.genres];
-            const genreToDelete = genres.indexOf(genreIndex);
-            genres.splice(genreToDelete, 1);
-            return { genres };
-        }, () => {
-            const selectedGenres = this.state.genres.map(genreIndex => {
-                return genres[genreIndex].id;
-            });
-            this.props.LibraryStore.setGenres(selectedGenres);
-            this.fetchMovies();
-        });
+    handleGenreSelect(e) {
+        const { LibraryStore } = this.props;
+
+        LibraryStore.setGenres(e.target.value);
+        this.fetchMovies();
+    }
+
+
+    deleteSelectedGenre = genreId => () => {
+        const { LibraryStore } = this.props;
+
+        LibraryStore.deleteGenre(genreId);
+        this.fetchMovies();
     }
 
     renderGenreSelectValues(selectedGenres) {
         const { classes } = this.props;
+        const { searchMode } = this.props.LibraryStore;
+
         return (
             <div className={classes.chips}>
-                {selectedGenres.map(genreIndex => (
+                {selectedGenres.map(genreId => (
                     <Chip
-                        key={genreIndex}
-                        label={genres[genreIndex].name}
+                        key={genreId}
+                        label={_genres[genreId]}
                         className={classes.chip}
-                        onDelete={this.deleteSelectedGenre(genreIndex)}
+                        onDelete={searchMode ? undefined : this.deleteSelectedGenre(genreId)}
                     />
                 ))}
             </div>
@@ -379,17 +368,17 @@ class Library extends Component {
                                         <InputLabel htmlFor="select-multiple-chip">Genres</InputLabel>
                                         <Select
                                             multiple
-                                            value={this.state.genres}
+                                            value={filters.with_genres}
                                             onChange={this.handleGenreSelect}
                                             input={<Input id="select-multiple-chip" />}
                                             renderValue={this.renderGenreSelectValues}
                                             MenuProps={MenuProps}
                                         >
                                         {
-                                            genres.map((genre, index) => (
-                                            <MenuItem key={index} value={index}>
-                                                <Checkbox checked={this.state.genres.includes(index)} />
-                                                <ListItemText primary={genre.name} />
+                                            Object.keys(_genres).map((genreId, index) => (
+                                            <MenuItem key={index} value={genreId}>
+                                                <Checkbox checked={filters.with_genres.includes(genreId)} />
+                                                <ListItemText primary={_genres[genreId]} />
                                             </MenuItem>
                                             ))
                                         }
@@ -490,7 +479,7 @@ class Library extends Component {
                                         value={queryString}
                                         startAdornment={
                                             <InputAdornment position="start">
-                                                    <Icon>search</Icon>
+                                                <Icon>search</Icon>
                                             </InputAdornment>
                                         }
                                         onChange={(e) => this.setState({queryString: e.target.value})}
@@ -507,7 +496,7 @@ class Library extends Component {
                         {
                             searchMode && !isLoading &&
                             <Grid item className={classes.backButton}>
-                                <ButtonBase disableRipple onClick={this.disableSearchMode}>
+                                <ButtonBase focusRipple onClick={this.disableSearchMode}>
                                     <Icon color="action">close</Icon>
                                 </ButtonBase>
                             </Grid>
