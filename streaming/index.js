@@ -305,11 +305,15 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 		req.movie = { imdb_id, movie_details: response.data };
 		next();
 	} catch (e) {
+		console.log('tmdb request failed...');
 		console.error(e);
 		res.json({'success': false, 'error': 'TMDb request failed'});
 	}
-}, async (req, res) => {
-	const { imdb_id, movie_details } = req.movie;
+}, async (req, res, next) => {
+	const { imdb_id } = req.movie;
+
+	if (!imdb_id) return next();
+
 	const url = `https://tv-v2.api-fetch.website/movie/${imdb_id}`;
 	console.log(`Making a request (${url})`);
 
@@ -325,12 +329,15 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 			});
 			req.movie.streaming = streaming;
 		}
-
-		res.json({'success': true,  movie_details, streaming: req.movie.streaming });
 	} catch (e) {
-		console.error(e);
-		res.json({'success': false, 'error': 'Popcorntime request failed'});
+		console.log('popcorntime request failed...');
+		console.log(e.response.status, e.response.text, e.response.data);
+	} finally {
+		next();
 	}
+}, (req, res) => {
+	const { movie_details, streaming } = req.movie;
+	res.json({'success': true,  movie_details, streaming });
 });
 
 const pump = require('pump');
