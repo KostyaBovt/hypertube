@@ -72,8 +72,8 @@ class MovieStore {
                 withCredentials: true,
             });
             if (response.data.status === 'ok') {
-                this.addComment(response.data.payload);
-                console.log(response.data.payload);
+                console.log('added comment', response.data);
+                // this.addComment(response.data.payload);
             }
         } catch (e) {
             console.error(e);

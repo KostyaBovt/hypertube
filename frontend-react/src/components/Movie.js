@@ -258,7 +258,10 @@ class Movie extends Component {
                                                 comments.map((comment, i) => (
                                                     <ListItem key={i} alignItems="flex-start">
                                                         <ListItemAvatar>
-                                                            { this.renderAvatar(comment, classes) }
+                                                            <Avatar>
+                                                                RT
+                                                            </Avatar>
+                                                            {/* { this.renderAvatar(comment, classes) } */}
                                                         </ListItemAvatar>
                                                         <ListItemText
                                                             disableTypography
@@ -273,7 +276,7 @@ class Movie extends Component {
                                                                         { comment.text }
                                                                     </Typography>
                                                                     <Typography component="span" variant="body2" color="textSecondary">
-                                                                        { distanceInWordsToNow(new Date(comment.dt + " UTC"), { addSuffix: true }) }
+                                                                        { distanceInWordsToNow(new Date(comment.dt), { addSuffix: true }) }
                                                                     </Typography>
                                                                 </React.Fragment>
                                                             }

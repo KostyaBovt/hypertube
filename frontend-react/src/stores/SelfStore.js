@@ -87,7 +87,6 @@ class SelfStore {
             if (response.data.status === "ok") {
                 this.updateSelfField('locale', value);
                 LibraryStore.resetMovies()
-                LibraryStore.resetFilters();
                 LibraryStore.setSearchMode(false);
             } else {
                 // const error = Object.values(response.data.reason)[0];
