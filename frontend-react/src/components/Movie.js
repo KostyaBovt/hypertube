@@ -179,9 +179,27 @@ class Movie extends Component {
         const { movie, comments } = this.props.MovieStore;
 
         if (movie === undefined) {
-            return <CircularProgress />;
+            return (
+                <main>
+                    <Grid container className={classes.container} justify="center">
+                        <Grid item>
+                            <CircularProgress />
+                        </Grid>
+                    </Grid>
+                </main>
+            );
         } else if (movie === null) {
-            return "ERROR";
+            return (
+                <main>
+                    <Grid container className={classes.container} justify="center">
+                        <Grid item>
+                            <Typography variant="subtitle2" color="textSecondary">
+                                This movie is unavailable
+                            </Typography>
+                        </Grid>
+                    </Grid>
+                </main>
+            );
         } else {
             return (
                 <main>
