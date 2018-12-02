@@ -309,6 +309,25 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 		console.error(e);
 		res.json({'success': false, 'error': 'TMDb request failed'});
 	}
+}, (req, res, next) => {
+	const { movie_details } = req.movie;
+	const { crew, cast } = movie_details.credits;
+	const transformPicUrls = (member) => {
+		if (member.profile_path) {
+			member.profile_path = `http://image.tmdb.org/t/p/w342/${member.profile_path}`;
+		}
+		return member;
+	}
+
+	console.log(crew, cast);
+
+	const directors = crew.filter((member => member.job === "Director")).map(transformPicUrls);
+	const producers = crew.filter((member => member.job === "Producer")).map(transformPicUrls);
+	const main_cast = cast.splice(0, 5).map(transformPicUrls);
+
+	movie_details.credits = { crew: { directors, producers }, main_cast };
+
+	next();
 }, async (req, res, next) => {
 	const { imdb_id } = req.movie;
 
@@ -319,6 +338,7 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 
 	try {
 		const response = await axios.get(url);
+		console.log(response.data);
 		const { torrents } = response.data;
 
 		if (torrents && torrents['en']) {

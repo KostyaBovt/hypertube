@@ -3,7 +3,7 @@ import { inject, observer } from 'mobx-react';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
-import { TextField, Typography, CircularProgress, Button, Avatar, List, ListItem, ListItemAvatar, ListItemText } from '@material-ui/core';
+import { TextField, Typography, CircularProgress, Button, Avatar, List, ListItem, ListItemAvatar, ListItemText, Icon, ListSubheader } from '@material-ui/core';
 import ReactPlayer from 'react-player';
 import Plyr from 'react-plyr';
 
@@ -50,6 +50,15 @@ const styles = theme => ({
     },
     commentText: {
         wordWrap: 'break-word'
+    },
+    leftIcon: {
+        marginRight: theme.spacing.unit,
+    },
+    inline: {
+        display: 'inline',
+    },
+    ul: {
+        padding: 0
     }
 });
 
@@ -172,6 +181,27 @@ class Movie extends Component {
         );
     }
 
+    renderCreditsListItems(items) {
+        return items.map(item => (
+            <ListItem key={item.id}>
+                <ListItemAvatar>
+                    {
+                        item.profile_path ?
+                        <Avatar alt={item.name} src={item.profile_path} /> :
+                        <Avatar >
+                            { item.name.charAt(0) }
+                        </Avatar>
+
+                    }
+                </ListItemAvatar>
+                <ListItemText
+                    primary={item.name}
+                    secondary={item.character || undefined}
+                />
+            </ListItem>
+        ));
+    }
+
     render() {
         const { classes } = this.props;
         const { commentValue } = this.state;
@@ -204,7 +234,7 @@ class Movie extends Component {
             return (
                 <main>
 
-                    <Grid item xs={12} md={6} className={classes.root}>
+                    <Grid item xs md={6} className={classes.root}>
                         <Grid container spacing={16} className={classes.container} direction="column">
 
                             <Grid item>
@@ -214,25 +244,48 @@ class Movie extends Component {
                                         <Grid item xs={4} className={classes.item}>
                                             <img className={classes.media} src={movie.poster_path} alt="Movie poster"/>
                                         </Grid>
+
                                         <Grid item xs className={classes.item}>
                                             <Grid container direction="column">
                                                 <Grid item>
-                                                    <Typography variant="h6">
+                                                    <Typography variant="h6" gutterBottom>
                                                         {movie.title}
                                                     </Typography>
                                                 </Grid>
                                                 <Grid item>
-                                                    <Typography gutterBottom variant="subtitle2" color="textSecondary">
-                                                        {movie.release_date}
+                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                      {"Original title: "}
+                                                    </Typography>
+                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
+                                                      {movie.original_title}
                                                     </Typography>
                                                 </Grid>
                                                 <Grid item>
-                                                    <Typography gutterBottom variant="subtitle2" color="textSecondary">
+                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                      {"Release date: "}
+                                                    </Typography>
+                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
+                                                        { movie.release_date }
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item>
+                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                      {"Runtime: "}
+                                                    </Typography>
+                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
                                                         {movie.runtime} minutes
                                                     </Typography>
                                                 </Grid>
                                                 <Grid item>
-                                                    <Typography variant="subtitle1">
+                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                      {"Rating: "}
+                                                    </Typography>
+                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
+                                                        {movie.vote_average}
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item>
+                                                    <Typography variant="body1">
                                                         {movie.overview}
                                                     </Typography>
                                                 </Grid>
@@ -240,10 +293,56 @@ class Movie extends Component {
                                         </Grid>
 
                                     </Grid>
+
+                                    {
+                                        !!movie.streaming &&
+                                        <Grid container direction="column">
+                                            {
+                                                movie.streaming.map(streamUrl => (
+                                                    <Grid key={streamUrl} item xs={4} className={classes.item}>
+                                                        <Button 
+                                                            variant="contained"
+                                                            color="primary"
+                                                            fullWidth
+                                                        >
+                                                            <Icon className={classes.leftIcon}>play_arrow</Icon>
+                                                            Stream in { streamUrl.split('/').pop() }
+                                                        </Button>
+                                                    </Grid>
+                                                ))
+                                            }
+                                        </Grid>
+                                    }
+
                                 </Paper>
                             </Grid>
 
-                            { !!movie.streaming && this.renderPlayer() }
+                            <Grid item>
+                                <Paper>
+                                    <List>
+                                        <li>
+                                            <ul className={classes.ul}>
+                                                <ListSubheader disableSticky>Directors</ListSubheader>
+                                                { this.renderCreditsListItems(movie.credits.crew.directors) }
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <ul className={classes.ul}>
+                                                <ListSubheader disableSticky>Producers</ListSubheader>
+                                                { this.renderCreditsListItems(movie.credits.crew.producers) }
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <ul className={classes.ul}>
+                                                <ListSubheader disableSticky>Main cast</ListSubheader>
+                                                { this.renderCreditsListItems(movie.credits.main_cast) }
+                                            </ul>
+                                        </li>
+                                    </List>
+                                </Paper>
+                            </Grid>
+
+                            {/* { !!movie.streaming && this.renderPlayer() } */}
 
                             <Grid item xs>
                                 <Paper>
@@ -276,16 +375,13 @@ class Movie extends Component {
                                                 comments.map((comment, i) => (
                                                     <ListItem key={i} alignItems="flex-start">
                                                         <ListItemAvatar>
-                                                            <Avatar>
-                                                                RT
-                                                            </Avatar>
-                                                            {/* { this.renderAvatar(comment, classes) } */}
+                                                            { this.renderAvatar(comment, classes) }
                                                         </ListItemAvatar>
                                                         <ListItemText
                                                             disableTypography
                                                             primary={
                                                                 <Typography component="span" variant="subtitle2" color="textPrimary">
-                                                                    { comment.user_id }
+                                                                    { comment.uname }
                                                                 </Typography>
                                                             }
                                                             secondary={
@@ -294,7 +390,7 @@ class Movie extends Component {
                                                                         { comment.text }
                                                                     </Typography>
                                                                     <Typography component="span" variant="body2" color="textSecondary">
-                                                                        { distanceInWordsToNow(new Date(comment.dt), { addSuffix: true }) }
+                                                                        { distanceInWordsToNow(new Date(comment.dt) + "UTC" , { addSuffix: true }) }
                                                                     </Typography>
                                                                 </React.Fragment>
                                                             }

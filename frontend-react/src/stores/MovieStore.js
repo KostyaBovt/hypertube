@@ -73,7 +73,7 @@ class MovieStore {
             });
             if (response.data.status === 'ok') {
                 console.log('added comment', response.data);
-                // this.addComment(response.data.payload);
+                this.addComment(response.data.payload);
             }
         } catch (e) {
             console.error(e);
