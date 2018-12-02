@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { inject, observer } from 'mobx-react';
 import { Paper, List, ListItem, ListSubheader, ListItemText, Dialog, DialogTitle, DialogContent, FormControl, InputLabel, Input, FormHelperText, DialogActions, Button, CircularProgress, withStyles } from '@material-ui/core';
 import simpleValidator from '../../helpers/simpleValidator';
+import { withNamespaces } from 'react-i18next';
 
 const styles = theme => ({
     paper: {
@@ -11,14 +12,8 @@ const styles = theme => ({
 	},
 });
 
-const fieldLabels = {
-	"fname": "First name",
-	"lname": "Last name",
-	"uname": "Username",
-	"email": "Email",
-	"bio": "Bio",
-}
 
+@withNamespaces()
 @inject('SelfStore') @observer
 class ProfileSection extends Component {
     constructor(props) {
@@ -108,7 +103,7 @@ class ProfileSection extends Component {
         }
 	}
     
-    renderInputDialog() {
+    renderInputDialog(t) {
         const { isLoading, isDialogOpen, selectedField, inputError, inputValue } = this.state;
         return (
 			<Dialog
@@ -117,11 +112,13 @@ class ProfileSection extends Component {
 				aria-labelledby="form-dialog-title"
 				fullWidth
 			>
-				<DialogTitle id="form-dialog-title">Change {fieldLabels[selectedField].toLowerCase()}</DialogTitle>
+				<DialogTitle id="form-dialog-title">
+                    {t('settingsPage:changeField')} {t('settingsPage:' + selectedField).toLowerCase()}
+                    </DialogTitle>
 				<DialogContent>
 					<form onSubmit={this.handleFormSubmit.bind(this)}>
                         <FormControl error={!!inputError} fullWidth>
-                            <InputLabel htmlFor={selectedField}>{fieldLabels[selectedField]}</InputLabel>
+                            <InputLabel htmlFor={selectedField}>{t('settingsPage:' + selectedField)}</InputLabel>
                             <Input
                                 id={selectedField}
                                 type="text"
@@ -137,10 +134,10 @@ class ProfileSection extends Component {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={this.handleDialogClose} color="primary">
-						Cancel
+                        {t('settingsPage:cancel')}
 					</Button>
 					<Button disabled={isLoading} onClick={this.saveFieldValue} color="primary">
-						{isLoading ? <CircularProgress size={18}/> : 'Save'}
+						{isLoading ? <CircularProgress size={18}/> : t('settingsPage:save')}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -148,35 +145,37 @@ class ProfileSection extends Component {
     }
 
     render() {
-        const { classes } = this.props;
+        const { classes, t } = this.props;
         const { self } = this.props.SelfStore;
         return (
             <React.Fragment>
-                { this.renderInputDialog() }
+                { this.renderInputDialog(t) }
                 <Paper className={classes.paper}>
-                    <List disablePadding subheader={ <ListSubheader disableSticky color="primary">Profile</ListSubheader> }>
+                    <List disablePadding subheader={
+                        <ListSubheader disableSticky color="primary">{t('settingsPage:profile')}</ListSubheader>
+                    }>
                         <ListItem id="fname" button divider onClick={this.handleItemClick}>
                             <ListItemText
-                                primary={self.fname || "None"}
-                                secondary="First name"
+                                primary={self.fname || t('settingsPage:none')}
+                                secondary={t('settingsPage:fname')}
                             />
                         </ListItem>
                         <ListItem id="lname" button divider onClick={this.handleItemClick}>
                             <ListItemText
-                                primary={self.lname || "None"}
-                                secondary="Last name"
+                                primary={self.lname || t('settingsPage:none')}
+                                secondary={t('settingsPage:lname')}
                             />
                         </ListItem>
                         <ListItem id="uname" button divider onClick={this.handleItemClick}>
                             <ListItemText
                                 primary={self.uname}
-                                secondary="Username"
+                                secondary={t('settingsPage:uname')}
                             />
                         </ListItem>
                         <ListItem id="bio" button onClick={this.handleItemClick}>
                             <ListItemText
-                                primary={self.bio || "None"}
-                                secondary="Bio"
+                                primary={self.bio || t('settingsPage:none')}
+                                secondary={t('settingsPage:bio')}
                             />
                         </ListItem>
                     </List>

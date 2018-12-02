@@ -1,6 +1,7 @@
-import { observable, action } from "mobx";
+import { observable, action, reaction } from "mobx";
 import axios from 'axios';
 import LibraryStore from "./LibraryStore";
+import i18n from "../helpers/i18n";
 
 class SelfStore {
     @observable self = undefined;
@@ -19,8 +20,11 @@ class SelfStore {
 
     async pullSelf() {
         try {
-            const response = await axios.get('http://localhost:8080/api/profile', { withCredentials: true })
+            const response = await axios.get('http://localhost:8080/api/profile', { withCredentials: true });
             this.setSelf(response.data.payload);
+            i18n.changeLanguage(this.self.locale);
+            reaction(() => this.self.locale,
+                     locale => i18n.changeLanguage(locale));
         } catch (e) {
             this.setSelf(null);
             console.error(e);

@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { inject, observer } from 'mobx-react';
 import { Paper, withStyles, List, ListItem, ListItemText, ListSubheader, Dialog, DialogTitle, DialogContent, FormControl, InputLabel, Input, FormHelperText, DialogActions, Button, CircularProgress, DialogContentText } from '@material-ui/core';
 import { validate } from 'email-validator';
+import { withNamespaces } from 'react-i18next';
 
 const styles = theme => ({
 	paper: {
@@ -11,6 +12,7 @@ const styles = theme => ({
     }
 });
 
+@withNamespaces()
 @inject('SelfStore') @observer
 class AccountSection extends Component {
     constructor(props) {
@@ -113,7 +115,7 @@ class AccountSection extends Component {
         }
     }
 
-    renderPasswordDialog() {
+    renderPasswordDialog(t) {
         const { isLoading, passwordDialogOpen, old_password, new_password, confirm, errors } = this.state;
         return (
             <Dialog
@@ -122,11 +124,11 @@ class AccountSection extends Component {
 				aria-labelledby="password-dialog-title"
 				fullWidth
 			>
-				<DialogTitle id="password-dialog-title">Change password</DialogTitle>
+				<DialogTitle id="password-dialog-title">{t('settingsPage:changePassword')}</DialogTitle>
 				<DialogContent>
 					<form onSubmit={this.handleFormSubmit}>
                         <FormControl error={!!errors.old_password} margin="dense" required fullWidth>
-                            <InputLabel htmlFor="old_password">Current password</InputLabel>
+                            <InputLabel htmlFor="old_password">{t('settingsPage:currentPassword')}</InputLabel>
                             <Input
                                 type="password"
                                 name="old_password"
@@ -137,7 +139,7 @@ class AccountSection extends Component {
                             <FormHelperText>{errors.old_password}</FormHelperText>
                         </FormControl>
                         <FormControl error={!!errors.new_password} margin="dense" required fullWidth>
-                            <InputLabel htmlFor="new_password">New password</InputLabel>
+                            <InputLabel htmlFor="new_password">{t('settingsPage:newPassword')}</InputLabel>
                             <Input
                                 type="password"
                                 name="new_password"
@@ -147,7 +149,7 @@ class AccountSection extends Component {
                             <FormHelperText>{errors.new_password}</FormHelperText>
                         </FormControl>
                         <FormControl error={!!errors.confirm} margin="dense" required fullWidth>
-                            <InputLabel htmlFor="confirm">Confirm new password</InputLabel>
+                            <InputLabel htmlFor="confirm">{t('settingsPage:confirmPassword')}</InputLabel>
                             <Input
                                 type="password"
                                 name="confirm"
@@ -160,17 +162,17 @@ class AccountSection extends Component {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={this.closeDialogs} color="primary">
-						Cancel
+                        {t('settingsPage:cancel')}
 					</Button>
 					<Button disabled={isLoading} onClick={this.updatePassword} color="primary">
-						{isLoading ? <CircularProgress size={18}/> : 'Save'}
+						{isLoading ? <CircularProgress size={18}/> : t('settingsPage:save')}
 					</Button>
 				</DialogActions>
 			</Dialog>
         );
     }
 
-    renderEmailDialog() {
+    renderEmailDialog(t) {
         const { isLoading, emailDialogOpen, email, errors } = this.state;
         return (
             <Dialog
@@ -179,14 +181,14 @@ class AccountSection extends Component {
 				aria-labelledby="email-dialog-title"
 				fullWidth
 			>
-				<DialogTitle id="email-dialog-title">Email address</DialogTitle>
+				<DialogTitle id="email-dialog-title">{t('settingsPage:emailAddress')}</DialogTitle>
 				<DialogContent>
                     <DialogContentText>
-                        New email address will be saved only if you confirmed it by following our confirmation link.
+                        {t('settingsPage:emailDialog')}
                     </DialogContentText>
 					<form onSubmit={this.handleFormSubmit}>
                         <FormControl error={!!errors.email} margin="normal" required fullWidth>
-                            <InputLabel htmlFor="email">Email</InputLabel>
+                            <InputLabel htmlFor="email">{t('settingsPage:email')}</InputLabel>
                             <Input
                                 id="email"
                                 type="email"
@@ -201,10 +203,10 @@ class AccountSection extends Component {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={this.closeDialogs} color="primary">
-						Cancel
+                        {t('settingsPage:cancel')}
 					</Button>
 					<Button disabled={isLoading} onClick={this.updateEmail} color="primary">
-						{isLoading ? <CircularProgress size={18}/> : 'ok'}
+						{isLoading ? <CircularProgress size={18}/> : t('settingsPage:ok')}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -212,25 +214,27 @@ class AccountSection extends Component {
     }
 
     render() {
-        const { classes } = this.props;
+        const { classes, t } = this.props;
         const { self } = this.props.SelfStore;
         return (
             <React.Fragment>
-                { this.renderEmailDialog() }
-                { this.renderPasswordDialog() }
+                { this.renderEmailDialog(t) }
+                { this.renderPasswordDialog(t) }
                 <Paper className={classes.paper}>
-                    <List disablePadding subheader={ <ListSubheader disableSticky color="primary">Account</ListSubheader> }>
+                    <List disablePadding subheader={
+                        <ListSubheader disableSticky color="primary">{t('settingsPage:account')}</ListSubheader>
+                    }>
                         {
                             !self.social_provider &&
                             <ListItem id="password" button divider onClick={this.handleItemClick}>
                                 <ListItemText
-                                    primary={"Change password"}
+                                    primary={t('settingsPage:changePassword')}
                                 />
                             </ListItem>
                         }
                         <ListItem id="email" button onClick={this.handleItemClick}>
                             <ListItemText
-                                primary={"Change email"}
+                                primary={t('settingsPage:changeEmail')}
                             />
                         </ListItem>
                     </List>

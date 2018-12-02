@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { inject, observer } from 'mobx-react';
 import imgHelpers from '../../helpers/imgHelpers';
 import { Paper, List, ListItem, ListSubheader, ListItemIcon, Icon, ListItemText, withStyles, Snackbar, IconButton, Avatar } from '@material-ui/core';
+import { withNamespaces } from 'react-i18next';
 
 const styles = theme => ({
     paper: {
@@ -21,6 +22,7 @@ const styles = theme => ({
 	}
 });
 
+@withNamespaces()
 @inject('SelfStore') @observer
 class PictureSection extends Component {
     constructor(props) {
@@ -37,7 +39,7 @@ class PictureSection extends Component {
     }
 
     async onFileChange(e) {
-		const { SelfStore } = this.props;
+		const { SelfStore, t } = this.props;
 
 		const file = e.target.files[0];
 		e.target.value = '';
@@ -54,14 +56,14 @@ class PictureSection extends Component {
                 }
 			} catch (e) {
                 this.setState({
-                    error: 'image processing failed, please try again',
+                    error: t('settingsPage:imageProcessingFailed'),
                     snackbarOpen: true
                 });
 				console.error(e);
 			}
 		} else {
             this.setState({
-                error: 'file is too big, max size is 3MB',
+                error: t('settingsPage:tooBigFile'),
                 snackbarOpen: true
             });
 		}
@@ -125,13 +127,15 @@ class PictureSection extends Component {
     }
 
     render() {
-        const { classes } = this.props;
+        const { classes, t } = this.props;
         const { self } = this.props.SelfStore;
         return (
             <React.Fragment>
                 { this.renderSnackBar() }
                 <Paper className={classes.paper}>
-                    <List disablePadding subheader={ <ListSubheader disableSticky color="primary">Picture</ListSubheader> }>
+                    <List disablePadding subheader={
+                        <ListSubheader disableSticky color="primary">{t('settingsPage:avatar')}</ListSubheader>
+                    }>
                         <ListItem divider className={classes.avatarContainer}>
                             { this.renderAvatar(self, classes) }
                         </ListItem>
@@ -141,7 +145,7 @@ class PictureSection extends Component {
                                     cloud_upload
                                 </Icon>
                             </ListItemIcon>
-                            <ListItemText primary="Upload new picture"/>
+                            <ListItemText primary={t('settingsPage:uploadPicture')}/>
                         </ListItem>
                         {
                             self.social_provider &&
@@ -151,7 +155,7 @@ class PictureSection extends Component {
                                         get_app
                                     </Icon>
                                 </ListItemIcon>
-                                <ListItemText primary={`Import picture from ${self.social_provider}`}/>
+                                <ListItemText primary={t('settingsPage:importPicture') + ' ' + self.social_provider}/>
                             </ListItem>
                         }
                         <ListItem button onClick={this.deleteCurrentPicture.bind(this)}>
@@ -160,7 +164,7 @@ class PictureSection extends Component {
                                     delete
                                 </Icon>
                             </ListItemIcon>
-                            <ListItemText primary="Delete current picture"/>
+                            <ListItemText primary={t('settingsPage:deletePicture')}/>
                         </ListItem>
                     </List>
                     <input

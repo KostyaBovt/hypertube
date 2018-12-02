@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import { Paper, withStyles, List, ListItem, ListItemText, ListSubheader, Dialog, DialogTitle, DialogContent, RadioGroup, FormControlLabel, Radio, DialogActions, Button, CircularProgress } from '@material-ui/core';
 import { inject, observer } from 'mobx-react';
+import { withNamespaces } from 'react-i18next';
 
 const styles = theme => ({
 	paper: {
@@ -10,6 +11,7 @@ const styles = theme => ({
     }
 });
 
+@withNamespaces()
 @inject('SelfStore') @observer
 class OtherSection extends Component {
     constructor(props) {
@@ -18,7 +20,7 @@ class OtherSection extends Component {
             isLoading: false,
             dialogOpen: false,
             value: ''
-        }
+        };
 
         this.openDialog = this.openDialog.bind(this);
         this.handleDialogClose = this.handleDialogClose.bind(this);
@@ -55,7 +57,7 @@ class OtherSection extends Component {
         }
     }
 
-    renderDialog() {
+    renderDialog(t) {
         const { dialogOpen, value, isLoading } = this.state;
 		return (
 			<Dialog
@@ -64,7 +66,7 @@ class OtherSection extends Component {
                 aria-labelledby="locale-dialog-title"
                 maxWidth="xs"
 			>
-				<DialogTitle id="locale-dialog-title">Language</DialogTitle>
+				<DialogTitle id="locale-dialog-title">{t('settingsPage:language')}</DialogTitle>
 				<DialogContent>
 					<form onSubmit={this.handleFormSubmit.bind(this)}>
                         <RadioGroup
@@ -80,10 +82,10 @@ class OtherSection extends Component {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={this.handleDialogClose} color="primary">
-						Cancel
+                        {t('settingsPage:cancel')}
 					</Button>
 					<Button disabled={isLoading} onClick={this.updateLocale} color="primary">
-						{isLoading ? <CircularProgress size={18}/> : 'Save'}
+						{isLoading ? <CircularProgress size={18}/> : t('settingsPage:save')}
 					</Button>
 				</DialogActions>
 			</Dialog>
@@ -91,19 +93,21 @@ class OtherSection extends Component {
 	}
     
     render() {
-        const { classes } = this.props;
+        const { classes, t } = this.props;
         const { self } = this.props.SelfStore;
         const selectedLanguage = self.locale === 'en' ? 'English' : 'Русский';
 
         return (
             <React.Fragment>
-                { this.renderDialog() }
+                { this.renderDialog(t) }
                 <Paper className={classes.paper}>
-                    <List disablePadding subheader={ <ListSubheader disableSticky color="primary">Other</ListSubheader> }>
+                    <List disablePadding subheader={
+                        <ListSubheader disableSticky color="primary">{t('settingsPage:other')}</ListSubheader>
+                    }>
                         <ListItem id="locale" button onClick={this.openDialog}>
                             <ListItemText
                                 primary={selectedLanguage}
-                                secondary="Language"
+                                secondary={t('settingsPage:language')}
                             />
                         </ListItem>
                     </List>
