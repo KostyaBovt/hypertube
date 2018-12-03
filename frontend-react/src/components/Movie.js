@@ -6,7 +6,8 @@ import Paper from '@material-ui/core/Paper';
 import { TextField, Typography, CircularProgress, Button, Avatar, List, ListItem, ListItemAvatar, ListItemText, Icon, ListSubheader } from '@material-ui/core';
 import ReactPlayer from 'react-player';
 import imgHelpers from '../helpers/imgHelpers';
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
+import { withNamespaces } from 'react-i18next';
 
 import { distanceInWordsToNow } from 'date-fns';
 
@@ -60,9 +61,13 @@ const styles = theme => ({
     },
     ul: {
         padding: 0
+    },
+    link: {
+        textDecoration: 'none',
+        color: 'white'
     }
 });
-
+@withNamespaces()
 @inject('MovieStore', 'SelfStore') @observer
 class Movie extends Component {
     constructor(props) {
@@ -147,6 +152,7 @@ class Movie extends Component {
     }
 
     renderCommentSectionActions(classes) {
+        const { t } = this.props;
         return (
             <Grid container justify="flex-end">
                 <Grid item className={classes.item}>
@@ -154,7 +160,7 @@ class Movie extends Component {
                         onClick={this.resetCommentInput}
                         variant="text"
                     >
-                        Cancel
+                        {t('movie:cancel')}
                     </Button>
                 </Grid>
                 <Grid item className={classes.item}>
@@ -163,7 +169,7 @@ class Movie extends Component {
                         variant="contained"
                         color="primary"
                     >
-                        Send
+                        {t('movie:send')}
                     </Button>
                 </Grid>
             </Grid>
@@ -192,7 +198,7 @@ class Movie extends Component {
     }
 
     render() {
-        const { classes } = this.props;
+        const { classes, t } = this.props;
         const { commentValue } = this.state;
         const { self } = this.props.SelfStore; 
         const { movie, comments } = this.props.MovieStore;
@@ -213,7 +219,7 @@ class Movie extends Component {
                     <Grid container className={classes.container} justify="center">
                         <Grid item>
                             <Typography variant="subtitle2" color="textSecondary">
-                                This movie is unavailable
+                                {t('movie:unavailable')}
                             </Typography>
                         </Grid>
                     </Grid>
@@ -243,7 +249,7 @@ class Movie extends Component {
                                                 </Grid>
                                                 <Grid item>
                                                     <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
-                                                      {"Original title: "}
+                                                        {t('movie:originalTitle')}
                                                     </Typography>
                                                     <Typography className={classes.inline} variant="body2" color="textPrimary">
                                                       {movie.original_title}
@@ -251,7 +257,7 @@ class Movie extends Component {
                                                 </Grid>
                                                 <Grid item>
                                                     <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
-                                                      {"Release date: "}
+                                                        {t('movie:releaseDate')}
                                                     </Typography>
                                                     <Typography className={classes.inline} variant="body2" color="textPrimary">
                                                         { movie.release_date }
@@ -259,15 +265,15 @@ class Movie extends Component {
                                                 </Grid>
                                                 <Grid item>
                                                     <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
-                                                      {"Runtime: "}
+                                                        {t('movie:runtime')}
                                                     </Typography>
                                                     <Typography className={classes.inline} variant="body2" color="textPrimary">
-                                                        {movie.runtime} minutes
+                                                        {movie.runtime + ' ' + t('movie:minutes')}
                                                     </Typography>
                                                 </Grid>
                                                 <Grid item>
                                                     <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
-                                                      {"Rating: "}
+                                                        {t('movie:rating')}
                                                     </Typography>
                                                     <Typography className={classes.inline} variant="body2" color="textPrimary">
                                                         {movie.vote_average}
@@ -295,7 +301,7 @@ class Movie extends Component {
                                                             fullWidth
                                                         >
                                                             <Icon className={classes.leftIcon}>play_arrow</Icon>
-                                                            Stream in { streamUrl.split('/').pop() }
+                                                            { t('movie:streamIn') + ' ' + streamUrl.split('/').pop() }
                                                         </Button>
                                                     </Grid>
                                                 ))
@@ -311,19 +317,19 @@ class Movie extends Component {
                                     <List>
                                         <li>
                                             <ul className={classes.ul}>
-                                                <ListSubheader disableSticky>Directors</ListSubheader>
+                                                <ListSubheader disableSticky>{t('movie:directors')}</ListSubheader>
                                                 { this.renderCreditsListItems(movie.credits.crew.directors) }
                                             </ul>
                                         </li>
                                         <li>
                                             <ul className={classes.ul}>
-                                                <ListSubheader disableSticky>Producers</ListSubheader>
+                                                <ListSubheader disableSticky>{t('movie:producers')}</ListSubheader>
                                                 { this.renderCreditsListItems(movie.credits.crew.producers) }
                                             </ul>
                                         </li>
                                         <li>
                                             <ul className={classes.ul}>
-                                                <ListSubheader disableSticky>Main cast</ListSubheader>
+                                                <ListSubheader disableSticky>{t('movie:mainCast')}</ListSubheader>
                                                 { this.renderCreditsListItems(movie.credits.main_cast) }
                                             </ul>
                                         </li>
@@ -347,7 +353,7 @@ class Movie extends Component {
                                                         <TextField
                                                             value={this.state.commentValue}
                                                             onChange={this.handleInput}
-                                                            placeholder="Leave a comment"
+                                                            placeholder={t('movie:liveComment')}
                                                             rowsMax={4}
                                                             fullWidth
                                                             multiline
@@ -363,7 +369,7 @@ class Movie extends Component {
                                             {
                                                 comments.map((comment, i) => (
                                                     <ListItem key={i} alignItems="flex-start">
-                                                        <Link to={"/user/" + comment.uname}>
+                                                        <Link className={classes.link} to={"/user/" + comment.uname}>
                                                             <ListItemAvatar>
                                                                 { imgHelpers.renderAvatar(comment, classes) }
                                                             </ListItemAvatar>
@@ -381,7 +387,7 @@ class Movie extends Component {
                                                                         { comment.text }
                                                                     </Typography>
                                                                     <Typography component="span" variant="body2" color="textSecondary">
-                                                                        { distanceInWordsToNow(new Date(comment.dt) + "UTC" , { addSuffix: true }) }
+                                                                        { distanceInWordsToNow(new Date(comment.dt) + "UTC" , { addSuffix: true })}
                                                                     </Typography>
                                                                 </React.Fragment>
                                                             }

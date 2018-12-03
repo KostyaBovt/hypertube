@@ -4,7 +4,8 @@ import PropTypes from 'prop-types';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import { Typography, Card, CardActionArea, CardMedia, CardContent, FormControl, InputLabel, Input, InputAdornment, Icon, Button, Select, Chip, MenuItem, ListItemText, Checkbox, CircularProgress, ButtonBase} from '@material-ui/core';
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
+import { withNamespaces } from 'react-i18next';
 
 const styles = theme => ({
     layout: {
@@ -61,28 +62,28 @@ const MenuProps = {
 };
 
 const _genres = {
-    "28": "Action",
-    "12": "Adventure",
-    "16": "Animation",
-    "35": "Comedy",
-    "80": "Crime",
-    "99": "Documentary",
-    "18": "Drama",
-    "10751": "Family",
-    "14": "Fantasy",
-    "36": "History",
-    "27": "Horror",
-    "10402": "Music",
-    "9648": "Mystery",
-    "10749": "Romance",
-    "878": "Science Fiction",
-    "10770": "TV Movie",
-    "53": "Thriller",
-    "10752": "War",
-    "37": "Western"
+    "28": "action",
+    "12": "adventure",
+    "16": "animation",
+    "35": "comedy",
+    "80": "crime",
+    "99": "documentary",
+    "18": "drama",
+    "10751": "family",
+    "14": "fantasy",
+    "36": "history",
+    "27": "horror",
+    "10402": "music",
+    "9648": "mystery",
+    "10749": "romance",
+    "878": "scienceFiction",
+    "10770": "tvMovie",
+    "53": "thriller",
+    "10752": "war",
+    "37": "western"
 };
 
-
+@withNamespaces()
 @inject('LibraryStore') @observer
 class Library extends Component {
     constructor(props) {
@@ -184,7 +185,7 @@ class Library extends Component {
     }
 
     renderGenreSelectValues(selectedGenres) {
-        const { classes } = this.props;
+        const { classes, t } = this.props;
         const { searchMode } = this.props.LibraryStore;
 
         return (
@@ -192,7 +193,7 @@ class Library extends Component {
                 {selectedGenres.map(genreId => (
                     <Chip
                         key={genreId}
-                        label={_genres[genreId]}
+                        label={t('library:' + _genres[genreId])}
                         className={classes.chip}
                         onDelete={searchMode ? undefined : this.deleteSelectedGenre(genreId)}
                     />
@@ -258,16 +259,17 @@ class Library extends Component {
     }
 
     renderMovieRating(movie) {
+        const { t } = this.props;
         if (movie.vote_count > 0) {
             return (
                 <Typography variant="caption" color="textSecondary">
-                    Rating - {movie.vote_average}/10
+                    { t('library:rating') + ' - ' + movie.vote_average/10 }
                 </Typography>
             );
         } else {
             return (
                 <Typography variant="caption" color="textSecondary">
-                    No rating
+                    {t('library:noRating')}
                 </Typography>
             );
         }
@@ -275,7 +277,7 @@ class Library extends Component {
     
     renderMovies(movies) {
         if (!movies) return;
-        const { classes } = this.props;
+        const { classes, t } = this.props;
         return movies.map(movie => (
             <Grid item key={movie.id}>
                 <Card className={classes.card}>
@@ -293,7 +295,7 @@ class Library extends Component {
                                 {movie.title}
                             </Typography>
                             <Typography variant="subtitle2" gutterBottom color="textSecondary">
-                                { movie.release_date.split("-")[0] || 'Release date unknown' }
+                                { movie.release_date.split("-")[0] || t('library:releaseDataUnknown') }
                             </Typography>
                             { this.renderMovieRating(movie) }
                         </CardContent>
@@ -330,7 +332,7 @@ class Library extends Component {
 
     render() {
         const { queryString } = this.state;
-        const { classes, LibraryStore } = this.props;
+        const { classes, t,  LibraryStore } = this.props;
         const { isLoading, movies, filters, searchMode } = LibraryStore;
         return (
             <main>
@@ -342,22 +344,22 @@ class Library extends Component {
                             <Grid container justify="center" alignItems="flex-end">
                                 <Grid item className={classes.filterItem}>
                                     <FormControl disabled={searchMode} className={classes.formControl}>
-                                        <InputLabel htmlFor="sort_by">Sort by</InputLabel>
+                                        <InputLabel htmlFor="sort_by">{t('library:sortBy')}</InputLabel>
                                         <Select
                                             value={filters.sort_by}
                                             onChange={this.handleFilterChange}
                                             input={<Input name="sort_by" id="sort_by" />}
                                         >
-                                            <MenuItem value={"popularity.asc"}>Popularity ascending</MenuItem>
-                                            <MenuItem value={"popularity.desc"}>Popularity descending</MenuItem>
-                                            <MenuItem value={"vote_average.asc"}>Rating ascending</MenuItem>
-                                            <MenuItem value={"vote_average.desc"}>Rating descending</MenuItem>
-                                            <MenuItem value={"primary_release_date.asc"}>Release date ascending</MenuItem>
-                                            <MenuItem value={"primary_release_date.desc"}>Release date descending</MenuItem>
-                                            <MenuItem value={"revenue.asc"}>Revenue ascending</MenuItem>
-                                            <MenuItem value={"revenue.desc"}>Revenue descending</MenuItem>
-                                            <MenuItem value={"original_title.asc"}>Original title ascending</MenuItem>
-                                            <MenuItem value={"original_title.desc"}>Original title descending</MenuItem>
+                                            <MenuItem value={"popularity.asc"}>{t('library:popularityAscending')}</MenuItem>
+                                            <MenuItem value={"popularity.desc"}>{t('library:popularityDescending')}</MenuItem>
+                                            <MenuItem value={"vote_average.asc"}>{t('library:ratingAscending')}</MenuItem>
+                                            <MenuItem value={"vote_average.desc"}>{t('library:ratingDescending')}</MenuItem>
+                                            <MenuItem value={"primary_release_date.asc"}>{t('library:releaseDateAscending')}</MenuItem>
+                                            <MenuItem value={"primary_release_date.desc"}>{t('library:releaseDateDescending')}</MenuItem>
+                                            <MenuItem value={"revenue.asc"}>{t('library:revenueAscending')}</MenuItem>
+                                            <MenuItem value={"revenue.desc"}>{t('library:revenueDescending')}</MenuItem>
+                                            <MenuItem value={"original_title.asc"}>{t('library:originalTitleAscending')}</MenuItem>
+                                            <MenuItem value={"original_title.desc"}>{t('library:originalTitleDescending')}</MenuItem>
                                             
                                         </Select>
                                     </FormControl>
@@ -365,7 +367,7 @@ class Library extends Component {
 
                                 <Grid item className={classes.filterItem}>
                                     <FormControl disabled={searchMode} className={classes.formControl}>
-                                        <InputLabel htmlFor="select-multiple-chip">Genres</InputLabel>
+                                        <InputLabel htmlFor="select-multiple-chip">{t('library:genres')}</InputLabel>
                                         <Select
                                             multiple
                                             value={filters.with_genres}
@@ -378,7 +380,7 @@ class Library extends Component {
                                             Object.keys(_genres).map((genreId, index) => (
                                             <MenuItem key={index} value={genreId}>
                                                 <Checkbox checked={filters.with_genres.includes(genreId)} />
-                                                <ListItemText primary={_genres[genreId]} />
+                                                <ListItemText primary={t('library:' + _genres[genreId])} />
                                             </MenuItem>
                                             ))
                                         }
@@ -390,7 +392,7 @@ class Library extends Component {
                                     <Grid container spacing={8}>
                                         <Grid item>
                                             <FormControl disabled={searchMode} className={classes.formControl}>
-                                                <InputLabel htmlFor="primary_release_date_gte">Release year</InputLabel>
+                                                <InputLabel htmlFor="primary_release_date_gte">{t('library:releaseYear')}</InputLabel>
                                                 <Select
                                                     value={filters["primary_release_date.gte"]}
                                                     onChange={this.handleFilterChange}
@@ -408,7 +410,7 @@ class Library extends Component {
                                                     }
                                                 >
                                                     <MenuItem value="">
-                                                        <em>Any</em>
+                                                        <em>{t('library:any')}</em>
                                                     </MenuItem>
                                                     { this.renderYearOptions(true) }
                                                 </Select>
@@ -417,7 +419,7 @@ class Library extends Component {
 
                                         <Grid item>
                                             <FormControl disabled={searchMode} className={classes.formControl}>
-                                                <InputLabel htmlFor="primary_release_date_lte">Release year</InputLabel>
+                                                <InputLabel htmlFor="primary_release_date_lte">{t('library:releaseYear')}</InputLabel>
                                                 <Select
                                                     value={filters["primary_release_date.lte"]}
                                                     onChange={this.handleFilterChange}
@@ -435,7 +437,7 @@ class Library extends Component {
                                                     }
                                                 >
                                                     <MenuItem value="">
-                                                        <em>Any</em>
+                                                        <em>{t('library:any')}</em>
                                                     </MenuItem>
                                                     { this.renderYearOptions(false) }
                                                 </Select>
@@ -446,7 +448,7 @@ class Library extends Component {
 
                                 <Grid item className={classes.filterItem}>
                                     <FormControl disabled={searchMode} className={classes.formControl}>
-                                        <InputLabel shrink  htmlFor="vote_average">Rating</InputLabel>
+                                        <InputLabel shrink  htmlFor="vote_average">{t('library:rating')}</InputLabel>
                                         <Select
                                             value={filters["vote_average.gte"]}
                                             onChange={this.handleFilterChange}
@@ -454,7 +456,7 @@ class Library extends Component {
                                             input={<Input name="vote_average.gte" id="vote_average" />}
                                         >
                                             <MenuItem value="">
-                                                <em>Any</em>
+                                                <em>{t('library:any')}</em>
                                             </MenuItem>
                                         {
                                             ["1+","2+","3+","4+","5+","6+","7+","8+","9+"].map((value, index) => (
@@ -475,7 +477,7 @@ class Library extends Component {
                                         id="search-field"
                                         type="text"
                                         name="queryString"
-                                        placeholder="Search..."
+                                        placeholder={t('library:search') + '...'}
                                         value={queryString}
                                         startAdornment={
                                             <InputAdornment position="start">
@@ -497,7 +499,7 @@ class Library extends Component {
                             searchMode && !isLoading &&
                             <Grid item className={classes.backButton}>
                                 <ButtonBase focusRipple onClick={this.disableSearchMode}>
-                                    <Icon color="action">close</Icon>
+                                    <Icon color="action">{t('library:close')}</Icon>
                                 </ButtonBase>
                             </Grid>
                         }

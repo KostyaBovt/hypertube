@@ -21,6 +21,10 @@ const styles = {
     buttons: {
         marginLeft: 5
     },
+    link: {
+        textDecoration: 'none',
+        color: 'white'
+    }
 };
 
 @withNamespaces()
@@ -121,7 +125,7 @@ class Header extends Component {
                 <AppBar position="static">
                     <Toolbar>
                         <Typography id="logo" variant="h6" color="inherit" className={classes.grow}>
-                            HyperTube
+                            <Link  to="/" className={classes.link}>HyperTube</Link>
                         </Typography>
                         { this.renderAuthButtons(classes, t) }
                     </Toolbar>

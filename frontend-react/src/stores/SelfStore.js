@@ -23,8 +23,7 @@ class SelfStore {
             const response = await axios.get('http://localhost:8080/api/profile', { withCredentials: true });
             this.setSelf(response.data.payload);
             i18n.changeLanguage(this.self.locale);
-            reaction(() => this.self.locale,
-                     locale => i18n.changeLanguage(locale));
+            reaction(() => this.self.locale, locale => i18n.changeLanguage(locale));
         } catch (e) {
             this.setSelf(null);
             console.error(e);

@@ -10,7 +10,8 @@ import Typography from '@material-ui/core/Typography';
 import intra_logo from "../img/42.png";
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
+import { withNamespaces } from 'react-i18next';
 
 const styles = {
 	paper: {
@@ -28,7 +29,7 @@ const styles = {
 		display: 'flex',
 	}
 };
-
+@withNamespaces()
 @inject('AuthStore') @observer
 class Login extends Component {
 	constructor(props) {
@@ -54,16 +55,16 @@ class Login extends Component {
 
 	render() {
 		const { fields, errors } = this.props.AuthStore;
-		const { classes } = this.props;
+		const { classes, t } = this.props;
 		return (
 			<form onSubmit={this.handleSubmit}>
 				<Paper className={classes.paper} elevation={1}>
 					<Typography variant="h5" gutterBottom>
-						Log In
+                        {t('login:LogIn')}
 					</Typography>
 
 					<FormControl error={!!errors.uname} margin="dense">
-						<InputLabel htmlFor="uname">Username</InputLabel>
+						<InputLabel htmlFor="uname">{t('login:Username')}</InputLabel>
 						<Input
 							id="uname"
 							type="text"
@@ -75,7 +76,7 @@ class Login extends Component {
 					</FormControl>
 
 					<FormControl error={!!errors.password} margin="dense">
-						<InputLabel htmlFor="password">Password</InputLabel>
+						<InputLabel htmlFor="password">{t('login:Password')}</InputLabel>
 						<Input
 							id="password"
 							type="password"
@@ -87,7 +88,7 @@ class Login extends Component {
 					</FormControl>
 
 					<Button className={classes.button} variant="contained" color="primary" type="submit">
-						Log in
+                        {t('login:LogIn')}
 					</Button>
 
 					<div className="social">
@@ -101,7 +102,7 @@ class Login extends Component {
 							<i  className="fa fa-google-plus-circle " aria-hidden="true"></i>
 						</a>
 						<Typography variant="body1">
-							<Link to="/auth/lostpass">Forgot password?</Link>
+							<Link to="/auth/lostpass">{t('login:ForgotPassword')}</Link>
 						</Typography>
 					</div>
 				</Paper>
