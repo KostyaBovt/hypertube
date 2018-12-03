@@ -114,18 +114,6 @@ class PictureSection extends Component {
 		)
     }
 
-    renderAvatar(self, classes) {
-		if (self.avatar) {
-			return <Avatar className={classes.avatar} src={`http://localhost:8080${self.avatar}`} />;
-		} else {
-			return (
-				<Avatar className={classes.avatar} src={self.avatar} >
-					{`${self.fname.charAt(0)}${self.lname.charAt(0)}`}
-				</Avatar>
-			);
-		}
-    }
-
     render() {
         const { classes, t } = this.props;
         const { self } = this.props.SelfStore;
@@ -137,7 +125,7 @@ class PictureSection extends Component {
                         <ListSubheader disableSticky color="primary">{t('settingsPage:avatar')}</ListSubheader>
                     }>
                         <ListItem divider className={classes.avatarContainer}>
-                            { this.renderAvatar(self, classes) }
+                            { imgHelpers.renderAvatar(self, classes) }
                         </ListItem>
                         <ListItem divider button onClick={() => { this.fileInput.current.click() }}>
                             <ListItemIcon>

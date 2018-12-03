@@ -7,8 +7,8 @@ i18n.init({
 
     lng: 'en',
     resources: {
-        'en': {
-            'settingsPage': {
+        en: {
+            settingsPage: {
                 other: 'Other',
                 language: 'Language',
                 cancel: 'Cancel',
@@ -36,10 +36,16 @@ i18n.init({
                 deletePicture: 'Delete current picture',
                 imageProcessingFailed: 'image processing failed, please try again',
                 tooBigFile: 'file is too big, max size is 3MB'
+            },
+            header: {
+                settings: 'Settings',
+                logout: 'Logout',
+                register: 'Register',
+                login: 'Login'
             }
         },
-        'ru': {
-            'settingsPage': {
+        ru: {
+            settingsPage: {
                 other: 'Другие',
                 language: 'Язык',
                 cancel: 'Закрыть',
@@ -67,6 +73,12 @@ i18n.init({
                 deletePicture: 'Удалить текущее изображение',
                 imageProcessingFailed: 'Обработка изображения не удалась, пожалуйста, попробуйте снова',
                 tooBigFile: 'Фаил слишком большой, максимальный размер - 3MB'
+            },
+            header: {
+                settings: 'Настройки профиля',
+                logout: 'Выход',
+                register: 'Регистрация',
+                login: 'Вход'
             }
         }
     }

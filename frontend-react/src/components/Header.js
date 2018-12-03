@@ -5,9 +5,11 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import { inject, observer } from 'mobx-react';
+import imgHelpers from '../helpers/imgHelpers';
+import { withNamespaces } from 'react-i18next';
 
 import { Link } from 'react-router-dom'
-import { IconButton, Avatar, Menu, MenuItem, ListItemIcon, Icon } from '@material-ui/core';
+import { IconButton, Menu, MenuItem, ListItemIcon, Icon } from '@material-ui/core';
 
 const styles = {
     root: {
@@ -21,6 +23,7 @@ const styles = {
     },
 };
 
+@withNamespaces()
 @inject('SelfStore', 'AuthStore') @observer
 class Header extends Component {
   constructor(props) {
@@ -48,19 +51,7 @@ class Header extends Component {
     this.setState({ anchorEl: null });
   }
 
-  renderAvatar(self, classes) {
-    if (self.avatar) {
-        return <Avatar src={`http://localhost:8080${self.avatar}`} />;
-    } else {
-        return (
-            <Avatar src={self.avatar} >
-                {`${self.fname.charAt(0)}${self.lname.charAt(0)}`}
-            </Avatar>
-        );
-    }
-}
-
-  renderAuthButtons(classes) {
+  renderAuthButtons(classes, t) {
     const { self } = this.props.SelfStore;
     const { anchorEl } = this.state;
 
@@ -74,7 +65,7 @@ class Header extends Component {
                   aria-haspopup="true"
                   onClick={this.handleMenu}
                 >
-                  { this.renderAvatar(self) }
+                  { imgHelpers.renderAvatar(self) }
                 </IconButton>
                 <Menu
                   id="menu-appbar"
@@ -95,7 +86,7 @@ class Header extends Component {
                             <Icon>settings</Icon>
                         </ListItemIcon>
                         <Typography variant="inherit" noWrap>
-                           Settings
+                            {t('header:settings')}
                         </Typography>
                     </MenuItem>
                     <MenuItem button onClick={this.logoutUser} >
@@ -103,7 +94,7 @@ class Header extends Component {
                             <Icon>exit_to_app</Icon>
                         </ListItemIcon>
                         <Typography variant="inherit" noWrap>
-                           Logout
+                            {t('header:logout')}
                         </Typography>
                     </MenuItem>
                 </Menu>
@@ -112,15 +103,19 @@ class Header extends Component {
     } else {
         return (
             <React.Fragment>
-                <Button component={Link} to="/auth/registration" className={classes.buttons} color="inherit">Register</Button>
-                <Button component={Link} to="/auth/login" className={classes.buttons} color="inherit">Login</Button>
+                <Button component={Link} to="/auth/registration" className={classes.buttons} color="inherit">
+                    {t('header:register')}
+                </Button>
+                <Button component={Link} to="/auth/login" className={classes.buttons} color="inherit">
+                    {t('header:login')}
+                </Button>
             </React.Fragment>
         )
     }
   }
   
   render() {
-        const { classes } = this.props;
+        const { classes, t } = this.props;
         return (
             <div className={classes.root}>
                 <AppBar position="static">
@@ -128,7 +123,7 @@ class Header extends Component {
                         <Typography id="logo" variant="h6" color="inherit" className={classes.grow}>
                             HyperTube
                         </Typography>
-                        { this.renderAuthButtons(classes) }
+                        { this.renderAuthButtons(classes, t) }
                     </Toolbar>
                 </AppBar>
             </div>

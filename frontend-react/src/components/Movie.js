@@ -5,7 +5,8 @@ import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
 import { TextField, Typography, CircularProgress, Button, Avatar, List, ListItem, ListItemAvatar, ListItemText, Icon, ListSubheader } from '@material-ui/core';
 import ReactPlayer from 'react-player';
-import Plyr from 'react-plyr';
+import imgHelpers from '../helpers/imgHelpers';
+import { Link } from 'react-router-dom'
 
 import { distanceInWordsToNow } from 'date-fns';
 
@@ -143,18 +144,6 @@ class Movie extends Component {
                 </Paper>
             </Grid>
         )
-    }
-
-    renderAvatar(data, classes) {
-		if (data.avatar) {
-			return <Avatar className={classes.avatar} src={`http://localhost:8080${data.avatar}`} />;
-		} else {
-			return (
-				<Avatar className={classes.avatar} src={data.avatar} >
-					{`${data.fname.charAt(0)}${data.lname.charAt(0)}`}
-				</Avatar>
-			);
-		}
     }
 
     renderCommentSectionActions(classes) {
@@ -352,7 +341,7 @@ class Movie extends Component {
                                             <form noValidate autoComplete="off">
                                                 <Grid container spacing={16} alignItems="flex-start">
                                                     <Grid item>
-                                                        {  this.renderAvatar(self, classes) }
+                                                        {  imgHelpers.renderAvatar(self, classes) }
                                                     </Grid>
                                                     <Grid item xs>
                                                         <TextField
@@ -374,9 +363,11 @@ class Movie extends Component {
                                             {
                                                 comments.map((comment, i) => (
                                                     <ListItem key={i} alignItems="flex-start">
-                                                        <ListItemAvatar>
-                                                            { this.renderAvatar(comment, classes) }
-                                                        </ListItemAvatar>
+                                                        <Link to={"/user/" + comment.uname}>
+                                                            <ListItemAvatar>
+                                                                { imgHelpers.renderAvatar(comment, classes) }
+                                                            </ListItemAvatar>
+                                                        </Link>
                                                         <ListItemText
                                                             disableTypography
                                                             primary={

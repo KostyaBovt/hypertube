@@ -1,3 +1,6 @@
+import {Avatar} from "@material-ui/core";
+import React from "react";
+
 /**
  * @param {File} file - Image File Object
  */
@@ -50,9 +53,22 @@ const getCroppedImgBlob = (image, crop) => {
 			resolve(file);
 		}, 'image/jpeg');
 	});
+};
+
+const renderAvatar = (data, classes) => {
+    if (data.avatar) {
+        return <Avatar className={classes ? classes.avatar : ''} src={`http://localhost:8080${data.avatar}`} />;
+    } else {
+        return (
+            <Avatar className={classes ? classes.avatar : ''} src={data.avatar} >
+                {`${data.fname.charAt(0)}${data.lname.charAt(0)}`}
+            </Avatar>
+        );
+    }
 }
 
 export default {
 	imgFileToBase64,
-	getCroppedImgBlob
+	getCroppedImgBlob,
+    renderAvatar
 };
