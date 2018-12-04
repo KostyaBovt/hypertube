@@ -291,7 +291,7 @@ class Library extends Component {
                             title={movie.title}
                         />
                         <CardContent>
-                            <Typography variant="subtitle2" noWrap>
+                            <Typography variant="subtitle2" noWrap color={ movie.watched_films_count > 0 ? 'textSecondary' : 'textPrimary' }>
                                 {movie.title}
                             </Typography>
                             <Typography variant="subtitle2" gutterBottom color="textSecondary">

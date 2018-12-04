@@ -252,7 +252,7 @@ app.get('/films', (req, res, next) => {
 	let params = {};
 	const filters = req.query;
 
-	var watched = req.user.watched;
+	const watched = req.user.watched;
 
 	if (filters.query) {
 		url += "/search/movie";
@@ -312,18 +312,13 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 }, (req, res, next) => {
 	const { movie_details } = req.movie;
 	const { crew, cast } = movie_details.credits;
-	const transformPicUrls = (member) => {
-		if (member.profile_path) {
-			member.profile_path = `http://image.tmdb.org/t/p/w342/${member.profile_path}`;
-		}
-		return member;
+	const getNamesOnly = (member) => {
+		return member.name;
 	}
 
-	console.log(crew, cast);
-
-	const directors = crew.filter((member => member.job === "Director")).map(transformPicUrls);
-	const producers = crew.filter((member => member.job === "Producer")).map(transformPicUrls);
-	const main_cast = cast.splice(0, 5).map(transformPicUrls);
+	const directors = crew.filter((member => member.job === "Director")).map(getNamesOnly);
+	const producers = crew.filter((member => member.job === "Producer")).map(getNamesOnly);
+	const main_cast = cast.splice(0, 5).map(getNamesOnly);
 
 	movie_details.credits = { crew: { directors, producers }, main_cast };
 
