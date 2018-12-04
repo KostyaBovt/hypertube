@@ -76,10 +76,12 @@ class Movie extends Component {
         this.state = {
             movieId: this.props.match.params.id,
             commentValue: '',
+            streamingUrl: undefined
         };
         this.handleInput = this.handleInput.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.resetCommentInput = this.resetCommentInput.bind(this);
+        this.handleSelection = this.handleSelection.bind(this);
     }
 
     componentDidMount() {
@@ -114,7 +116,12 @@ class Movie extends Component {
         this.resetCommentInput();
     }
 
-    renderPlayer(){
+    handleSelection(url) {
+        console.log(url);
+        this.setState({streamingUrl: url})
+    }
+
+    renderPlayer(Url) {
         const { MovieStore, classes } = this.props;
         const { movie } = MovieStore;
 
@@ -124,7 +131,7 @@ class Movie extends Component {
                     <ReactPlayer
                         controls
                         className={classes.reactPlayer}
-                        url={movie.streaming}
+                        url={Url}
                         config={{
                             file: {
                                 attributes: {
@@ -179,7 +186,7 @@ class Movie extends Component {
 
     render() {
         const { classes, t } = this.props;
-        const { commentValue } = this.state;
+        const { commentValue, streamingUrl } = this.state;
         const { self } = this.props.SelfStore; 
         const { movie, comments } = this.props.MovieStore;
 
@@ -303,6 +310,7 @@ class Movie extends Component {
                                                             variant="contained"
                                                             color="primary"
                                                             fullWidth
+                                                            onClick={() => this.handleSelection(streamUrl)}
                                                         >
                                                             <Icon className={classes.leftIcon}>play_arrow</Icon>
                                                             { t('movie:streamIn') + ' ' + streamUrl.split('/').pop() }
@@ -316,7 +324,7 @@ class Movie extends Component {
                                 </Paper>
                             </Grid>
 
-                            {/* { !!movie.streaming && this.renderPlayer() } */}
+                            { !!streamingUrl && this.renderPlayer(streamingUrl) }
 
                             <Grid item xs>
                                 <Paper>
