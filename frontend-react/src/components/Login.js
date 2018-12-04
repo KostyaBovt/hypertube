@@ -27,6 +27,13 @@ const styles = {
 	},
 	authBtnsContainer: {
 		display: 'flex',
+	},
+	forgotPassword: {
+		textAlign: 'center'
+	},
+    forgotPasswordLink: {
+        color: 'black',
+        textDecoration: 'none'
 	}
 };
 @withNamespaces()
@@ -101,10 +108,12 @@ class Login extends Component {
 						<a title="Google" href="http://localhost:8080/api/auth/google/login">
 							<i  className="fa fa-google-plus-circle " aria-hidden="true"></i>
 						</a>
-						<Typography variant="body1">
-							<Link to="/auth/lostpass">{t('login:ForgotPassword')}</Link>
-						</Typography>
 					</div>
+					<Typography variant="body1" className={classes.forgotPassword}>
+						<Link to="/auth/lostpass" className={classes.forgotPasswordLink}>
+							{t('login:forgotPassword')}
+						</Link>
+					</Typography>
 				</Paper>
 			</form>
 		);

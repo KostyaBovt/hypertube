@@ -23,6 +23,7 @@ const styles = theme => ({
     },
     playerContainer: {
         minWidth: '100%',
+        minHeight: '400px',
         padding: theme.spacing.unit
     },
     media: {

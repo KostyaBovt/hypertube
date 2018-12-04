@@ -104,7 +104,7 @@ i18n.init({
                 logIn: 'log In',
                 username: 'Username',
                 password: 'Password',
-                forgotPassword: 'ForgotPassword?'
+                forgotPassword: 'Forgot password ?'
             },
             registration: {
                 checkEmail: 'Please, check your email and follow the link we\'\ve sent to activate your account.',
