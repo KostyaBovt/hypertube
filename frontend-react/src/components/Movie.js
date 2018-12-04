@@ -3,7 +3,7 @@ import { inject, observer } from 'mobx-react';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
-import { TextField, Typography, CircularProgress, Button, Avatar, List, ListItem, ListItemAvatar, ListItemText, Icon, ListSubheader } from '@material-ui/core';
+import { TextField, Typography, CircularProgress, Button, Avatar, List, ListItem, ListItemAvatar, ListItemText, Icon } from '@material-ui/core';
 import ReactPlayer from 'react-player';
 import imgHelpers from '../helpers/imgHelpers';
 import { Link } from 'react-router-dom';
@@ -59,8 +59,9 @@ const styles = theme => ({
     inline: {
         display: 'inline',
     },
-    ul: {
-        padding: 0
+    overview: {
+        marginTop: theme.spacing.unit,
+        marginBottom: theme.spacing.unit
     },
     link: {
         textDecoration: 'none',
@@ -176,27 +177,6 @@ class Movie extends Component {
         );
     }
 
-    renderCreditsListItems(items) {
-        return items.map(item => (
-            <ListItem key={item.id}>
-                <ListItemAvatar>
-                    {
-                        item.profile_path ?
-                        <Avatar alt={item.name} src={item.profile_path} /> :
-                        <Avatar >
-                            { item.name.charAt(0) }
-                        </Avatar>
-
-                    }
-                </ListItemAvatar>
-                <ListItemText
-                    primary={item.name}
-                    secondary={item.character || undefined}
-                />
-            </ListItem>
-        ));
-    }
-
     render() {
         const { classes, t } = this.props;
         const { commentValue } = this.state;
@@ -280,7 +260,31 @@ class Movie extends Component {
                                                     </Typography>
                                                 </Grid>
                                                 <Grid item>
-                                                    <Typography variant="body1">
+                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                        {t('movie:directors')}
+                                                    </Typography>
+                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
+                                                        {movie.credits.crew.directors.join(', ')}
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item>
+                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                        {t('movie:producers')}
+                                                    </Typography>
+                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
+                                                        {movie.credits.crew.producers.join(', ')}
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item>
+                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                        {t('movie:mainCast')}
+                                                    </Typography>
+                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
+                                                        {movie.credits.main_cast.join(', ')}
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item>
+                                                    <Typography variant="body1" className={classes.overview}>
                                                         {movie.overview}
                                                     </Typography>
                                                 </Grid>
@@ -309,31 +313,6 @@ class Movie extends Component {
                                         </Grid>
                                     }
 
-                                </Paper>
-                            </Grid>
-
-                            <Grid item>
-                                <Paper>
-                                    <List>
-                                        <li>
-                                            <ul className={classes.ul}>
-                                                <ListSubheader disableSticky>{t('movie:directors')}</ListSubheader>
-                                                { this.renderCreditsListItems(movie.credits.crew.directors) }
-                                            </ul>
-                                        </li>
-                                        <li>
-                                            <ul className={classes.ul}>
-                                                <ListSubheader disableSticky>{t('movie:producers')}</ListSubheader>
-                                                { this.renderCreditsListItems(movie.credits.crew.producers) }
-                                            </ul>
-                                        </li>
-                                        <li>
-                                            <ul className={classes.ul}>
-                                                <ListSubheader disableSticky>{t('movie:mainCast')}</ListSubheader>
-                                                { this.renderCreditsListItems(movie.credits.main_cast) }
-                                            </ul>
-                                        </li>
-                                    </List>
                                 </Paper>
                             </Grid>
 
