@@ -1,6 +1,4 @@
 import i18n from 'i18next';
-import {DialogTitle} from "@material-ui/core";
-import React from "react";
 
 i18n.init({
     debug: true,
@@ -35,7 +33,7 @@ i18n.init({
                 uploadPicture: 'Upload new picture',
                 deletePicture: 'Delete current picture',
                 imageProcessingFailed: 'image processing failed, please try again',
-                tooBigFile: 'file is too big, max size is 3MB'
+                tooBigFile: 'file is too big, max size is 3MB',
             },
             header: {
                 settings: 'Settings',
@@ -84,6 +82,7 @@ i18n.init({
                 war: 'war:',
                 western: 'western',
                 releaseDataUnknown: 'Release date unknown',
+                loadMore: 'Load more'
             },
             movie: {
                 unavailable: 'This movie is unavailable',
@@ -118,7 +117,7 @@ i18n.init({
         },
         ru: {
             settingsPage: {
-                other: 'Другие',
+                other: 'Другое',
                 language: 'Язык',
                 cancel: 'Закрыть',
                 save: 'Сохранить',
@@ -132,41 +131,41 @@ i18n.init({
                 lname: 'Фамилия',
                 uname: 'Логин',
                 bio: 'Биография',
-                none: '-',
+                none: 'Отсутствует',
                 profile: 'Профиль',
                 changeField: 'Изменить поле',
                 email: 'Почта',
                 emailAddress: 'Почтовый адрес',
-                emailDialog: 'Новий почтовий адрес будет сохранен только если вы подтвердите его перейдя по ссылке в отпраленом письме',
-                ok: 'оk',
+                emailDialog: 'Новий почтовий адрес будет сохранен только когда вы подтвердите его перейдя по ссылке которую мы туда отправили',
+                ok: 'ок',
                 avatar: 'Аватар',
                 importPicture: 'Импортировать изображение из',
                 uploadPicture: 'Загрузить новое изображение',
                 deletePicture: 'Удалить текущее изображение',
                 imageProcessingFailed: 'Обработка изображения не удалась, пожалуйста, попробуйте снова',
-                tooBigFile: 'Фаил слишком большой, максимальный размер - 3MB'
+                tooBigFile: 'Файл слишком большой, максимальный размер - 3MB'
             },
             header: {
-                settings: 'Настройки профиля',
+                settings: 'Настройки',
                 logout: 'Выход',
                 register: 'Регистрация',
                 login: 'Вход'
             },
             library: {
                 sortBy: 'Сортировать по',
-                popularityAscending: 'возрастанию популярности',
-                popularityDescending: 'убыванию популярности',
-                ratingAscending: 'возрастанию рейтинга',
-                ratingDescending: 'убыванию рейтинга',
-                releaseDateAscending: 'дате выхода, новые в начале',
-                releaseDateDescending: 'дате выхода, новые в конце',
-                revenueAscending: 'возрастанию сборов',
-                revenueDescending: 'убыванию сборов',
-                originalTitleAscending: 'возрастанию в алфавитном порядке',
-                originalTitleDescending: 'убыванию в алфавитном порядке',
+                popularityAscending: 'Возрастанию популярности',
+                popularityDescending: 'Убыванию популярности',
+                ratingAscending: 'Возрастанию рейтинга',
+                ratingDescending: 'Убыванию рейтинга',
+                releaseDateAscending: 'Дате выхода, новые в начале',
+                releaseDateDescending: 'Дате выхода, новые в конце',
+                revenueAscending: 'Возрастанию сборов',
+                revenueDescending: 'Убыванию сборов',
+                originalTitleAscending: 'Алфавиту (А-Я)',
+                originalTitleDescending: 'Алфавиту (Я-А)',
                 genres: 'Жанры',
                 releaseYear: 'Год выхода',
-                any: 'Любые',
+                any: 'Любой',
                 search: 'Поиск',
                 close: 'Закрыть',
                 rating: 'Рейтинг',
@@ -191,21 +190,22 @@ i18n.init({
                 war: 'Военные',
                 western: 'Вестерн',
                 releaseDataUnknown: 'Дата выхода неизвестна',
+                loadMore: 'Показать больше'
             },
             movie: {
                 unavailable: 'Этот фильм недоступен',
-                stream: 'Проигрывать в ',
-                cancel: 'Очистить',
+                stream: 'Смотреть в ',
+                cancel: 'Отменить',
                 send: 'Отправить',
                 originalTitle: 'Оригинальное название: ',
                 releaseDate: 'Дата выхода: ',
-                runtime: 'Время: ',
+                runtime: 'Продолжительность : ',
                 rating: 'Рейтинг: ',
                 liveComment: 'Оставить коментарий',
                 directors: 'Режиссеры',
                 producers: 'Продюсеры',
                 mainCast: 'В главных ролях',
-                streamIn: 'Воспроизвести в',
+                streamIn: 'Смотреть в',
                 minutes: 'минут'
             },
             login: {
@@ -216,7 +216,7 @@ i18n.init({
             },
             registration: {
                 checkEmail: 'Пожалуйста, проверьте свою почту и следуйте по ссылке которую мы отправили для активации Вашего аккаунта',
-                ok: 'Ок',
+                ok: 'ок',
                 registration: 'Регистрация',
                 username: 'Имя',
                 email: 'Емейл',

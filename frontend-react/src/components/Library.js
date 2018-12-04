@@ -263,7 +263,7 @@ class Library extends Component {
         if (movie.vote_count > 0) {
             return (
                 <Typography variant="caption" color="textSecondary">
-                    { t('library:rating') + ' - ' + movie.vote_average/10 }
+                    { `${t('library:rating')} - ${movie.vote_average}/10` }
                 </Typography>
             );
         } else {
@@ -306,7 +306,7 @@ class Library extends Component {
     }
 
     renderLoadMoreButton() {
-        const { classes, LibraryStore } = this.props;
+        const { classes, LibraryStore, t } = this.props;
         const { isLoading, movies, currentPage, totalPages } = LibraryStore;
 
         if (isLoading) {
@@ -322,7 +322,7 @@ class Library extends Component {
                 <Grid container className={classes.container} justify="center">
                     <Grid item>
                         <Button onClick={() => this.handleLoadMore(currentPage)} variant="outlined" size="large" color="primary">
-                            Load more
+                            { t('library:loadMore') }
                         </Button>
                     </Grid>
                 </Grid>
@@ -499,7 +499,7 @@ class Library extends Component {
                             searchMode && !isLoading &&
                             <Grid item className={classes.backButton}>
                                 <ButtonBase focusRipple onClick={this.disableSearchMode}>
-                                    <Icon color="action">{t('library:close')}</Icon>
+                                    <Icon color="action">close</Icon>
                                 </ButtonBase>
                             </Grid>
                         }

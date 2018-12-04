@@ -29,37 +29,37 @@ const theme = createMuiTheme({
 class HyperTube extends Component {
     componentDidMount(){
         const { SelfStore } = this.props;
-        
         SelfStore.pullSelf();
     }
-  render() {
-      const { SelfStore } = this.props;
-      if (SelfStore.self === undefined) {
-          return null;
-      } else {
-          return (
-              <I18nextProvider i18n={i18n}>
-                  <MuiThemeProvider theme={theme}>
-                      <BrowserRouter>
-                          <React.Fragment>
-                              <CssBaseline/>
-                              <Header/>
-                              <Switch>
-                                  <Route path="/auth" component={Auth}/>
-                                  <PrivateRoute exact path="/" component={Library}/>
-                                  <PrivateRoute exact path="/user/:username" component={User}/>
-                                  <PrivateRoute exact path="/settings" component={SettingsPage}/>
-                                  <PrivateRoute exact path="/movie/:id([0-9]*)" component={Movie}/>
-                                  <Route path="*" component={NotFound}/>
-                              </Switch>
-                              <Footer/>
-                          </React.Fragment>
-                      </BrowserRouter>
-                  </MuiThemeProvider>
-              </I18nextProvider>
-          );
-      }
-  }
+
+    render() {
+        const { SelfStore } = this.props;
+        if (SelfStore.self === undefined) {
+            return null;
+        } else {
+            return (
+                <I18nextProvider i18n={i18n}>
+                    <MuiThemeProvider theme={theme}>
+                        <BrowserRouter>
+                            <React.Fragment>
+                                <CssBaseline/>
+                                <Header/>
+                                <Switch>
+                                    <Route path="/auth" component={Auth}/>
+                                    <PrivateRoute exact path="/" component={Library}/>
+                                    <PrivateRoute exact path="/user/:username" component={User}/>
+                                    <PrivateRoute exact path="/settings" component={SettingsPage}/>
+                                    <PrivateRoute exact path="/movie/:id([0-9]*)" component={Movie}/>
+                                    <Route path="*" component={NotFound}/>
+                                </Switch>
+                                <Footer/>
+                            </React.Fragment>
+                        </BrowserRouter>
+                    </MuiThemeProvider>
+                </I18nextProvider>
+            );
+        }
+    }
 }
 
 @inject('SelfStore') @observer
