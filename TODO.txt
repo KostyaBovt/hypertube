@@ -1,3 +1,6 @@
 1. fix subtitles
-2. streaming: change port to 8080 in Access-Control-Allow-Origin
-3. delete this file
+2. fix verstka
+3. fix header localization
+4. streaming: change port to 8080 in Access-Control-Allow-Origin
+5. test all
+6. delete this file
