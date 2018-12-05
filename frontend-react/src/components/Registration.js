@@ -10,7 +10,7 @@ import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, CircularProgress } from '@material-ui/core';
-import { withNamespaces } from 'react-i18next';
+
 
 import grey from '@material-ui/core/colors/grey';
 
@@ -30,7 +30,7 @@ const styles = {
 		color: grey[500]
 	}
 };
-@withNamespaces()
+
 @inject('AuthStore') @observer
 class Registration extends Component {
 	constructor(props) {
@@ -88,12 +88,12 @@ class Registration extends Component {
 					<DialogTitle id="alert-dialog-title">{"Registration successfull"}</DialogTitle>
 					<DialogContent>
 						<DialogContentText id="alert-dialog-description">
-                            {t('registration:checkEmail')}
+							Please, check your email and follow the link we've sent to activate your account.
 						</DialogContentText>
 					</DialogContent>
 					<DialogActions>
 						<Button onClick={this.handleDialogClose} color="primary" autoFocus>
-                            {t('registration:ok')}
+                            ok
 						</Button>
 					</DialogActions>
 				</Dialog>
@@ -101,7 +101,7 @@ class Registration extends Component {
 				<form onSubmit={this.handleSubmit}>
 					<Paper className={classes.paper} elevation={1}>
 						<Typography variant="h5" gutterBottom>
-                            {t('registration:registration')}
+							Registration
 						</Typography>
 						<FormControl error={!!errors.fname} margin="dense">
 							<InputLabel htmlFor="fname">First Name</InputLabel>
@@ -128,7 +128,7 @@ class Registration extends Component {
 						</FormControl>
 
 						<FormControl error={!!errors.uname} margin="dense">
-							<InputLabel htmlFor="uname">{t('registration:username')}</InputLabel>
+							<InputLabel htmlFor="uname">Username</InputLabel>
 							<Input
 								id="uname"
 								type="text"
@@ -140,7 +140,7 @@ class Registration extends Component {
 						</FormControl>
 
 						<FormControl error={!!errors.email} margin="dense">
-							<InputLabel htmlFor="email">{t('registration:email')}</InputLabel>
+							<InputLabel htmlFor="email">Email</InputLabel>
 							<Input
 								id="email"
 								type="email"
@@ -164,7 +164,7 @@ class Registration extends Component {
 						</FormControl>
 
 						<FormControl error={!!errors.confirmPassword} margin="dense">
-							<InputLabel htmlFor="confirmPassword">{t('registration:confirmPassword')}</InputLabel>
+							<InputLabel htmlFor="confirmPassword">Confirm Password</InputLabel>
 							<Input
 								id="confirmPassword"
 								type="password"
