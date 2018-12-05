@@ -299,8 +299,9 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 
 	try {
 		const response = await axios.get(url, { params });
-		const { imdb_id, poster_path } = response.data;
-		response.data.poster_path = 'http://image.tmdb.org/t/p/w342' + poster_path;
+		const { imdb_id, poster_path, backdrop_path } = response.data;
+		response.data.poster_path = 'http://image.tmdb.org/t/p/w500' + poster_path;
+		response.data.backdrop_path = 'http://image.tmdb.org/t/p/w500' + backdrop_path;
 		response.data.watched_films_count = watched[movieId] || 0;
 		req.movie = { imdb_id, movie_details: response.data };
 		next();
@@ -334,7 +335,7 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 	try {
 		const response = await axios.get(url);
 		console.log(response.data);
-		const { torrents } = response.data;
+		const { torrents, trailer } = response.data;
 
 		if (torrents && torrents['en']) {
 			const streaming = [];
@@ -344,9 +345,17 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 			});
 			req.movie.streaming = streaming;
 		}
+
+		if (trailer) {
+			req.movie.movie_details.trailer = trailer;
+		}
 	} catch (e) {
 		console.log('popcorntime request failed...');
-		console.log(e.response.status, e.response.text, e.response.data);
+		if (e.response) {
+			console.log(e.response.status, e.response.text, e.response.data);
+		} else {
+			console.error(e);
+		}
 	} finally {
 		next();
 	}
@@ -708,7 +717,11 @@ app.get('/subtitles/:imdbid/:resolution/:language', (req, res, next) => { // Che
 		});
 	} catch (e) {
 		console.log('Error while downloading subtitles:', srtDownloadUrl);
-		console.error(e);
+		if (e.response) {
+			console.log(e.response.status, e.response.text, e.response.data);
+		} else {
+			console.error(e);
+		}
 		res.sendStatus(500);
 	}
 }, async (req, res) => {
