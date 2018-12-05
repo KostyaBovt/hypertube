@@ -3,7 +3,7 @@ import { inject, observer } from 'mobx-react';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
-import { TextField, Typography, CircularProgress, Button, Avatar, List, ListItem, ListItemAvatar, ListItemText, Icon } from '@material-ui/core';
+import { TextField, Typography, CircularProgress, Button, List, ListItem, ListItemAvatar, ListItemText, Icon, Divider } from '@material-ui/core';
 import ReactPlayer from 'react-player';
 import imgHelpers from '../helpers/imgHelpers';
 import { Link } from 'react-router-dom';
@@ -21,26 +21,25 @@ const styles = theme => ({
     item: {
         margin: theme.spacing.unit
     },
-    playerContainer: {
-        minWidth: '100%',
-        minHeight: '400px',
-        padding: theme.spacing.unit
-    },
     media: {
         width: "100%",
     },
+    playerContainer: {
+        position: 'relative',
+        paddingTop: 'calc((9 / 16) * 100%)',
+        backgroundColor: '#000',
+    },
     reactPlayer: {
-        padding: 0,
-        margin: 0
+        position: 'absolute',
+        top: 0,
+        left: 0
     },
     container: {
         padding: theme.spacing.unit * 2
     },
-    avatar: {
-		backgroundColor: theme.palette.grey,
-    },
-    commentSection: {
-        paddingTop: theme.spacing.unit * 2,
+    movieDetails: {
+        minWidth: '300px',
+        margin: theme.spacing.unit
     },
     commentForm: {
         paddingTop: theme.spacing.unit * 2,
@@ -60,13 +59,13 @@ const styles = theme => ({
     inline: {
         display: 'inline',
     },
-    overview: {
-        marginTop: theme.spacing.unit,
-        marginBottom: theme.spacing.unit
-    },
     link: {
         textDecoration: 'none',
         color: 'white'
+    },
+    divider: {
+        marginLeft: theme.spacing.unit * 3,
+        marginRight: theme.spacing.unit * 3
     }
 });
 @withNamespaces()
@@ -77,7 +76,8 @@ class Movie extends Component {
         this.state = {
             movieId: this.props.match.params.id,
             commentValue: '',
-            streamingUrl: undefined
+            streamingUrl: undefined,
+            resolution: undefined
         };
         this.handleInput = this.handleInput.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
@@ -117,22 +117,24 @@ class Movie extends Component {
         this.resetCommentInput();
     }
 
-    handleSelection(url) {
-        console.log(url);
-        this.setState({streamingUrl: url})
+    handleSelection(url, resolution) {
+        console.log(url, resolution);
+        this.setState({ streamingUrl: url, resolution });
     }
 
-    renderPlayer(Url) {
+    renderPlayer() {
         const { MovieStore, classes } = this.props;
         const { movie } = MovieStore;
+        const { streamingUrl, resolution } = this.state;
 
-        return (
-            <Grid item>
-                <Paper square className={classes.playerContainer}>
+        if (streamingUrl || movie.trailer) {
+            return (
+                <Grid item className={classes.playerContainer}>
                     <ReactPlayer
                         controls
                         className={classes.reactPlayer}
-                        url={Url}
+                        url={streamingUrl || movie.trailer}
+                        poster={movie.backdrop_path}
                         config={{
                             file: {
                                 attributes: {
@@ -141,12 +143,12 @@ class Movie extends Component {
                                 tracks: [
                                     {
                                         kind: 'subtitles',
-                                        src: `http://localhost:3200/subtitles/${movie.imdb_id}/720p/en`,
+                                        src: `http://localhost:3200/subtitles/${movie.imdb_id}/${resolution}/en`,
                                         srcLang: 'en'
                                     },
                                     {
                                         kind: 'subtitles',
-                                        src: `http://localhost:3200/subtitles/${movie.imdb_id}/720p/ru`,
+                                        src: `http://localhost:3200/subtitles/${movie.imdb_id}/${resolution}/ru`,
                                         srcLang: 'ru'
                                     }
                                 ]
@@ -155,9 +157,41 @@ class Movie extends Component {
                         width='100%'
                         height='100%'
                     />
-                </Paper>
-            </Grid>
-        )
+                </Grid>
+            );
+        }
+    }
+
+    renderStreamingButtons() {
+        const { classes, t, MovieStore } = this.props;
+        const { movie } = MovieStore;
+        
+
+        if (movie && movie.streaming) {
+            const buttons = movie.streaming.map(streamUrl => {
+                const resolution = streamUrl.split('/').pop();
+                return (
+                    <Grid key={streamUrl} item className={classes.item}>
+                        <Button 
+                            variant="contained"
+                            color="primary"
+                            onClick={() => this.handleSelection(streamUrl, resolution)}
+                        >
+                            <Icon className={classes.leftIcon}>play_arrow</Icon>
+                            { `${t('movie:streamIn')} ${resolution}` }
+                        </Button>
+                    </Grid>
+                );
+            });
+
+            return (
+                <Grid item className={classes.item}>
+                    <Grid container justify="center">
+                        {buttons}
+                    </Grid>
+                </Grid>
+            );
+        }
     }
 
     renderCommentSectionActions(classes) {
@@ -217,180 +251,165 @@ class Movie extends Component {
             return (
                 <main>
 
-                    <Grid item xs md={6} className={classes.root}>
-                        <Grid container spacing={16} className={classes.container} direction="column">
+                    <Grid item xs md={8} className={classes.root}>
+                        <Paper>
+                            <Grid container spacing={0} direction="column">
 
-                            <Grid item>
-                                <Paper>
-                                    <Grid container>
+                                <Grid container justify="center" direction="column" className={classes.container}>
 
-                                        <Grid item xs={4} className={classes.item}>
-                                            <img className={classes.media} src={movie.poster_path} alt="Movie poster"/>
-                                        </Grid>
+                                    <Grid item>
+                                        <Grid container justify="center">
+                                            <Grid item md={5} xl={4} className={classes.item}>
+                                                <img className={classes.media} src={movie.poster_path} alt="Movie poster"/>
+                                            </Grid>
 
-                                        <Grid item xs className={classes.item}>
-                                            <Grid container direction="column">
-                                                <Grid item>
-                                                    <Typography variant="h6" gutterBottom>
-                                                        {movie.title}
-                                                    </Typography>
-                                                </Grid>
-                                                <Grid item>
-                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
-                                                        {t('movie:originalTitle')}
-                                                    </Typography>
-                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
-                                                      {movie.original_title}
-                                                    </Typography>
-                                                </Grid>
-                                                <Grid item>
-                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
-                                                        {t('movie:releaseDate')}
-                                                    </Typography>
-                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
-                                                        { movie.release_date }
-                                                    </Typography>
-                                                </Grid>
-                                                <Grid item>
-                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
-                                                        {t('movie:runtime')}
-                                                    </Typography>
-                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
-                                                        {movie.runtime + ' ' + t('movie:minutes')}
-                                                    </Typography>
-                                                </Grid>
-                                                <Grid item>
-                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
-                                                        {t('movie:rating')}
-                                                    </Typography>
-                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
-                                                        {movie.vote_average}
-                                                    </Typography>
-                                                </Grid>
-                                                <Grid item>
-                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
-                                                        {t('movie:directors')}
-                                                    </Typography>
-                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
-                                                        {movie.credits.crew.directors.join(', ')}
-                                                    </Typography>
-                                                </Grid>
-                                                <Grid item>
-                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
-                                                        {t('movie:producers')}
-                                                    </Typography>
-                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
-                                                        {movie.credits.crew.producers.join(', ')}
-                                                    </Typography>
-                                                </Grid>
-                                                <Grid item>
-                                                    <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
-                                                        {t('movie:mainCast')}
-                                                    </Typography>
-                                                    <Typography className={classes.inline} variant="body2" color="textPrimary">
-                                                        {movie.credits.main_cast.join(', ')}
-                                                    </Typography>
-                                                </Grid>
-                                                <Grid item>
-                                                    <Typography variant="body1" className={classes.overview}>
-                                                        {movie.overview}
-                                                    </Typography>
+                                            <Grid item xs className={classes.movieDetails}>
+                                                <Grid container direction="column">
+                                                    <Grid item>
+                                                        <Typography variant="h5" gutterBottom>
+                                                            {movie.title}
+                                                        </Typography>
+                                                    </Grid>
+                                                    <Grid item>
+                                                        <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                            {t('movie:originalTitle')}
+                                                        </Typography>
+                                                        <Typography className={classes.inline} variant="body2" color="textPrimary">
+                                                            {movie.original_title}
+                                                        </Typography>
+                                                    </Grid>
+                                                    <Grid item>
+                                                        <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                            {t('movie:releaseDate')}
+                                                        </Typography>
+                                                        <Typography className={classes.inline} variant="body2" color="textPrimary">
+                                                            { movie.release_date }
+                                                        </Typography>
+                                                    </Grid>
+                                                    <Grid item>
+                                                        <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                            {t('movie:runtime')}
+                                                        </Typography>
+                                                        <Typography className={classes.inline} variant="body2" color="textPrimary">
+                                                            {movie.runtime + ' ' + t('movie:minutes')}
+                                                        </Typography>
+                                                    </Grid>
+                                                    <Grid item>
+                                                        <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                            {t('movie:rating')}
+                                                        </Typography>
+                                                        <Typography className={classes.inline} variant="body2" color="textPrimary">
+                                                            {movie.vote_average}
+                                                        </Typography>
+                                                    </Grid>
+                                                    <Grid item>
+                                                        <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                            {t('movie:directors')}
+                                                        </Typography>
+                                                        <Typography className={classes.inline} variant="body2" color="textPrimary">
+                                                            {movie.credits.crew.directors.join(', ')}
+                                                        </Typography>
+                                                    </Grid>
+                                                    <Grid item>
+                                                        <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                            {t('movie:producers')}
+                                                        </Typography>
+                                                        <Typography className={classes.inline} variant="body2" color="textPrimary">
+                                                            {movie.credits.crew.producers.join(', ')}
+                                                        </Typography>
+                                                    </Grid>
+                                                    <Grid item>
+                                                        <Typography className={classes.inline} variant="subtitle2" color="textPrimary">
+                                                            {t('movie:mainCast')}
+                                                        </Typography>
+                                                        <Typography className={classes.inline} variant="body2" color="textPrimary">
+                                                            {movie.credits.main_cast.join(', ')}
+                                                        </Typography>
+                                                    </Grid>
                                                 </Grid>
                                             </Grid>
                                         </Grid>
-
                                     </Grid>
 
                                     {
-                                        !!movie.streaming &&
-                                        <Grid container direction="column">
-                                            {
-                                                movie.streaming.map(streamUrl => (
-                                                    <Grid key={streamUrl} item xs={4} className={classes.item}>
-                                                        <Button 
-                                                            variant="contained"
-                                                            color="primary"
-                                                            fullWidth
-                                                            onClick={() => this.handleSelection(streamUrl)}
-                                                        >
-                                                            <Icon className={classes.leftIcon}>play_arrow</Icon>
-                                                            { t('movie:streamIn') + ' ' + streamUrl.split('/').pop() }
-                                                        </Button>
-                                                    </Grid>
-                                                ))
-                                            }
+                                        !!movie.overview &&
+                                        <Grid item xs className={classes.item}>
+                                            <Typography variant="body1">
+                                                {movie.overview}
+                                            </Typography>
                                         </Grid>
                                     }
 
-                                </Paper>
-                            </Grid>
+                                    { this.renderStreamingButtons() }
 
-                            { !!streamingUrl && this.renderPlayer(streamingUrl) }
+                                </Grid>
+                                
+                                
+                                { this.renderPlayer() }
 
-                            <Grid item xs>
-                                <Paper>
-                                    <Grid container direction="column">
+                                { !streamingUrl && !movie.trailer && <Divider className={classes.divider} /> }
 
-                                        <Grid item className={classes.commentForm}>
-                                            <form noValidate autoComplete="off">
-                                                <Grid container spacing={16} alignItems="flex-start">
-                                                    <Grid item>
-                                                        {  imgHelpers.renderAvatar(self, classes) }
-                                                    </Grid>
-                                                    <Grid item xs>
-                                                        <TextField
-                                                            value={this.state.commentValue}
-                                                            onChange={this.handleInput}
-                                                            placeholder={t('movie:liveComment')}
-                                                            rowsMax={4}
-                                                            fullWidth
-                                                            multiline
-                                                        />
-                                                    </Grid>
-                                                    { commentValue && this.renderCommentSectionActions(classes) }
+                                <Grid container direction="column" className={classes.container}>
+
+                                    <Grid item className={classes.commentForm}>
+                                        <form noValidate autoComplete="off">
+                                            <Grid container spacing={16} alignItems="flex-start">
+                                                <Grid item>
+                                                    {  imgHelpers.renderAvatar(self, classes) }
                                                 </Grid>
-                                            </form>
-                                        </Grid>
-
-                                        <Grid item xs>
-                                            <List>
-                                            {
-                                                comments.map((comment, i) => (
-                                                    <ListItem key={i} alignItems="flex-start">
-                                                        <Link className={classes.link} to={"/user/" + comment.uname}>
-                                                            <ListItemAvatar>
-                                                                { imgHelpers.renderAvatar(comment, classes) }
-                                                            </ListItemAvatar>
-                                                        </Link>
-                                                        <ListItemText
-                                                            disableTypography
-                                                            primary={
-                                                                <Typography component="span" variant="subtitle2" color="textPrimary">
-                                                                    { comment.uname }
-                                                                </Typography>
-                                                            }
-                                                            secondary={
-                                                                <React.Fragment>
-                                                                    <Typography className={classes.commentText} component="span" variant="subtitle1" color="textPrimary">
-                                                                        { comment.text }
-                                                                    </Typography>
-                                                                    <Typography component="span" variant="body2" color="textSecondary">
-                                                                        { distanceInWordsToNow(new Date(comment.dt) + "UTC" , { addSuffix: true })}
-                                                                    </Typography>
-                                                                </React.Fragment>
-                                                            }
-                                                        />
-                                                    </ListItem>
-                                                ))
-                                            }
-                                            </List>
-                                        </Grid>
-
+                                                <Grid item xs>
+                                                    <TextField
+                                                        value={this.state.commentValue}
+                                                        onChange={this.handleInput}
+                                                        placeholder={t('movie:liveComment')}
+                                                        rowsMax={4}
+                                                        fullWidth
+                                                        multiline
+                                                    />
+                                                </Grid>
+                                                { commentValue && this.renderCommentSectionActions(classes) }
+                                            </Grid>
+                                        </form>
                                     </Grid>
-                                </Paper>
-                            </Grid>
 
-                        </Grid>
+                                    <Grid item xs>
+                                        <List>
+                                        {
+                                            comments.map((comment, i) => (
+                                                <ListItem key={i} alignItems="flex-start">
+                                                    <Link className={classes.link} to={"/user/" + comment.uname}>
+                                                        <ListItemAvatar>
+                                                            { imgHelpers.renderAvatar(comment, classes) }
+                                                        </ListItemAvatar>
+                                                    </Link>
+                                                    <ListItemText
+                                                        disableTypography
+                                                        primary={
+                                                            <Typography component="span" variant="subtitle2" color="textPrimary">
+                                                                { comment.uname }
+                                                            </Typography>
+                                                        }
+                                                        secondary={
+                                                            <React.Fragment>
+                                                                <Typography className={classes.commentText} component="span" variant="subtitle1" color="textPrimary">
+                                                                    { comment.text }
+                                                                </Typography>
+                                                                <Typography component="span" variant="body2" color="textSecondary">
+                                                                    { distanceInWordsToNow(new Date(comment.dt) + "UTC" , { addSuffix: true })}
+                                                                </Typography>
+                                                            </React.Fragment>
+                                                        }
+                                                    />
+                                                </ListItem>
+                                            ))
+                                        }
+                                        </List>
+                                    </Grid>
+
+                                </Grid>
+
+                            </Grid>
+                        </Paper>
                     </Grid>
 
                 </main>
