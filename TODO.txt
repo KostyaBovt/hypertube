@@ -1,0 +1,3 @@
+1. fix subtitles
+2. streaming: change port to 8080 in Access-Control-Allow-Origin
+3. delete this file
