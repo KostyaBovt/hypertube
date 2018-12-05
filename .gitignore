@@ -12,3 +12,4 @@ hyper/logs/erlang.log*
 hyper/logs/run_erl.log*
 hyper/priv/static/photos/*.*
 .DS_Store
+frontend-react/build

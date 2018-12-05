@@ -231,7 +231,7 @@ mod_req({delete_cookie, Name}, Req) -> cowboy_req:set_resp_cookie(Name, <<>>, Re
 mod_req({set_cookie, Name, Value}, Req) -> cowboy_req:set_resp_cookie(Name, Value, Req, #{path => "/"}).
 
 set_cors_headers(Req) ->
-    Headers = #{<<"Access-Control-Allow-Origin">> => ?FRONTEND_ORIGIN,
+    Headers = #{<<"Access-Control-Allow-Origin">> => ?DEV_FRONTEND_ORIGIN,
                 <<"Access-Control-Allow-Methods">> => <<"GET, POST, OPTIONS">>,
                 <<"Access-Control-Allow-Headers">> => <<"Content-Type, Access-Control-Allow-Headers, ",
                                                         "Authorization, X-Requested-With">>,

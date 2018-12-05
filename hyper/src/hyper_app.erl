@@ -8,8 +8,9 @@
 
 start(_Type, _Args) ->
     Paths = [{"/api/[...]", hyper_http, []},
-             {"/static/[...]", cowboy_static, {priv_dir, hyper, "./static/"}},
-             {"/[...]", cowboy_static, {priv_file, hyper, "static/index.html"}}],
+             {"/", cowboy_static, {priv_file, hyper, "./frontend/index.html"}},
+             {"/photos/[...]", cowboy_static, {priv_dir, hyper, "./photos/"}},
+             {"/[...]", cowboy_static, {priv_dir, hyper, "./frontend/"}}],
     Dispatch = cowboy_router:compile([{'_', Paths}]),
     {ok, _} = cowboy:start_clear(hyper_http_listener, [{port, ?HTTP_PORT}], #{env => #{dispatch => Dispatch}}),
     hyper_mnesia:init_tables(),

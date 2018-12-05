@@ -19,7 +19,7 @@
 
 -import(hyper_lib, [gv/2, gv/3]).
 
--define(PHOTOS_PATH, "/static/photos/").
+-define(PHOTOS_PATH, "/photos/").
 
 %% API
 
