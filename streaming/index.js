@@ -130,43 +130,31 @@ app.all('*', userAuth, getWatched);
 
 // ======================= put watched film by curent user in DB
 
-app.get('/watched/:movieId', async (req, res) => {
-	
-	const { movieId } = req.params;
-	var userId = req.user.id;
-
-	const url = `https://api.themoviedb.org/3/movie/${movieId}`;
+const setMovieAsWatched = async (imdb_id, userId) => {
+	const url = `https://api.themoviedb.org/3/movie/${imdb_id}`;
 	const params = {
-		api_key: API_KEY,
-		id: movieId
+		api_key: API_KEY
 	};
 
 	console.log(`Making a request (${url}) with params`, params);
 
-	try {
-		const response = await axios.get(url, { params });
-		var imdb_id = response.data['imdb_id'];
-		console.log(imdb_id);
-	} catch (e) {
-		console.error(e);
-		res.json({'success': false, 'error': 'failed while updating watched statistics'});
-	}
-
-	const {Client}  = require('pg');
+	const response = await axios.get(url, { params });
+	const { id: movieId } = response.data;
+	
+	const { Client }  = require('pg');
 	const db = new Client({
-	  user: 'Hypertube',
-	  host: 'localhost',
-	  database: 'Hypertube',
-	  password: '12345',
-	  port: 5433,
+		user: 'Hypertube',
+		host: 'localhost',
+		database: 'Hypertube',
+		password: '12345',
+		port: 5433,
 	});
 
 	await db.connect()
-	const resultWatched = await db.query( "INSERT into history values ($1, $2, $3)", [userId, movieId, imdb_id]);
+	await db.query( "INSERT into history values ($1, $2, $3)", [userId, movieId, imdb_id]);
 	await db.end();
-
-	res.json({'success': true, 'result': 'watched statistics was updated'});
-});
+	return true;
+};
 
 
 // ============================== get OUR popular films
@@ -387,6 +375,18 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 			start: 0,
 			end: undefined
 		};
+	}
+
+	next();
+}, async (req, res, next) => {
+	const { range, movie } = req._streaming;
+	if (range.start === 0) {
+		try {
+			setMovieAsWatched(movie.id, req.user.id);
+		} catch (e) {
+			console.log(`Error while setting movie ${$movie.id} as watched:`);
+			console.error(e);
+		}
 	}
 
 	next();
@@ -733,24 +733,7 @@ app.get('/subtitles/:imdbid/:resolution/:language', (req, res, next) => { // Che
 			console.error(err);
 			res.sendStatus(500);
 		} else {
-			const head = {
-				'Content-Length': stat.size,
-				'Content-Type': 'text/vtt',
-			}
-			res.writeHead(200, head);
-
-			const subtitlesReadStream = fs.createReadStream(file.path);
-
-			subtitlesReadStream.on("open", () => {
-				pump(subtitlesReadStream, res, (err) => {
-					if (err) {
-						console.log('Subtitles read stream closed with erorr:');
-						console.error(err);
-					} else {
-						console.log('Subtitles read stream closed with no erorrs.');
-					}
-				});
-			});
+			res.sendFile(file.path);
 		}
 	});
 });

@@ -68,8 +68,9 @@ const styles = theme => ({
         marginRight: theme.spacing.unit * 3
     }
 });
+
 @withNamespaces()
-@inject('MovieStore', 'SelfStore') @observer
+@inject('MovieStore', 'SelfStore', 'LibraryStore') @observer
 class Movie extends Component {
     constructor(props) {
         super(props);
@@ -81,6 +82,7 @@ class Movie extends Component {
         };
         this.handleInput = this.handleInput.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleSelection = this.handleSelection.bind(this);
         this.resetCommentInput = this.resetCommentInput.bind(this);
         this.handleSelection = this.handleSelection.bind(this);
     }
@@ -118,8 +120,9 @@ class Movie extends Component {
     }
 
     handleSelection(url, resolution) {
-        console.log(url, resolution);
+        const { LibraryStore } = this.props;
         this.setState({ streamingUrl: url, resolution });
+        LibraryStore.setSelectedMovieAsWatched();
     }
 
     renderPlayer() {

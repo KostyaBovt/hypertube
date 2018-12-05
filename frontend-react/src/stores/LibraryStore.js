@@ -2,6 +2,7 @@ import { observable, action, toJS } from "mobx";
 import axios from 'axios';
 
 class LibraryStore {
+    _lastSelectedMovie = undefined;
     @observable isLoading = false;
 
     @observable searchMode = false;
@@ -76,6 +77,13 @@ class LibraryStore {
         this.movies = undefined;
         this.currentPage = undefined;
         this.totalPages = undefined;
+    }
+
+    @action setSelectedMovieAsWatched() {
+        const { _lastSelectedMovie } = this
+        if (_lastSelectedMovie !== undefined) {
+            this.movies[_lastSelectedMovie].watched_films_count = 1;
+        }
     }
 
     async fetchMovies(pageToFetch = 1) {

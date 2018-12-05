@@ -103,6 +103,7 @@ class Library extends Component {
         this.fetchMovies = this.fetchMovies.bind(this);
         this.handleMovieSearch = this.handleMovieSearch.bind(this);
         this.handleLoadMore = this.handleLoadMore.bind(this);
+        this.handleMovieClick = this.handleMovieClick.bind(this);
         this.searchField = React.createRef();
     }
 
@@ -112,6 +113,11 @@ class Library extends Component {
         if (!LibraryStore.movies) {
             LibraryStore.fetchMovies();
         }
+    }
+
+    handleMovieClick = movieIndex => (e) => {
+        const { LibraryStore } = this.props;
+        LibraryStore._lastSelectedMovie = movieIndex;
     }
     
     handleSearchFormSubmit(e) {
@@ -278,10 +284,10 @@ class Library extends Component {
     renderMovies(movies) {
         if (!movies) return;
         const { classes, t } = this.props;
-        return movies.map(movie => (
+        return movies.map((movie, i) => (
             <Grid item key={movie.id}>
                 <Card className={classes.card}>
-                    <CardActionArea component={Link} to={`/movie/${movie.id}`}>
+                    <CardActionArea component={Link} to={`/movie/${movie.id}`} onClick={this.handleMovieClick(i)}>
                         <CardMedia
                             component="img"
                             className={classes.media}
