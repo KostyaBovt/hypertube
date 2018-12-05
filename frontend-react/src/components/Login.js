@@ -102,7 +102,7 @@ class Login extends Component {
 					</Button>
 
 					<div className="social">
-						<a title="42_Intra" className={classes.intra} href="http://localhost:8080/api/auth/intra/login">
+						<a title="42_Intra" className={classes.intraIco} href="http://localhost:8080/api/auth/intra/login">
 							<img src={intra_logo} height="20"/>
 						</a>
 						<a title="GitHub" href="http://localhost:8080/api/auth/github/login">
