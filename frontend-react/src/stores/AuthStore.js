@@ -51,9 +51,7 @@ class AuthStore {
                 } else if (response.data.status === "error") {
                     this.setErrors(response.data.reason);
                     return false;
-                }   
-
-                console.log(response);
+                }
             } catch (e) {
                 console.error(e);
             }
@@ -61,20 +59,19 @@ class AuthStore {
     }
 
     async login() {
-            const { uname, password } = this.fields;
-            this.clearErrors();
-            try {
-                const response = await axios.post('http://localhost:8080/api/auth/login', { uname, password }, {withCredentials: true});
-                if (response.data.status === 'ok') {
-                    UserStore.setSelf(response.data.payload);
-                } else {
-                    this.setErrors({ uname: 'Invalid username or password' });
-                }   
-                console.log(response);
-            } catch (e) {
-                console.log(e);
-                return false;
-            }
+        const { uname, password } = this.fields;
+        this.clearErrors();
+        try {
+            const response = await axios.post('http://localhost:8080/api/auth/login', { uname, password }, {withCredentials: true});
+            if (response.data.status === 'ok') {
+                UserStore.setSelf(response.data.payload);
+            } else {
+                this.setErrors({ uname: 'Invalid username or password' });
+            }   
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
     }
 
     async lostPass() {
@@ -89,9 +86,8 @@ class AuthStore {
                     this.setErrors(response.data.reason);
                     return false;
                 }   
-                console.log(response);
             } catch (e) {
-                console.log(e);
+                console.error(e);
                 return false;
             }
         }
@@ -109,9 +105,8 @@ class AuthStore {
                     this.setErrors(response.data.reason);
                     return false;
                 }   
-                console.log(response);
             } catch (e) {
-                console.log(e);
+                console.error(e);
                 return false;
             }
         }
@@ -119,8 +114,7 @@ class AuthStore {
 
     async logout() {
         try {
-            const response = await axios.post('http://localhost:8080/api/auth/logout', null, {withCredentials: true});
-            console.log(response);
+            await axios.post('http://localhost:8080/api/auth/logout', null, {withCredentials: true});
         } catch (e) {
             console.error(e);
         }
