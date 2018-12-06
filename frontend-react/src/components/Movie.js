@@ -205,6 +205,7 @@ class Movie extends Component {
                     <Button
                         onClick={this.resetCommentInput}
                         variant="text"
+                        size="small"
                     >
                         {t('movie:cancel')}
                     </Button>
@@ -214,6 +215,7 @@ class Movie extends Component {
                         onClick={this.handleSubmit}
                         variant="contained"
                         color="primary"
+                        size="small"
                     >
                         {t('movie:send')}
                     </Button>
