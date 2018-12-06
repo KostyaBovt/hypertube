@@ -46,26 +46,33 @@ setTimeout(async function runCleaner() {
 	});
 
 	await db.connect()
+	const { rows } = await db.query(`
+		SELECT
+			imdb_id, MAX(seen)
+		FROM
+			history
+		GROUP BY
+			imdb_id
+		HAVING
+			NOW() - MAX(seen) > INTERVAL '30 minutes'
+	`);
+	await db.end()
 
-	const result_to_delete = await db.query( "SELECT imdb_id, MAX(seen) FROM history GROUP BY imdb_id HAVING NOW() - MAX(seen) > INTERVAL '30 days'");
-
-	var params = [];
-	for (var i = result_to_delete.rows.length - 1; i >= 0; i--) {
-		console.log('now to delete this film :');
-		console.log(result_to_delete.rows[i]['imdb_id']);
-		params.push(result_to_delete.rows[i]['imdb_id']);
-		if (fs.existsSync('/tmp/videos/' + result_to_delete.rows[i]['imdb_id'])) {
-			var temp_imdb_id = result_to_delete.rows[i]['imdb_id'];
-			rimraf('/tmp/videos/' + result_to_delete.rows[i]['imdb_id'], function () { 
-				console.log('=========\ndeleted folder /tmp/videos/' + temp_imdb_id + '\n=========\n');
-			});
-			
-		}
+	for (let i = 0; i != rows.length; i++) {
+		const { imdb_id } = rows[i];
+		fs.access(`/tmp/videos/${imdb_id}`, fs.constants.R_OK, (err) => {
+			if (!err) {
+				rimraf(`/tmp/videos/${imdb_id}`, () => { 
+					console.log(`deleted folder /tmp/videos/${imdb_id}`);
+				});
+			}
+		});
 	}
-	if (result_to_delete.rows.length == 0) {
+
+	if (rows.length == 0) {
 		console.log('nothing to clean');
 	}
-	await db.end()
+
 	
 	setTimeout(runCleaner, 1000 * 60 * 60);
 }, 3000);
@@ -95,10 +102,8 @@ const userAuth = async (req, res, next) => {
 // ======================= function to get watched films by curent user
 
 const getWatched = async (req, res, next) => {
-	
-	var user_id = req.user.id;
-
-	const {Client}  = require('pg');
+	const { id: user_id } = req.user;
+	const { Client } = require('pg');
 
 	const db = new Client({
 	  user: 'Hypertube',
@@ -109,20 +114,28 @@ const getWatched = async (req, res, next) => {
 	});
 
 	await db.connect()
-
-	const result_watched = await db.query( "SELECT film_id, count(*) from history where user_id=$1 group by film_id", [user_id]);
-	// console.log('============== watched films============');
-	// console.log(result_watched.rows);
-
-	var watched_films_rows = result_watched.rows;
-
-	var watched_films_mapped = {};
-	for (var i = watched_films_rows.length - 1; i >= 0; i--) {
-		watched_films_mapped[watched_films_rows[i]['film_id']] = parseInt(watched_films_rows[i]['count']);
-	}
-	req.user.watched = watched_films_mapped;
-
+	const { rows } = await db.query(`
+		SELECT
+			film_id, count(*)
+		FROM
+			history
+		WHERE
+			user_id=$1
+		GROUP BY
+			film_id
+		`,
+		[user_id]
+	);
 	await db.end();
+
+	let watched = {}
+
+	rows.forEach(film => {
+		const { film_id } = film;
+		watched[film_id] = parseInt(film.count, 10);
+	});
+	req.user.watched = watched;
+
 	next();
 }
 
