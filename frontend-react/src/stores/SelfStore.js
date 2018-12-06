@@ -31,7 +31,9 @@ class SelfStore {
             this.setLocale(locale);
         } catch (e) {
             this.setSelf(null);
-            console.error(e);
+            if (e.response.status !== 403) {
+                console.error(e);
+            }
         }
     }
 
