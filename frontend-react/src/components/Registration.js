@@ -10,6 +10,7 @@ import Button from '@material-ui/core/Button';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, CircularProgress } from '@material-ui/core';
+import { withNamespaces } from 'react-i18next';
 
 
 import grey from '@material-ui/core/colors/grey';
@@ -31,6 +32,7 @@ const styles = {
 	}
 };
 
+@withNamespaces()
 @inject('AuthStore') @observer
 class Registration extends Component {
 	constructor(props) {
@@ -88,12 +90,12 @@ class Registration extends Component {
 					<DialogTitle id="alert-dialog-title">{"Registration successfull"}</DialogTitle>
 					<DialogContent>
 						<DialogContentText id="alert-dialog-description">
-							Please, check your email and follow the link we've sent to activate your account.
+							{t('registration:checkEmail')}
 						</DialogContentText>
 					</DialogContent>
 					<DialogActions>
 						<Button onClick={this.handleDialogClose} color="primary" autoFocus>
-                            ok
+							{t('registration:ok')}
 						</Button>
 					</DialogActions>
 				</Dialog>
@@ -101,10 +103,10 @@ class Registration extends Component {
 				<form onSubmit={this.handleSubmit}>
 					<Paper className={classes.paper} elevation={1}>
 						<Typography variant="h5" gutterBottom>
-							Registration
+							{t('registration:registration')}
 						</Typography>
 						<FormControl error={!!errors.fname} margin="dense">
-							<InputLabel htmlFor="fname">First Name</InputLabel>
+							<InputLabel htmlFor="fname">{t('registration:fname')}</InputLabel>
 							<Input
 								id="fname"
 								type="text"
@@ -116,7 +118,7 @@ class Registration extends Component {
 						</FormControl>
 
 						<FormControl error={!!errors.lname} margin="dense">
-							<InputLabel htmlFor="lname">Last Name</InputLabel>
+							<InputLabel htmlFor="lname">{t('registration:lname')}</InputLabel>
 							<Input
 								id="lname"
 								type="text"
@@ -128,7 +130,7 @@ class Registration extends Component {
 						</FormControl>
 
 						<FormControl error={!!errors.uname} margin="dense">
-							<InputLabel htmlFor="uname">Username</InputLabel>
+							<InputLabel htmlFor="uname">{t('registration:username')}</InputLabel>
 							<Input
 								id="uname"
 								type="text"
@@ -140,7 +142,7 @@ class Registration extends Component {
 						</FormControl>
 
 						<FormControl error={!!errors.email} margin="dense">
-							<InputLabel htmlFor="email">Email</InputLabel>
+							<InputLabel htmlFor="email">{t('registration:email')}</InputLabel>
 							<Input
 								id="email"
 								type="email"
@@ -152,7 +154,7 @@ class Registration extends Component {
 						</FormControl>
 
 						<FormControl error={!!errors.password} margin="dense">
-							<InputLabel htmlFor="password">Password</InputLabel>
+							<InputLabel htmlFor="password">{t('registration:password')}</InputLabel>
 							<Input
 								id="password"
 								type="password"
@@ -164,7 +166,7 @@ class Registration extends Component {
 						</FormControl>
 
 						<FormControl error={!!errors.confirmPassword} margin="dense">
-							<InputLabel htmlFor="confirmPassword">Confirm Password</InputLabel>
+							<InputLabel htmlFor="confirmPassword">{t('registration:confirmPassword')}</InputLabel>
 							<Input
 								id="confirmPassword"
 								type="password"
@@ -183,7 +185,7 @@ class Registration extends Component {
 							color="primary"
 							type="submit"
 						>
-							{isLoading ? <CircularProgress size={24} className={classes.buttonProgress}/> : 'Register'}
+							{isLoading ? <CircularProgress size={24} className={classes.buttonProgress}/> : t('registration:register')}
 						</Button>
 					</Paper>
 				</form>

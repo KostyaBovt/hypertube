@@ -11,6 +11,7 @@ import intra_logo from "../img/42.png";
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
 import { Link } from 'react-router-dom';
+import { withNamespaces } from 'react-i18next';
 
 const styles = {
 	paper: {
@@ -39,6 +40,7 @@ const styles = {
 	}
 };
 
+@withNamespaces()
 @inject('AuthStore') @observer
 class Login extends Component {
 	constructor(props) {
@@ -69,11 +71,11 @@ class Login extends Component {
 			<form onSubmit={this.handleSubmit}>
 				<Paper className={classes.paper} elevation={1}>
 					<Typography variant="h5" gutterBottom>
-                        Log In
+						{t('login:LogIn')}
 					</Typography>
 
 					<FormControl error={!!errors.uname} margin="dense">
-						<InputLabel htmlFor="uname">Username</InputLabel>
+						<InputLabel htmlFor="uname">{t('login:username')}</InputLabel>
 						<Input
 							id="uname"
 							type="text"
@@ -85,7 +87,7 @@ class Login extends Component {
 					</FormControl>
 
 					<FormControl error={!!errors.password} margin="dense">
-						<InputLabel htmlFor="password">Password</InputLabel>
+						<InputLabel htmlFor="password">{t('login:password')}</InputLabel>
 						<Input
 							id="password"
 							type="password"
@@ -97,7 +99,7 @@ class Login extends Component {
 					</FormControl>
 
 					<Button className={classes.button} variant="contained" color="primary" type="submit">
-                        Log In
+						{t('login:logIn')}
 					</Button>
 
 					<div className="social">
@@ -113,7 +115,7 @@ class Login extends Component {
 					</div>
 					<Typography variant="body1" className={classes.forgotPassword}>
 						<Link to="/auth/lostpass" className={classes.forgotPasswordLink}>
-							Forgot password?
+							{t('login:forgotPassword')}
 						</Link>
 					</Typography>
 				</Paper>

@@ -101,17 +101,22 @@ i18n.init({
                 minutes: 'minutes'
             },
             login: {
-                logIn: 'log In',
+                LogIn: 'Log in',
+                logIn: 'Log in',
                 username: 'Username',
                 password: 'Password',
-                forgotPassword: 'Forgot password ?'
+                forgotPassword: 'Frogot password?',
             },
             registration: {
+                registration: 'Registration',
                 checkEmail: 'Please, check your email and follow the link we\'\ve sent to activate your account.',
                 ok: 'ok',
-                registration: 'Registration',
+                register: 'Register',
+                fname: 'First Name',
+                lname: 'Last Name',
                 username: 'Username',
                 email: 'Email',
+                password: 'Password',
                 confirmPassword: 'Confirm Password',
             }
         },
@@ -209,17 +214,22 @@ i18n.init({
                 minutes: 'минут'
             },
             login: {
-                logIn: 'Логин',
-                username: 'Имя',
+                LogIn: 'Вход',
+                logIn: 'Войти',
+                username: 'Логин',
                 password: 'Пароль',
                 forgotPassword: 'Забыли пароль?',
             },
             registration: {
+                registration: 'Регистрация',
                 checkEmail: 'Пожалуйста, проверьте свою почту и следуйте по ссылке которую мы отправили для активации Вашего аккаунта',
                 ok: 'ок',
-                registration: 'Регистрация',
-                username: 'Имя',
-                email: 'Емейл',
+                register: 'Зарегистрироватся',
+                fname: 'Имя',
+                lname: 'Фамилия',
+                username: 'Логин',
+                email: 'Електронная почта',
+                password: 'Пароль',
                 confirmPassword: 'Подтверждение пароля',
 
             }

@@ -4,10 +4,15 @@ import LibraryStore from "./LibraryStore";
 import i18n from "../helpers/i18n";
 
 class SelfStore {
+    @observable locale = 'en'
     @observable self = undefined;
 
     @action setSelf(data) {
         this.self = data;
+    }
+
+    @action setLocale(locale) {
+        this.locale = locale;
     }
 
     @action updateSelfField(fieldName, value) {
@@ -21,9 +26,9 @@ class SelfStore {
     async pullSelf() {
         try {
             const response = await axios.get('http://localhost:8080/api/profile', { withCredentials: true });
-            this.setSelf(response.data.payload);
-            i18n.changeLanguage(this.self.locale);
-            reaction(() => this.self.locale, locale => i18n.changeLanguage(locale));
+            const { locale, ...self } = response.data.payload;
+            this.setSelf(self);
+            this.setLocale(locale);
         } catch (e) {
             this.setSelf(null);
             console.error(e);
@@ -88,11 +93,10 @@ class SelfStore {
         try {
             const response = await axios.post('http://localhost:8080/api/profile/locale', data, { withCredentials: true });
             if (response.data.status === "ok") {
-                this.updateSelfField('locale', value);
+                this.setLocale(value);
                 LibraryStore.resetMovies()
                 LibraryStore.setSearchMode(false);
             } else {
-                // const error = Object.values(response.data.reason)[0];
                 return false;
             }
         } catch (e) {
@@ -119,4 +123,11 @@ class SelfStore {
     
 }
 
-export default new SelfStore();
+const store = new SelfStore();
+
+reaction(
+    () => store.locale,
+    locale => i18n.changeLanguage(locale)
+);
+
+export default store;

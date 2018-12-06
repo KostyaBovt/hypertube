@@ -36,10 +36,10 @@ class OtherSection extends Component {
     }
 
     openDialog(e) {
-        const { self } = this.props.SelfStore;
+        const { locale } = this.props.SelfStore;
         this.setState({
             dialogOpen: true,
-            value: self.locale
+            value: locale
         });
     }
 
@@ -47,7 +47,7 @@ class OtherSection extends Component {
         const locale = this.state.value;
         const { SelfStore } = this.props;
 
-        if (locale === SelfStore.self.locale) {
+        if (locale === SelfStore.locale) {
             return;
         } else {
             this.setState({ isLoading: true });
@@ -59,6 +59,7 @@ class OtherSection extends Component {
 
     renderDialog(t) {
         const { dialogOpen, value, isLoading } = this.state;
+        console.log('setting locale', value);
 		return (
 			<Dialog
 				open={dialogOpen}
@@ -94,8 +95,8 @@ class OtherSection extends Component {
     
     render() {
         const { classes, t } = this.props;
-        const { self } = this.props.SelfStore;
-        const selectedLanguage = self.locale === 'en' ? 'English' : 'Русский';
+        const { locale } = this.props.SelfStore;
+        const selectedLanguage = locale === 'en' ? 'English' : 'Русский';
 
         return (
             <React.Fragment>
