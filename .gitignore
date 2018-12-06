@@ -3,6 +3,7 @@
 hyper/deps
 hyper/.erlang.mk
 frontend-react/node_modules/
+frontend-react/package-lock.json
 hyper/ebin
 hyper/hyper.d
 hyper/.hyper.plt
