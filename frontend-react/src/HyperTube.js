@@ -11,14 +11,14 @@ import {Switch, Route, Redirect, BrowserRouter} from 'react-router-dom';
 import { inject, observer } from 'mobx-react';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
-import teal from '@material-ui/core/colors/teal';
+import blue from '@material-ui/core/colors/blue';
 import SettingsPage from './components/SettingsPage';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './helpers/i18n.js';
 
 const theme = createMuiTheme({
   palette: {
-    primary: teal
+    primary: blue
   },
   typography: {
     useNextVariants: true,

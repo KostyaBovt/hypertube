@@ -21,9 +21,9 @@ const styles = {
     buttons: {
         marginLeft: 5
     },
-    link: {
-        textDecoration: 'none',
-        color: 'white'
+    logo: {
+        flexGrow: 1,
+        textDecoration: 'none'
     }
 };
 
@@ -68,8 +68,10 @@ class Header extends Component {
                   aria-owns={isMenuOpen ? 'menu-appbar' : undefined}
                   aria-haspopup="true"
                   onClick={this.handleMenu}
+                  color="inherit"
                 >
-                  { imgHelpers.renderAvatar(self) }
+                  { imgHelpers.renderAvatar(self, classes) }
+                  {/* <Icon>account_circle</Icon> */}
                 </IconButton>
                 <Menu
                   id="menu-appbar"
@@ -108,10 +110,10 @@ class Header extends Component {
         return (
             <React.Fragment>
                 <Button component={Link} to="/auth/registration" className={classes.buttons} color="inherit">
-                    Registration
+                    {t('header:register')}
                 </Button>
                 <Button component={Link} to="/auth/login" className={classes.buttons} color="inherit">
-                    Login
+                    {t('header:login')}
                 </Button>
             </React.Fragment>
         )
@@ -124,8 +126,14 @@ class Header extends Component {
             <div className={classes.root}>
                 <AppBar position="static">
                     <Toolbar>
-                        <Typography id="logo" variant="h6" color="inherit" className={classes.grow}>
-                            <Link  to="/" className={classes.link}>HyperTube</Link>
+                        <Typography
+                            className={classes.logo}
+                            variant="h6"
+                            color="inherit"
+                            component={Link}
+                            to="/"
+                        >
+                            HyperTube
                         </Typography>
                         { this.renderAuthButtons(classes, t) }
                     </Toolbar>
