@@ -54,7 +54,6 @@ class LibraryStore {
 
     @action setGenres(genres) {
         this.filters.with_genres = genres;
-        console.log(genres);
     }
 
     @action deleteGenre(genreId) {
@@ -87,17 +86,14 @@ class LibraryStore {
     }
 
     async fetchMovies(pageToFetch = 1) {
-        console.log('fetching movies page ', pageToFetch);
         const params = this._getDefinedFilters();
         params.page = pageToFetch;
-        console.log(params);
         try {
             this.setIsLoading(true);
             const response = await axios.get("http://localhost:3200/films", {
                 params,
                 withCredentials: true
             });
-            console.log(response);
             if (response.data.success === true) {
                 const { page, total_pages, results } = response.data.movies;
                 if (pageToFetch === 1) {
@@ -113,28 +109,24 @@ class LibraryStore {
             }
         } catch (e) {
             this.setMovies(null);
-            console.log(e);
+            console.error(e);
         } finally {
             this.setIsLoading(false);
         }
     }
 
     async fetchSearchResults(pageToFetch = 1) {
-        console.log(`Searching for ${this.currentQuery}, page ${pageToFetch}`);
         this.setIsLoading(true);
         try {
             const response = await axios.get("http://localhost:3200/films", {
                 params: { query: this.currentQuery, page: pageToFetch },
                 withCredentials: true
             });
-            console.log(response);
             if (response.data.success === true) {
                 const { page, total_pages, results } = response.data.movies;
                 if (pageToFetch === 1) {
-                    console.log('setting movies', results);
                     this.setMovies(results);
                 } else {
-                    console.log('pushing movies');
                     this.pushMovies(results)
                 }
                 this.setPage(page);

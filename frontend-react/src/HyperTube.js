@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import './HyperTube.css';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import Movie from './components/Movie';
@@ -15,6 +14,7 @@ import blue from '@material-ui/core/colors/blue';
 import SettingsPage from './components/SettingsPage';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './helpers/i18n.js';
+import './HyperTube.css';
 
 const theme = createMuiTheme({
   palette: {

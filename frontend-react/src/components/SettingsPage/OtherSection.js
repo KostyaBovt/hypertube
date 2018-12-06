@@ -59,7 +59,6 @@ class OtherSection extends Component {
 
     renderDialog(t) {
         const { dialogOpen, value, isLoading } = this.state;
-        console.log('setting locale', value);
 		return (
 			<Dialog
 				open={dialogOpen}

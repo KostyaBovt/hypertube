@@ -465,7 +465,6 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 		torrentEngineManager.createNewEngine(engineId, movie.magnetLink, (engine) => {
 			console.log(`${engineId} engine created!`);
 			const torrentFile = torrentEngineManager.getMovieFileByEngineId(engineId);
-
 			
 			fs.readFile(`/tmp/videos/${movie.id}/${movie.resolution}.json`, 'utf8', (err, data) => {
 				if (err && err.errno !== -2) {

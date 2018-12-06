@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { inject, observer } from 'mobx-react';
 import imgHelpers from '../../helpers/imgHelpers';
-import { Paper, List, ListItem, ListSubheader, ListItemIcon, Icon, ListItemText, withStyles, Snackbar, IconButton, Avatar } from '@material-ui/core';
+import { Paper, List, ListItem, ListSubheader, ListItemIcon, Icon, ListItemText, withStyles, Snackbar, IconButton } from '@material-ui/core';
 import { withNamespaces } from 'react-i18next';
 
 const styles = theme => ({
@@ -77,7 +77,6 @@ class PictureSection extends Component {
     async deleteCurrentPicture(e) {
         const { SelfStore } = this.props;
         if (SelfStore.self.avatar) {
-            console.log('deleting picture...');
             await SelfStore.updateProfile('avatar', '');
         }
     }

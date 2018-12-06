@@ -7,10 +7,9 @@ import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import intra_logo from "../img/42.png";
 import { withStyles } from '@material-ui/core/styles';
 import Paper from '@material-ui/core/Paper';
-import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, CircularProgress } from '@material-ui/core';
+import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@material-ui/core';
 
 const styles = {
 	paper: {
@@ -64,7 +63,6 @@ class NewPass extends Component {
 	}
 
 	handleDialogClose(e, reason) {
-		console.log(reason);
 		this.setState({ isDialogOpen: false });
 		this.props.history.push('/auth/login');
 	}
@@ -124,7 +122,13 @@ class NewPass extends Component {
 								<FormHelperText>{errors.confirmPassword}</FormHelperText>
 							</FormControl>
 
-					<Button className={classes.button} onClick={this.handleSubmit} variant="contained" color="primary">
+					<Button 
+						className={classes.button}
+						onClick={this.handleSubmit}
+						variant="contained"
+						color="primary"
+						disabled={isLoading}
+					>
 						Submit
 					</Button>
 				</Paper>

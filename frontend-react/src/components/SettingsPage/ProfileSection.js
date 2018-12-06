@@ -88,7 +88,6 @@ class ProfileSection extends Component {
         if (this.isValidField(selectedField, inputValue)) {
             this.setState({ isLoading: true });
             const result = await this.props.SelfStore.updateProfile(selectedField, inputValue);
-            console.log(result);
             if (result.success) {
                 this.setState({
                     isLoading: false,

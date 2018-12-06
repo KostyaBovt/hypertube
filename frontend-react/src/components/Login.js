@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import "../../node_modules/materialize-social/materialize-social.css";
 import { inject, observer } from 'mobx-react';
 import FormControl from '@material-ui/core/FormControl';
 import FormHelperText from '@material-ui/core/FormHelperText';
@@ -104,7 +103,7 @@ class Login extends Component {
 
 					<div className="social">
 						<a title="42_Intra" className={classes.intraIco} href="http://localhost:8080/api/auth/intra/login">
-							<img src={intra_logo} height="20"/>
+							<img src={intra_logo} height="20" alt="Intra"/>
 						</a>
 						<a title="GitHub" href="http://localhost:8080/api/auth/github/login">
 							<i className="fa fa-github"></i>

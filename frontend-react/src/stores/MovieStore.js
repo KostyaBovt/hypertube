@@ -35,7 +35,6 @@ class MovieStore {
             if (response.data.success) {
                 const { movie_details: details, streaming } = response.data;
                 this.setMovie({ ...details, streaming });
-                console.log(details, streaming);
             } else {
                 this.setMovie(null);
             }
@@ -56,7 +55,6 @@ class MovieStore {
             });
             if (response.data.status === 'ok') {
                 this.setComments(response.data.payload);
-                console.log(response.data.payload);
             }
         } catch (e) {
             console.error(e);
@@ -72,7 +70,6 @@ class MovieStore {
                 withCredentials: true,
             });
             if (response.data.status === 'ok') {
-                console.log('added comment', response.data);
                 this.addComment(response.data.payload);
             }
         } catch (e) {

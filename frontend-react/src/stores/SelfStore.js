@@ -45,7 +45,6 @@ class SelfStore {
                 const error = Object.values(response.data.reason)[0];
                 console.error(error);
             }
-            console.log(response);
         } catch (e) {
             console.error(e);
         }
@@ -75,7 +74,6 @@ class SelfStore {
         const data = { email: value };
         try {
             const response = await axios.post('http://localhost:8080/api/profile/email', data, { withCredentials: true });
-            console.log(response);
             if (response.data.status === "ok") {
                 return { success: true };
             } else {
@@ -109,7 +107,6 @@ class SelfStore {
         const data = { old_password, new_password };
         try {
             const response = await axios.post('http://localhost:8080/api/profile/pass', data, { withCredentials: true });
-            console.log(response);
             if (response.data.status === "ok") {
                 return { success: true };
             } else {

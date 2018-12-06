@@ -170,7 +170,6 @@ class Library extends Component {
 
     handleFilterChange(e) {
         const { name, value } = e.target;
-        console.log('setting filter', name, value);
         this.props.LibraryStore.setFilter(name, value);
         this.fetchMovies();
     }
