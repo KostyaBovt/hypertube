@@ -108,10 +108,10 @@ class Header extends Component {
         return (
             <React.Fragment>
                 <Button component={Link} to="/auth/registration" className={classes.buttons} color="inherit">
-                    {t('header:register')}
+                    Registration
                 </Button>
                 <Button component={Link} to="/auth/login" className={classes.buttons} color="inherit">
-                    {t('header:login')}
+                    Login
                 </Button>
             </React.Fragment>
         )
