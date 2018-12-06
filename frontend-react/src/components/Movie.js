@@ -22,7 +22,7 @@ const styles = theme => ({
         margin: theme.spacing.unit
     },
     media: {
-        width: "100%",
+        width: '100%'
     },
     playerContainer: {
         position: 'relative',
@@ -260,10 +260,12 @@ class Movie extends Component {
 
                                 <Grid container justify="center" direction="column" className={classes.container}>
 
-                                    <Grid item>
-                                        <Grid container justify="center">
-                                            <Grid item md={5} xl={4} className={classes.item}>
-                                                <img className={classes.media} src={movie.poster_path} alt="Movie poster"/>
+                                    <Grid container item justify="center">
+
+                                            <Grid item md={5} xl={4} zeroMinWidth className={classes.item}>
+                                                <div>
+                                                    <img className={classes.media} src={movie.poster_path} alt="Movie poster"/>
+                                                </div>
                                             </Grid>
 
                                             <Grid item xs className={classes.movieDetails}>
@@ -331,12 +333,12 @@ class Movie extends Component {
                                                     </Grid>
                                                 </Grid>
                                             </Grid>
-                                        </Grid>
+
                                     </Grid>
 
                                     {
                                         !!movie.overview &&
-                                        <Grid item xs className={classes.item}>
+                                        <Grid item className={classes.item}>
                                             <Typography variant="body1">
                                                 {movie.overview}
                                             </Typography>
