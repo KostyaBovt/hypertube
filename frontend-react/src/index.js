@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './HyperTube.css';
 import HyperTube from './HyperTube';
 import * as serviceWorker from './serviceWorker';
 import { Provider } from 'mobx-react';
