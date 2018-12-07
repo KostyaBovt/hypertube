@@ -17,11 +17,13 @@ const styles = {
     grow: {
         flexGrow: 1,
     },
+    toolbar: {
+        justifyContent: 'space-between'
+    },
     buttons: {
         marginLeft: 5
     },
     logo: {
-        flexGrow: 1,
         textDecoration: 'none'
     }
 };
@@ -124,7 +126,7 @@ class Header extends Component {
         return (
             <div className={classes.root}>
                 <AppBar position="static">
-                    <Toolbar>
+                    <Toolbar className={classes.toolbar}>
                         <Typography
                             className={classes.logo}
                             variant="h6"
