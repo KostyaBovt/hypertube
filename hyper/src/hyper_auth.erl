@@ -66,6 +66,7 @@ login(Login, Pass) ->
     end.
 
 -spec check_password(Pass::binary(), User::map()) -> hyper_http:handler_ret().
+check_password(_, #{<<"password">> := null}) -> {error, #{<<"password">> => incorrect}};
 check_password(Pass, #{<<"password">> := PassHash} = User0) ->
     case erlpass:match(Pass, PassHash) of
         true ->
