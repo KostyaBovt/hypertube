@@ -72,7 +72,6 @@ class Header extends Component {
                   color="inherit"
                 >
                   { imgHelpers.renderAvatar(self, classes) }
-                  {/* <Icon>account_circle</Icon> */}
                 </IconButton>
                 <Menu
                   id="menu-appbar"
@@ -109,14 +108,14 @@ class Header extends Component {
         )
     } else {
         return (
-            <React.Fragment>
+            <div>
                 <Button component={Link} to="/auth/registration" className={classes.buttons} color="inherit">
                     {t('header:register')}
                 </Button>
                 <Button component={Link} to="/auth/login" className={classes.buttons} color="inherit">
                     {t('header:login')}
                 </Button>
-            </React.Fragment>
+            </div>
         )
     }
   }
