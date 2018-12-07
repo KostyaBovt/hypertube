@@ -26,7 +26,7 @@ app.use(cookieParser());
 
 app.use((req, res, next) => {
 	res.set({
-		'Access-Control-Allow-Origin': 'http://localhost:3000',
+		'Access-Control-Allow-Origin': 'http://localhost:8080',
 		'Access-Control-Allow-Credentials': 'true',
 	});
 	next();
@@ -225,8 +225,11 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 	try {
 		const response = await axios.get(url, { params });
 		const { imdb_id, poster_path, backdrop_path } = response.data;
-		response.data.poster_path = 'http://image.tmdb.org/t/p/w500' + poster_path;
-		response.data.backdrop_path = 'http://image.tmdb.org/t/p/w500' + backdrop_path;
+		if (response.data.poster_path) {
+			response.data.poster_path = 'http://image.tmdb.org/t/p/w500' + poster_path;
+		} else {
+			response.data.poster_path = 'http://www.theprintworks.com/wp-content/themes/psBella/assets/img/film-poster-placeholder.png';
+		}
 		response.data.watched_films_count = watched[movieId] || 0;
 		req.movie = { imdb_id, movie_details: response.data };
 		next();

@@ -144,7 +144,6 @@ class Movie extends Component {
                         controls
                         className={classes.reactPlayer}
                         url={streamingUrl || movie.trailer}
-                        poster={movie.backdrop_path}
                         config={{
                             file: {
                                 attributes: {
@@ -262,7 +261,11 @@ class Movie extends Component {
 
                                             <Grid item md={5} xl={4} zeroMinWidth className={classes.item}>
                                                 <div>
-                                                    <img className={classes.media} src={movie.poster_path} alt="Movie poster"/>
+                                                    <img
+                                                        className={classes.media}
+                                                        src={ movie.poster_path }
+                                                        alt="Movie poster"
+                                                    />
                                                 </div>
                                             </Grid>
 
