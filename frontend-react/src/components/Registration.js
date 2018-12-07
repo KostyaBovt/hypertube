@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import "../../node_modules/materialize-social/materialize-social.css";
 import { inject, observer } from 'mobx-react';
 import { withStyles } from '@material-ui/core/styles';
 import FormControl from '@material-ui/core/FormControl';
