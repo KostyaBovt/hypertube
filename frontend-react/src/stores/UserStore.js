@@ -16,7 +16,6 @@ class UserStore {
         try {
             const response = await axios.get('http://localhost:8080/api/user/' + username, { withCredentials: true })
             this.setUser(response.data.payload);
-            console.log('User: ', response);
         } catch (e) {
             this.user = null;
             console.error(e);

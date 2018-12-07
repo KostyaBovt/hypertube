@@ -69,11 +69,11 @@ class Login extends Component {
 		return (
 			<form onSubmit={this.handleSubmit}>
 				<Paper className={classes.paper} elevation={1}>
-					<Typography variant="h5" gutterBottom>
+					<Typography variant="h5" align="center" gutterBottom>
 						{t('login:LogIn')}
 					</Typography>
 
-					<FormControl error={!!errors.uname} margin="dense">
+					<FormControl required error={!!errors.uname} margin="dense">
 						<InputLabel htmlFor="uname">{t('login:username')}</InputLabel>
 						<Input
 							id="uname"
@@ -85,7 +85,7 @@ class Login extends Component {
 						<FormHelperText>{errors.uname}</FormHelperText>
 					</FormControl>
 
-					<FormControl error={!!errors.password} margin="dense">
+					<FormControl required error={!!errors.password} margin="dense">
 						<InputLabel htmlFor="password">{t('login:password')}</InputLabel>
 						<Input
 							id="password"

@@ -99,8 +99,8 @@ class LostPass extends Component {
 							Lost Password
 						</Typography>
 
-						<FormControl error={!!errors.email} margin="dense">
-							<InputLabel htmlFor="email">Your Email</InputLabel>
+						<FormControl required error={!!errors.email} margin="dense">
+							<InputLabel htmlFor="email">Email</InputLabel>
 							<Input
 								id="email"
 								type="email"

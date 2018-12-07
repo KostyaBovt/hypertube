@@ -101,10 +101,10 @@ class Registration extends Component {
 
 				<form onSubmit={this.handleSubmit}>
 					<Paper className={classes.paper} elevation={1}>
-						<Typography variant="h5" gutterBottom>
+						<Typography align="center" variant="h5" gutterBottom>
 							{t('registration:registration')}
 						</Typography>
-						<FormControl error={!!errors.fname} margin="dense">
+						<FormControl required error={!!errors.fname} margin="dense">
 							<InputLabel htmlFor="fname">{t('registration:fname')}</InputLabel>
 							<Input
 								id="fname"
@@ -116,7 +116,7 @@ class Registration extends Component {
 							<FormHelperText>{errors.fname}</FormHelperText>
 						</FormControl>
 
-						<FormControl error={!!errors.lname} margin="dense">
+						<FormControl required error={!!errors.lname} margin="dense">
 							<InputLabel htmlFor="lname">{t('registration:lname')}</InputLabel>
 							<Input
 								id="lname"
@@ -128,7 +128,7 @@ class Registration extends Component {
 							<FormHelperText>{errors.lname}</FormHelperText>
 						</FormControl>
 
-						<FormControl error={!!errors.uname} margin="dense">
+						<FormControl required error={!!errors.uname} margin="dense">
 							<InputLabel htmlFor="uname">{t('registration:username')}</InputLabel>
 							<Input
 								id="uname"
@@ -140,7 +140,7 @@ class Registration extends Component {
 							<FormHelperText>{errors.uname}</FormHelperText>
 						</FormControl>
 
-						<FormControl error={!!errors.email} margin="dense">
+						<FormControl required error={!!errors.email} margin="dense">
 							<InputLabel htmlFor="email">{t('registration:email')}</InputLabel>
 							<Input
 								id="email"
@@ -152,7 +152,7 @@ class Registration extends Component {
 							<FormHelperText>{errors.email}</FormHelperText>
 						</FormControl>
 
-						<FormControl error={!!errors.password} margin="dense">
+						<FormControl required error={!!errors.password} margin="dense">
 							<InputLabel htmlFor="password">{t('registration:password')}</InputLabel>
 							<Input
 								id="password"
@@ -164,7 +164,7 @@ class Registration extends Component {
 							<FormHelperText>{errors.password}</FormHelperText>
 						</FormControl>
 
-						<FormControl error={!!errors.confirmPassword} margin="dense">
+						<FormControl required error={!!errors.confirmPassword} margin="dense">
 							<InputLabel htmlFor="confirmPassword">{t('registration:confirmPassword')}</InputLabel>
 							<Input
 								id="confirmPassword"

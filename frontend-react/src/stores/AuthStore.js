@@ -81,6 +81,7 @@ class AuthStore {
             try {
                 const response = await axios.post('http://localhost:8080/api/auth/lostpass', { email }, {withCredentials: true});
                 if (response.data.status === 'ok') {
+                    this.setFieldValue('email', '');
                     return true;
                 } else if (response.data.status === "error"){
                     this.setErrors(response.data.reason);
