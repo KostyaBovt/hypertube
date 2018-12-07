@@ -3,7 +3,7 @@ import { inject, observer } from 'mobx-react';
 import { withStyles } from '@material-ui/core/styles';
 import Grid from '@material-ui/core/Grid';
 import Paper from '@material-ui/core/Paper';
-import { TextField, Typography, CircularProgress, Button, List, ListItem, ListItemAvatar, ListItemText, Icon, Divider } from '@material-ui/core';
+import { TextField, Typography, CircularProgress, Button, List, ListItem, ListItemAvatar, ListItemText, Icon, Divider, InputAdornment } from '@material-ui/core';
 import ReactPlayer from 'react-player';
 import imgHelpers from '../helpers/imgHelpers';
 import { Link } from 'react-router-dom';
@@ -100,6 +100,10 @@ class Movie extends Component {
     }
 
     handleInput(e) {
+        const { value } = e.target;
+        const comment = value.trim();
+
+        if (comment.length > 500) return;
         this.setState({
             commentValue: e.target.value
         });
@@ -115,7 +119,10 @@ class Movie extends Component {
         const { MovieStore } = this.props;
         const { movieId, commentValue } = this.state;
 
-        MovieStore.postComment(movieId, commentValue);
+        const comment = commentValue.trim();
+        if (comment.length > 500) return;
+
+        MovieStore.postComment(movieId, comment);
         this.resetCommentInput();
     }
 
@@ -355,12 +362,15 @@ class Movie extends Component {
                                                 </Grid>
                                                 <Grid item xs>
                                                     <TextField
-                                                        value={this.state.commentValue}
+                                                        value={commentValue}
                                                         onChange={this.handleInput}
                                                         placeholder={t('movie:liveComment')}
-                                                        rowsMax={4}
+                                                        rowsMax={5}
                                                         fullWidth
                                                         multiline
+                                                        InputProps={{
+                                                            endAdornment: <InputAdornment position="start">{`${commentValue.length}/500`}</InputAdornment>,
+                                                        }}
                                                     />
                                                 </Grid>
                                                 { commentValue && this.renderCommentSectionActions(classes) }
