@@ -26,8 +26,8 @@ app.use(cookieParser());
 
 app.use((req, res, next) => {
 	res.set({
-		'Access-Control-Allow-Origin':			'http://localhost:3000',
-		'Access-Control-Allow-Credentials':		'true',
+		'Access-Control-Allow-Origin': 'http://localhost:3000',
+		'Access-Control-Allow-Credentials': 'true',
 	});
 	next();
 });
@@ -62,22 +62,18 @@ setTimeout(async function runCleaner() {
 		const { imdb_id } = rows[i];
 		fs.access(`/tmp/videos/${imdb_id}`, fs.constants.R_OK, (err) => {
 			if (!err) {
-				rimraf(`/tmp/videos/${imdb_id}`, () => { 
-					console.log(`deleted folder /tmp/videos/${imdb_id}`);
+				rimraf(`/tmp/videos/${imdb_id}`, (err) => {
+					if (err) {
+						console.log(`Error while deleting /tmp/videos/${imdb_id} dir`);
+						console.error(err);
+					}
 				});
 			}
 		});
 	}
 
-	if (rows.length == 0) {
-		console.log('nothing to clean');
-	}
-
-	
 	setTimeout(runCleaner, 1000 * 60 * 60);
 }, 3000);
-
-// ============================== function to validate user
 
 const userAuth = async (req, res, next) => {
 	const { cookies } = req;
@@ -98,8 +94,6 @@ const userAuth = async (req, res, next) => {
 		res.json({'success': false, 'error': 'invalid token'});
 	}
 }
-
-// ======================= function to get watched films by curent user
 
 const getWatched = async (req, res, next) => {
 	const { id: user_id } = req.user;
@@ -141,15 +135,11 @@ const getWatched = async (req, res, next) => {
 
 app.all('*', userAuth, getWatched);
 
-// ======================= put watched film by curent user in DB
-
 const setMovieAsWatched = async (imdb_id, userId) => {
 	const url = `https://api.themoviedb.org/3/movie/${imdb_id}`;
 	const params = {
 		api_key: API_KEY
 	};
-
-	console.log(`Making a request (${url}) with params`, params);
 
 	const response = await axios.get(url, { params });
 	const { id: movieId } = response.data;
@@ -168,68 +158,6 @@ const setMovieAsWatched = async (imdb_id, userId) => {
 	await db.end();
 	return true;
 };
-
-
-// ============================== get OUR popular films
-
-app.get('/popular_films', async (request, response) => {
-	// console.log(request.user);
-
-	// language: to request from api user settings
-	var language = request.user.locale || 'en';
-
-	// integer 1 - 1000
-	var page = parseInt(request.query.page) || 1;
-	var offset = (page - 1) * 20;
-
-	// desc or asc
-	var order = request.query.order == 'asc' ?  'asc' : 'desc';
-
-	var watched = request.user.watched;
-
-	const {Client}  = require('pg');
-
-	const db = new Client({
-	  user: 'Hypertube',
-	  host: 'localhost',
-	  database: 'Hypertube',
-	  password: '12345',
-	  port: 5433,
-	});
-
-	await db.connect()
-
-	const res = await db.query("SELECT film_id, imdb_id, COUNT(seen) FROM history GROUP BY film_id, imdb_id ORDER BY COUNT(seen) " + order + " OFFSET $1", [offset]);
-
-	await db.end()
-
-	var rows = res['rows'];
-
-
-	try {
-		const promisesArray = rows.map(element => {
-			let url = 'https://api.themoviedb.org/3/movie/' + element.imdb_id + '?api_key=' + API_KEY + '&language=' + language;
-			return axios(url);
-		});
-
-		const detailed_result_const = await axios.all(promisesArray.map(p => p.catch(() => 'NOT_RESOLVED_MOVIE_INFO')));
-		var detailed_result = detailed_result_const;
-
-	} catch(err) {
-	    console.error('Error:', err);
-	}
-
-	final_response = detailed_result.map(element => {return element.data});
-
-	for (var i = final_response.length - 1; i >= 0; i--) {
-		final_response[i]['poster_path'] = 'http://image.tmdb.org/t/p/w342' + final_response[i]['poster_path'];
-		final_response[i]['popular_films_count'] = rows[i]['count'];
-		final_response[i]['watched_films_count'] = watched[final_response[i]['id']] || 0 ;
-	}
-
-	response.send(final_response);
-
-});
 
 
 app.get('/films', (req, res, next) => {
@@ -265,8 +193,6 @@ app.get('/films', (req, res, next) => {
 
 	params.api_key = API_KEY;
 	params.language = req.user.locale;
-	
-	console.log(`Making a request (${url}) with params`, params);
 
 	try {
 		const response = await axios.get(url, { params });
@@ -294,9 +220,7 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 		append_to_response: "credits"
 	};
 
-	var watched = req.user.watched;
-
-	console.log(`Making a request (${url}) with params`, params);
+	const watched = req.user.watched;
 
 	try {
 		const response = await axios.get(url, { params });
@@ -307,7 +231,6 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 		req.movie = { imdb_id, movie_details: response.data };
 		next();
 	} catch (e) {
-		console.log('tmdb request failed...');
 		console.error(e);
 		res.json({'success': false, 'error': 'TMDb request failed'});
 	}
@@ -331,11 +254,9 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 	if (!imdb_id) return next();
 
 	const url = `https://tv-v2.api-fetch.website/movie/${imdb_id}`;
-	console.log(`Making a request (${url})`);
 
 	try {
 		const response = await axios.get(url);
-		console.log(response.data);
 		const { torrents, trailer } = response.data;
 
 		if (torrents && torrents['en']) {
@@ -390,8 +311,6 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 	const { id, resolution } = req.params;
 	const { range } = req.headers;
 
-	console.log("streaming request", req.params, range);
-
 	req._streaming = {};
 	req._streaming.movie = { id, resolution };
 
@@ -425,11 +344,9 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 	const { id, resolution } = req._streaming.movie;
 
 	const response = await axios.get(`https://tv-v2.api-fetch.website/movie/${id}`);
-	console.log('response', response.data.torrents);
 
 	const { torrents } = response.data;
 	if (!torrents) { // There is no torrent links for this movie, so it can't be downloaded
-		console.log("There is no torrent links for this movie, so it can't be downloaded");
 		return res.sendStatus(404); // Sending response 404 and not going further
 	} else {
 		const { url, size } = torrents['en'][resolution];
@@ -443,16 +360,13 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 
 	fs.access(movieDirPath, fs.constants.R_OK, (err) => {
 		if (!err) {
-			console.log(`Directory for movie ${id} already exists`);
 			next();
 		} else if (err && err.errno === -2) { // Dir not exists
-			console.log(`Creating directory for movie ${id}...`);
 			fs.mkdir(movieDirPath, (err) => {
 				if (err) {
 					console.error(err);
 					res.sendStatus(500);
 				} else {
-					console.log('Directory created!');
 					next();
 				}
 			});
@@ -475,10 +389,8 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 		if (!err) {
 			req._streaming.movie.file.size = fileStats.size;
 			req._streaming.movie.file.exists = true;
-			console.log(`Resoulution ${resolution} already exists for movie ${id}`);
 			next();
 		} else if (err && err.errno === -2) {
-			console.log(`Resoulution ${resolution} not exists yet for movie ${id}`);
 			next();
 		} else {
 			console.error(e);
@@ -492,9 +404,7 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 		next();
 	} else {
 		const engineId = `${movie.id}-${movie.resolution}`;
-		console.log(`Creating new ${engineId} engine...`);
 		torrentEngineManager.createNewEngine(engineId, movie.magnetLink, (engine) => {
-			console.log(`${engineId} engine created!`);
 			const torrentFile = torrentEngineManager.getMovieFileByEngineId(engineId);
 			
 			fs.readFile(`/tmp/videos/${movie.id}/${movie.resolution}.json`, 'utf8', (err, data) => {
@@ -518,7 +428,6 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 					fullSize: torrentFile.length
 				};
 
-				console.log('writing data', data);
 				const stat = JSON.stringify(data);
 
 				fs.writeFile(`/tmp/videos/${movie.id}/${movie.resolution}.json`, stat, (err) => {
@@ -536,21 +445,12 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 						if (err) {
 							console.log(`${engineId} download pipe closed with error: `);
 							console.error(err);
-						} else {
-							console.log(`${engineId} download pipe closed, movie successfully downloaded!`);
 						}
 		
-						torrentEngineManager.destroyEngine(engineId, () => {
-							console.log(`Engine ${engineId} was destroyed!`);
-						});
+						torrentEngineManager.destroyEngine(engineId);
 					});
 
 					movie.file.size = 0;
-		
-					engine.on('idle', () => {
-						console.log(`Engine ${engineId} idle ...`);
-					});
-		
 					next();
 				});
 			});
@@ -566,7 +466,6 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 			res.sendStatus(500);
 		} else {
 			const stat = JSON.parse(data);
-			console.log(`Stat file for movie ${movie.id}[${movie.resolution}]`, stat);
 			req._streaming.movie.fullSize = stat.fullSize;
 			req._streaming.movie.file.extension = stat.extension;
 			next();
@@ -576,8 +475,6 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 	const { movie } = req._streaming;
 	
 	if (movie.file.size !== movie.fullSize) { // File is still downloading
-		console.log(`Movie full size ${movie.fullSize}, local file size ${movie.file.size} ...`);
-		console.log('File is still downloading so stream source is torrent');
 		
 		const engineId = `${movie.id}-${movie.resolution}`;
 		const torrentFile = torrentEngineManager.getMovieFileByEngineId(engineId);
@@ -588,7 +485,6 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 			size: torrentFile.length
 		}
 	} else { // File is fully downloaded
-		console.log('File is fully downloaded so stream source is local file');
 		req._streaming.range.end = req._streaming.range.end || movie.file.size - 1;
 		req._streaming.source = {
 			readStream: fs.createReadStream(movie.file.path, req._streaming.range),
@@ -609,12 +505,8 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 	}
 
 	res.writeHead(206, head);
-	console.log('Starting stream...');
 
-	pump(source.readStream, res, (err) => {
-		console.log(`Movie streaming pipe closed`);
-		// console.error(err);
-	});
+	pump(source.readStream, res);
 });
 
 app.get('/subtitles/:imdbid/:language', (req, res, next) => { // Cheking if /tmp/videos/subs dir exists
@@ -700,7 +592,6 @@ app.get('/subtitles/:imdbid/:language', (req, res, next) => { // Cheking if /tmp
 				imdbid
 			}
 	
-			console.log(`Will search subtitles with these params: `, req._subtitles.searchParams);
 			next();
 		});
 		
@@ -721,7 +612,6 @@ app.get('/subtitles/:imdbid/:language', (req, res, next) => { // Cheking if /tmp
 			return res.sendStatus(404); // No subtitles with this language
 		} else {
 			req._subtitles.srtDownloadUrl = searchResults[language].url;
-			console.log('subtitles found', searchResults[language]);
 			next();
 		}
 	} catch (e) {
@@ -733,7 +623,6 @@ app.get('/subtitles/:imdbid/:language', (req, res, next) => { // Cheking if /tmp
 	const { file, srtDownloadUrl } = req._subtitles;
 
 	if (file.exists) {
-		console.log(`Subtitles ${file.name} already downloaded`);
 		next();
 		return;
 	}
@@ -748,14 +637,12 @@ app.get('/subtitles/:imdbid/:language', (req, res, next) => { // Cheking if /tmp
 		const localFileWriteStream = fs.createWriteStream(file.path);
 
 		localFileWriteStream.on("open", () => {
-			console.log(`Subtitles ${file.name} is not downloaded yet, starting download...`);
 			pump(response.data, srt2vtt(), localFileWriteStream, (err) => {
 				if (err) {
 					console.log(`${file.name} pipe closed with error:`);
 					console.error(err);
 					res.sendStatus(500);
 				} else {
-					console.log(`${file.name} pipe closed with no errors, subtitles downloaded`);
 					next();
 				}
 			});
@@ -784,8 +671,6 @@ app.get('/subtitles/:imdbid/:language', (req, res, next) => { // Cheking if /tmp
 });
 
 app.listen(port, () => {
-	console.log(`server is listening on ${port}`);
-
 	fs.access('/tmp/videos', fs.constants.F_OK, (err) => {
 		if (err) { // Directory does not exsist
 			return fs.mkdir('/tmp/videos', (err) => {
