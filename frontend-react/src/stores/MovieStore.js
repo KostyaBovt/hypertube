@@ -33,8 +33,8 @@ class MovieStore {
                 withCredentials: true
             });
             if (response.data.success) {
-                const { movie_details: details, streaming } = response.data;
-                this.setMovie({ ...details, streaming });
+                const { movie_details: details, streaming, subtitles } = response.data;
+                this.setMovie({ ...details, streaming, subtitles });
             } else {
                 this.setMovie(null);
             }

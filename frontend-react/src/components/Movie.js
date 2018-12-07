@@ -128,7 +128,7 @@ class Movie extends Component {
     renderPlayer() {
         const { MovieStore, classes } = this.props;
         const { movie } = MovieStore;
-        const { streamingUrl, resolution } = this.state;
+        const { streamingUrl } = this.state;
 
         if (streamingUrl || movie.trailer) {
             return (
@@ -143,18 +143,7 @@ class Movie extends Component {
                                 attributes: {
                                     crossOrigin: "use-credentials"
                                 },
-                                tracks: [
-                                    {
-                                        kind: 'subtitles',
-                                        src: `http://localhost:3200/subtitles/${movie.imdb_id}/${resolution}/en`,
-                                        srcLang: 'en'
-                                    },
-                                    {
-                                        kind: 'subtitles',
-                                        src: `http://localhost:3200/subtitles/${movie.imdb_id}/${resolution}/ru`,
-                                        srcLang: 'ru'
-                                    }
-                                ]
+                                tracks: movie.subtitles
                             }
                         }}
                         width='100%'

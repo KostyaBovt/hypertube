@@ -339,10 +339,8 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 		const { torrents, trailer } = response.data;
 
 		if (torrents && torrents['en']) {
-			const streaming = [];
-			Object.keys(torrents['en']).forEach(resolution => {
-				const streamingUrl = `http://localhost:3200/film/${imdb_id}/${resolution}`;
-				streaming.push(streamingUrl);
+			const streaming = Object.keys(torrents['en']).map(resolution => {
+				return `http://localhost:3200/film/${imdb_id}/${resolution}`;
 			});
 			req.movie.streaming = streaming;
 		}
@@ -360,9 +358,29 @@ app.get('/film_details/:movieId', async (req, res, next) => {
 	} finally {
 		next();
 	}
+}, async (req, res, next) => {
+	const { imdb_id } = req.movie;
+	const searchResults = await OS.search({
+		imdbid: imdb_id,
+		fps: "23.976",
+	});
+
+	const subtitles = ['en', 'ru'].reduce((result, currLang) => {
+		if (searchResults[currLang]) {
+			result.push({
+				kind: 'subtitles',
+				src: `http://localhost:3200/subtitles/${imdb_id}/${currLang}`,
+				srcLang: currLang
+			});
+		}
+		return result;
+	}, []);
+
+	req.movie.subtitles = subtitles;	
+	next();
 }, (req, res) => {
-	const { movie_details, streaming } = req.movie;
-	res.json({'success': true,  movie_details, streaming });
+	const { movie_details, streaming, subtitles } = req.movie;
+	res.json({'success': true,  movie_details, streaming, subtitles });
 });
 
 const pump = require('pump');
@@ -599,7 +617,7 @@ app.get('/film/:id/:resolution', (req, res, next) => { // Parsing range headers
 	});
 });
 
-app.get('/subtitles/:imdbid/:resolution/:language', (req, res, next) => { // Cheking if /tmp/videos/subs dir exists
+app.get('/subtitles/:imdbid/:language', (req, res, next) => { // Cheking if /tmp/videos/subs dir exists
 	fs.access('/tmp/videos/subs', fs.constants.R_OK, (err) => {
 		if (!err) {
 			next();
@@ -620,9 +638,9 @@ app.get('/subtitles/:imdbid/:resolution/:language', (req, res, next) => { // Che
 		}
 	});
 }, (req, res, next) => { // Checking if subtitles is already downloaded
-	const { imdbid, resolution, language } = req.params;
+	const { imdbid, language } = req.params;
 
-	const fileName = `${imdbid}[${resolution}]-${language}.vtt`;
+	const fileName = `${imdbid}-${language}.vtt`;
 	const fullPath = `/tmp/videos/subs/${fileName}`;
 
 	req._subtitles = {
@@ -646,7 +664,7 @@ app.get('/subtitles/:imdbid/:resolution/:language', (req, res, next) => { // Che
 		}
 	});
 }, async (req, res, next) => {
-	const { imdbid, resolution } = req.params;
+	const { imdbid } = req.params;
 	const { file } = req._subtitles;
 
 	if (file.exists) {
@@ -654,23 +672,38 @@ app.get('/subtitles/:imdbid/:resolution/:language', (req, res, next) => { // Che
 		return;
 	}
 
-	fs.readFile(`/tmp/videos/${imdbid}/${resolution}.json`, 'utf8', (err, data) => {
+	fs.readdir(`/tmp/videos/${imdbid}`, (err, files) => {
 		if (err) {
-			console.log(`Unexpected error while reading stat file for ${imdbid}`);
+			console.log('Error while reading movie directory:');
 			console.error(err);
 			res.sendStatus(500);
 			return;
 		}
 
-		const movieStat = JSON.parse(data);
-		req._subtitles.searchParams = {
-			filename: movieStat.originalName,
-			fps: "23.976",
-			imdbid
-		}
+		const statFile = files.find(fileName => {
+			const extension = fileName.split('.').pop();
+			return extension === 'json';
+		});
 
-		console.log(`Will search subtitles with these params: `, req._subtitles.searchParams);
-		next();
+		fs.readFile(`/tmp/videos/${imdbid}/${statFile}`, 'utf8', (err, data) => {
+			if (err) {
+				console.log(`Unexpected error while reading stat file for ${imdbid}`);
+				console.error(err);
+				res.sendStatus(500);
+				return;
+			}
+	
+			const movieStat = JSON.parse(data);
+			req._subtitles.searchParams = {
+				filename: movieStat.originalName,
+				fps: "23.976",
+				imdbid
+			}
+	
+			console.log(`Will search subtitles with these params: `, req._subtitles.searchParams);
+			next();
+		});
+		
 	});
 }, async (req, res, next) => {
 	const { language } = req.params;
@@ -730,11 +763,11 @@ app.get('/subtitles/:imdbid/:resolution/:language', (req, res, next) => { // Che
 	} catch (e) {
 		console.log('Error while downloading subtitles:', srtDownloadUrl);
 		if (e.response) {
-			console.log(e.response.status, e.response.text, e.response.data);
+			console.log('error status', e.response.status);
+			res.sendStatus(e.response.status);
 		} else {
 			console.error(e);
 		}
-		res.sendStatus(500);
 	}
 }, async (req, res) => {
 	const { file } = req._subtitles;
