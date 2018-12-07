@@ -38,7 +38,9 @@ const destroyEngine = (id, callback) => {
         engine.remove(() => {
             engine.destroy(() => {
                 _engines[id] = undefined;
-                callback();
+                if (callback !== undefined) {
+                    callback();
+                }
             });
         });
     }
