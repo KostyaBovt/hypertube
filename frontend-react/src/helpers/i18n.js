@@ -103,7 +103,7 @@ i18n.init({
                 logIn: 'Log in',
                 username: 'Username',
                 password: 'Password',
-                forgotPassword: 'Frogot password?',
+                forgotPassword: 'Forgot password?',
             },
             registration: {
                 registration: 'Registration',
