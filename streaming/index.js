@@ -25,8 +25,14 @@ app.use(cors());
 app.use(cookieParser());
 
 app.use((req, res, next) => {
+	const { origin } = req.headers;
+	const allowedOrigins = ['http://localhost:3000', 'http://localhost:8080'];
+
+	if (allowedOrigins.includes(origin)) {
+		res.set('Access-Control-Allow-Origin', origin);
+	}
+
 	res.set({
-		'Access-Control-Allow-Origin': 'http://localhost:8080',
 		'Access-Control-Allow-Credentials': 'true',
 	});
 	next();
