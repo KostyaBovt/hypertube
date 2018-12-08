@@ -8,8 +8,9 @@
 
 start(_Type, _Args) ->
     Paths = [{"/api/[...]", hyper_http, []},
-             {"/", cowboy_static, {priv_file, hyper, "./frontend/index.html"}},
              {"/photos/[...]", cowboy_static, {priv_dir, hyper, "./photos/"}},
+             {"/index.css", cowboy_static, {priv_file, hyper, "./frontend/index.css"}},
+             {"/favicon.ico", cowboy_static, {priv_file, hyper, "./frontend/favicon.ico"}},
              {"/static/[...]", cowboy_static, {priv_dir, hyper, "./frontend/static/"}},
              {"/[...]", cowboy_static, {priv_file, hyper, "./frontend/index.html"}}],
     Dispatch = cowboy_router:compile([{'_', Paths}]),
